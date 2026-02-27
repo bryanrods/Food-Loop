@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Casos de éxito - Food Loop</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2D6A4F">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="logo-brand"><span>Food Loop</span></a>
+            <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+            <nav class="nav-menu" id="navMenu">
+                <!-- Enlaces de navegación actualizados -->
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="galeria.html" class="nav-link">Galería</a>
+                <a href="features.html" class="nav-link">Características</a>
+                <a href="testimonios.html" class="nav-link">Casos de éxito</a>
+                <a href="about.html" class="nav-link">Sobre Nosotros</a>
+                <a href="comenzar.html" class="nav-link">Comenzar</a>
+                <!-- Botón de llamada a la acción actualizado -->
+                <button class="cta-btn" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <!-- TESTIMONIOS -->
+        <section id="testimonials" class="testimonials-section" style="padding-top:150px;">
+            <h2 class="section-title">Historias de <span>éxito visual</span></h2>
+            <p class="testimonials-subtitle">Dueños de negocios que ya están creciendo con Food Loop</p>
+            <div class="swiper testimonialSwiper">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="testimonial-img">
+                                <img src="icons/client-1.jpg" alt="María González"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.img-placeholder').style.display='flex';">
+                                <div class="img-placeholder" style="display: none;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="testimonial-rating">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <p>"Redujimos pérdidas en un 70% el primer mes. La IA de precios es increíble."</p>
+                            <div class="testimonial-author">
+                                <div>
+                                    <strong>María González</strong>
+                                    <span>Panadería El Trigo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="testimonial-img">
+                                <img src="icons/client-2.jpg" alt="Carlos Méndez"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.img-placeholder').style.display='flex';">
+                                <div class="img-placeholder" style="display: none;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="testimonial-rating">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <p>"Recuperamos más de $12,000 en inventario que antes tirábamos."</p>
+                            <div class="testimonial-author">
+                                <div>
+                                    <strong>Carlos Méndez</strong>
+                                    <span>Supermercado Don Carlos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="testimonial-img">
+                                <img src="icons/client-3.jpg" alt="Laura Rivas"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.img-placeholder').style.display='flex';">
+                                <div class="img-placeholder" style="display: none;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="testimonial-rating">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                            </div>
+                            <p>"Mi negocio era solo físico, ahora vendo por WhatsApp y la app lo gestiona todo."</p>
+                            <div class="testimonial-author">
+                                <div>
+                                    <strong>Laura Rivas</strong>
+                                    <span>Frutería La Aurora</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="testimonial-img">
+                                <img src="icons/client-4.jpg" alt="Javier Soto"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.img-placeholder').style.display='flex';">
+                                <div class="img-placeholder" style="display: none;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="testimonial-rating">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <p>"Food Loop nos ayudó a vender productos cerca de vencer que antes regalábamos."</p>
+                            <div class="testimonial-author">
+                                <div>
+                                    <strong>Javier Soto</strong>
+                                    <span>Carnicería Los Arrieros</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
+        </section>
+        <!-- CONTADORES -->
+        <section class="stats-premium">
+            <div class="stats-container">
+                <div class="stat-premium-item">
+                    <i class="fas fa-store fa-2x"></i>
+                    <span class="stat-premium-number" id="counter1">12,840</span>
+                    <p>Comercios activos</p>
+                </div>
+                <div class="stat-premium-item">
+                    <i class="fas fa-boxes fa-2x"></i>
+                    <span class="stat-premium-number" id="counter2">2.4M</span>
+                    <p>Productos gestionados</p>
+                </div>
+                <div class="stat-premium-item">
+                    <i class="fas fa-dollar-sign fa-2x"></i>
+                    <span class="stat-premium-number" id="counter3">$89M</span>
+                    <p>Flujo recuperado</p>
+                </div>
+                <div class="stat-premium-item">
+                    <i class="fas fa-leaf fa-2x"></i>
+                    <span class="stat-premium-number" id="counter4">450k</span>
+                    <p>kg de desperdicio evitado</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <i class="fas fa-leaf"></i> Food Loop
+                <p>Transformamos inventario en flujo de efectivo.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fab fa-x-twitter"></i></a>
+                </div>
+            </div>
+            <div class="footer-links">
+                <h4>Producto</h4>
+                <a href="#">Características</a>
+                <a href="#">Precios</a>
+                <a href="#">Demo</a>
+            </div>
+            <div class="footer-links">
+                <h4>Recursos</h4>
+                <a href="#">Blog</a>
+                <a href="#">Centro de ayuda</a>
+                <a href="#">Estado</a>
+            </div>
+            <div class="footer-links">
+                <h4>Legal</h4>
+                <a href="#">Privacidad</a>
+                <a href="#">Términos</a>
+                <a href="#">Cookies</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Food Loop Technologies. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

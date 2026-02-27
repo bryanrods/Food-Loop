@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Food Loop - Transforma tu Negocio Local</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2D6A4F">
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Swiper CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+    <!-- TU CSS -->
+    <!-- Actualizamos la ruta al CSS para usar la carpeta css/ -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="navbar-container">
+            <a href="#" class="logo-brand">
+                <span>Food Loop</span>
+            </a>
+
+            <button class="hamburger" id="hamburger">
+                <span></span><span></span><span></span>
+            </button>
+
+            <nav class="nav-menu" id="navMenu">
+                <!-- Enlaces de navegación actualizados -->
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="galeria.html" class="nav-link">Galería</a>
+                <a href="features.html" class="nav-link">Características</a>
+                <a href="testimonios.html" class="nav-link">Casos de éxito</a>
+                <a href="about.html" class="nav-link">Sobre Nosotros</a>
+                <a href="comenzar.html" class="nav-link">Comenzar</a>
+                <!-- Botón de llamada a la acción que redirige a Comenzar -->
+                <button class="cta-btn" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- HERO -->
+        <section class="hero-premium">
+            <div class="hero-background"></div>
+
+            <div class="hero-container">
+                <div class="hero-content">
+                    <span class="badge">🚀 La Solución #1 para Comercios Locales</span>
+
+                    <h1 class="hero-title">
+                        Transforma tu Inventario en
+                        <span class="highlight">Dinero en Efectivo</span>
+                    </h1>
+
+                    <p class="hero-subtitle">
+                        Recupera flujo de caja vendiendo tu inventario remanente a precios inteligentes. Reduce
+                        pérdidas,
+                        multiplica ganancias.
+                    </p>
+
+                    <div class="hero-stats" id="stats">
+                        <div class="stat-item">
+                            <span class="stat-number">+45%</span>
+                            <p>Flujo de caja</p>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">-60%</span>
+                            <p>Desperdicio</p>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">+12k</span>
+                            <p>Comercios</p>
+                        </div>
+                    </div>
+
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary">Descargar Gratis</button>
+                        <button class="btn btn-secondary">Ver Demo</button>
+                    </div>
+
+                    <div class="hero-trust">
+                        <i class="fas fa-shield-alt"></i> <span>Sin tarjeta de crédito • 30 días gratis</span>
+                    </div>
+                </div>
+
+                <div class="hero-visual">
+                    <div class="icon-frame">
+                        <img src="icons/Foodloop.png" alt="Food Loop" class="hero-custom-icon"
+                            onerror="this.style.display='none'; this.parentElement.querySelector('.icon-placeholder').style.display='flex';">
+                        <div class="icon-placeholder gallery-placeholder"
+                            style="display: none; background: transparent; backdrop-filter: none;">
+                            <i class="fas fa-box-open fa-4x" style="color: var(--mustard-yellow);"></i>
+                            <p style="color: white;">+ tu icono en /icons</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-wave">
+                <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
+                        fill="white" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- CARRUSEL 1 -->
+        <section id="carruseles" class="gallery-section">
+            <h2 class="section-title">Visualiza tu <span>inventario en acción</span></h2>
+            <p class="gallery-subtitle">Comercios reales que ya transforman su stock con Food Loop</p>
+
+            <div class="swiper mainSwiper">
+                <div class="swiper-wrapper">
+
+                    <div class="swiper-slide">
+                        <div class="gallery-card">
+                            <img src="icons/gallery-1.jpg" alt="Panadería"
+                                onerror="this.style.display='none'; this.parentElement.querySelector('.gallery-placeholder').style.display='flex';">
+                            <div class="gallery-placeholder" style="display: none;">
+                                <i class="fas fa-bread-slice"></i>
+                                <span>Panadería El Trigo</span>
+                            </div>
+                            <div class="gallery-overlay">
+                                <h4>Panadería El Trigo</h4>
+                                <p>+45% flujo en 3 semanas</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <div class="gallery-card">
+                            <img src="icons/gallery-2.jpg" alt="Supermercado"
+                                onerror="this.style.display='none'; this.parentElement.querySelector('.gallery-placeholder').style.display='flex';">
+                            <div class="gallery-placeholder" style="display: none;">
+                                <i class="fas fa-store"></i>
+                                <span>Supermercado Don Carlos</span>
+                            </div>
+                            <div class="gallery-overlay">
+                                <h4>Supermercado Don Carlos</h4>
+                                <p>-70% desperdicio</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <div class="gallery-card">
+                            <img src="icons/gallery-3.jpg" alt="Frutería"
+                                onerror="this.style.display='none'; this.parentElement.querySelector('.gallery-placeholder').style.display='flex';">
+                            <div class="gallery-placeholder" style="display: none;">
+                                <i class="fas fa-apple-alt"></i>
+                                <span>Frutería La Aurora</span>
+                            </div>
+                            <div class="gallery-overlay">
+                                <h4>Frutería La Aurora</h4>
+                                <p>Gestión inteligente</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <div class="gallery-card">
+                            <img src="icons/gallery-4.jpg" alt="Carnicería"
+                                onerror="this.style.display='none'; this.parentElement.querySelector('.gallery-placeholder').style.display='flex';">
+                            <div class="gallery-placeholder" style="display: none;">
+                                <i class="fas fa-drumstick-bite"></i>
+                                <span>Carnicería Los Arrieros</span>
+                            </div>
+                            <div class="gallery-overlay">
+                                <h4>Carnicería Los Arrieros</h4>
+                                <p>Rotación 24h</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <div class="gallery-card">
+                            <img src="icons/gallery-5.jpg" alt="Restaurante"
+                                onerror="this.style.display='none'; this.parentElement.querySelector('.gallery-placeholder').style.display='flex';">
+                            <div class="gallery-placeholder" style="display: none;">
+                                <i class="fas fa-utensils"></i>
+                                <span>Restaurante Sabores</span>
+                            </div>
+                            <div class="gallery-overlay">
+                                <h4>Restaurante Sabores</h4>
+                                <p>+30% ticket medio</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
+        </section>
+
+        <!-- FEATURES -->
+        <section id="features" class="features-section">
+            <h2 class="section-title">¿Por Qué Elegir <span>Food Loop</span>?</h2>
+            <div class="features-grid">
+                <div class="feature-box">
+                    <i class="fas fa-chart-line feature-icon"></i>
+                    <h3>IA de Precios</h3>
+                    <p>Algoritmos que sugieren el precio óptimo para liquidar stock en tiempo real.</p>
+                    <span class="feature-tag">+45% flujo</span>
+                </div>
+
+                <div class="feature-box">
+                    <i class="fas fa-mobile-alt feature-icon"></i>
+                    <h3>Acceso Total</h3>
+                    <p>Gestiona tu negocio desde cualquier dispositivo, sin perder funcionalidad.</p>
+                    <span class="feature-tag">Multiplataforma</span>
+                </div>
+
+                <div class="feature-box">
+                    <i class="fas fa-shield-alt feature-icon"></i>
+                    <h3>Seguridad</h3>
+                    <p>Tus datos y transacciones están protegidos de extremo a extremo.</p>
+                    <span class="feature-tag">Encriptación AES</span>
+                </div>
+
+                <div class="feature-box">
+                    <i class="fas fa-clock feature-icon"></i>
+                    <h3>Alertas Inteligentes</h3>
+                    <p>Notificaciones cuando un producto está próximo a vencer.</p>
+                    <span class="feature-tag">-60% desperdicio</span>
+                </div>
+
+                <div class="feature-box">
+                    <i class="fas fa-hand-holding-usd feature-icon"></i>
+                    <h3>Pagos Ágiles</h3>
+                    <p>Transferencias inmediatas y conciliación automática.</p>
+                    <span class="feature-tag">+99% velocidad</span>
+                </div>
+
+                <div class="feature-box">
+                    <i class="fas fa-file-invoice feature-icon"></i>
+                    <h3>Reportes automáticos</h3>
+                    <p>Informes diarios de pérdidas, ganancias y rotación de inventario.</p>
+                    <span class="feature-tag">Dashboard</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS -->
+        <section id="testimonials" class="testimonials-section">
+            <h2 class="section-title">Historias de <span>éxito visual</span></h2>
+            <p class="testimonials-subtitle">Dueños de negocios que ya están creciendo con Food Loop</p>
+
+            <div class="swiper testimonialSwiper">
+                <div class="swiper-wrapper">
+
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="testimonial-img">
+                                <img src="icons/client-1.jpg" alt="María González"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.img-placeholder').style.display='flex';">
+                                <div class="img-placeholder" style="display: none;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="testimonial-rating">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <p>"Redujimos pérdidas en un 70% el primer mes. La IA de precios es increíble."</p>
+                            <div class="testimonial-author">
+                                <div>
+                                    <strong>María González</strong>
+                                    <span>Panadería El Trigo</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="testimonial-img">
+                                <img src="icons/client-2.jpg" alt="Carlos Méndez"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.img-placeholder').style.display='flex';">
+                                <div class="img-placeholder" style="display: none;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="testimonial-rating">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <p>"Recuperamos más de $12,000 en inventario que antes tirábamos."</p>
+                            <div class="testimonial-author">
+                                <div>
+                                    <strong>Carlos Méndez</strong>
+                                    <span>Supermercado Don Carlos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="testimonial-img">
+                                <img src="icons/client-3.jpg" alt="Laura Rivas"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.img-placeholder').style.display='flex';">
+                                <div class="img-placeholder" style="display: none;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="testimonial-rating">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                            </div>
+                            <p>"Mi negocio era solo físico, ahora vendo por WhatsApp y la app lo gestiona todo."</p>
+                            <div class="testimonial-author">
+                                <div>
+                                    <strong>Laura Rivas</strong>
+                                    <span>Frutería La Aurora</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="testimonial-img">
+                                <img src="icons/client-4.jpg" alt="Javier Soto"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.img-placeholder').style.display='flex';">
+                                <div class="img-placeholder" style="display: none;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="testimonial-rating">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <p>"Food Loop nos ayudó a vender productos cerca de vencer que antes regalábamos."</p>
+                            <div class="testimonial-author">
+                                <div>
+                                    <strong>Javier Soto</strong>
+                                    <span>Carnicería Los Arrieros</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
+        </section>
+
+        <!-- CONTADORES -->
+        <section class="stats-premium">
+            <div class="stats-container">
+                <div class="stat-premium-item">
+                    <i class="fas fa-store fa-2x"></i>
+                    <span class="stat-premium-number" id="counter1">12,840</span>
+                    <p>Comercios activos</p>
+                </div>
+                <div class="stat-premium-item">
+                    <i class="fas fa-boxes fa-2x"></i>
+                    <span class="stat-premium-number" id="counter2">2.4M</span>
+                    <p>Productos gestionados</p>
+                </div>
+                <div class="stat-premium-item">
+                    <i class="fas fa-dollar-sign fa-2x"></i>
+                    <span class="stat-premium-number" id="counter3">$89M</span>
+                    <p>Flujo recuperado</p>
+                </div>
+                <div class="stat-premium-item">
+                    <i class="fas fa-leaf fa-2x"></i>
+                    <span class="stat-premium-number" id="counter4">450k</span>
+                    <p>kg de desperdicio evitado</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT -->
+        <section id="about" class="about-section">
+            <div class="about-container">
+                <div class="about-content">
+                    <h2 class="section-title">Sobre <span>Food Loop</span></h2>
+                    <p class="about-text">
+                        Somos un equipo de ingenieros, foodies y expertos en retail que decidieron atacar el problema
+                        del desperdicio de alimentos en comercios locales. Nacimos en 2020 y hoy operamos en 12 países.
+                    </p>
+
+                    <div class="about-features-mini">
+                        <span><i class="fas fa-check-circle"></i> +15.000 horas de desarrollo</span>
+                        <span><i class="fas fa-check-circle"></i> Equipo en 5 países</span>
+                        <span><i class="fas fa-check-circle"></i> Inversión Serie A</span>
+                    </div>
+
+                    <div class="about-culture">
+                        <i class="fas fa-heart"></i> Cultura de impacto: por cada transacción donamos una comida.
+                    </div>
+                </div>
+
+                <div class="about-visual">
+                    <div class="swiper teamSwiper">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide">
+                                <img src="icons/team-1.jpg" alt="Equipo"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
+                                <div class="team-placeholder" style="display: none;">
+                                    <i class="fas fa-users"></i>
+                                    <span>Nuestro equipo</span>
+                                </div>
+                            </div>
+                            <div class="swiper-slide">
+                                <img src="icons/team-2.jpg" alt="Oficina"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
+                                <div class="team-placeholder" style="display: none;">
+                                    <i class="fas fa-building"></i>
+                                    <span>Oficina central</span>
+                                </div>
+                            </div>
+                            <div class="swiper-slide">
+                                <img src="icons/team-3.jpg" alt="Impacto"
+                                    onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
+                                <div class="team-placeholder" style="display: none;">
+                                    <i class="fas fa-hand-holding-heart"></i>
+                                    <span>Impacto social</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="swiper-pagination"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- DESCARGA -->
+        <section class="download-banner">
+            <div class="banner-content">
+                <h3>Descarga Food Loop y empieza a recuperar tu inventario</h3>
+                <p>Disponible para iOS, Android y web. Sin permanencia.</p>
+                <div class="badge-container">
+                    <span class="store-badge"><i class="fab fa-apple"></i> App Store</span>
+                    <span class="store-badge"><i class="fab fa-google-play"></i> Google Play</span>
+                    <span class="store-badge"><i class="fas fa-qrcode"></i> Escanea QR</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <i class="fas fa-leaf"></i> Food Loop
+                <p>Transformamos inventario en flujo de efectivo.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fab fa-x-twitter"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-links">
+                <h4>Producto</h4>
+                <a href="#">Características</a>
+                <a href="#">Precios</a>
+                <a href="#">Demo</a>
+            </div>
+
+            <div class="footer-links">
+                <h4>Recursos</h4>
+                <a href="#">Blog</a>
+                <a href="#">Centro de ayuda</a>
+                <a href="#">Estado</a>
+            </div>
+
+            <div class="footer-links">
+                <h4>Legal</h4>
+                <a href="#">Privacidad</a>
+                <a href="#">Términos</a>
+                <a href="#">Cookies</a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2025 Food Loop Technologies. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Swiper JS -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+    <!-- TU JS -->
+    <script>
+        (function () {
+            "use strict";
+
+            // REGISTRO DE SERVICE WORKER
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/js/sw.js').catch((err) => {
+                        console.log('Service Worker registration failed:', err);
+                    });
+                });
+            }
+
+            // HAMBURGER
+            const hamburger = document.getElementById('hamburger');
+            const navMenu = document.getElementById('navMenu');
+            if (hamburger && navMenu) {
+                hamburger.addEventListener('click', () => {
+                    navMenu.classList.toggle('active');
+                    hamburger.classList.toggle('toggle');
+                });
+            }
+
+            // INICIALIZAR SWIPERS
+            const mainSwiper = new Swiper('.mainSwiper', {
+                slidesPerView: 1,
+                spaceBetween: 30,
+                loop: true,
+                autoplay: { delay: 4000, disableOnInteraction: false },
+                pagination: { el: '.swiper-pagination', clickable: true },
+                navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }
+            });
+
+            const testimonialSwiper = new Swiper('.testimonialSwiper', {
+                slidesPerView: 1,
+                spaceBetween: 30,
+                loop: true,
+                autoplay: { delay: 4500, disableOnInteraction: false },
+                pagination: { el: '.swiper-pagination', clickable: true },
+                navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }
+            });
+
+            const teamSwiper = new Swiper('.teamSwiper', {
+                slidesPerView: 1,
+                spaceBetween: 0,
+                loop: true,
+                autoplay: { delay: 3500, disableOnInteraction: false },
+                pagination: { el: '.swiper-pagination', clickable: true },
+            });
+
+            // MANEJADOR DE ERRORES DE IMAGEN
+            function handleImageError(img) {
+                img.style.display = 'none';
+                const parent = img.parentElement;
+                if (parent) {
+                    const placeholder = parent.querySelector(
+                        '.gallery-placeholder, .img-placeholder, .team-placeholder, .masonry-placeholder, .icon-placeholder'
+                    );
+                    if (placeholder) placeholder.style.display = 'flex';
+                }
+            }
+
+            document.querySelectorAll('img').forEach(img => {
+                img.addEventListener('error', function () { handleImageError(this); });
+            });
+
+            // CONTADORES
+            const counter1 = document.getElementById('counter1');
+            const counter2 = document.getElementById('counter2');
+            const counter3 = document.getElementById('counter3');
+            const counter4 = document.getElementById('counter4');
+
+            function animateCounter(element, start, end, duration = 2000) {
+                if (!element) return;
+                let range = end - start;
+                let increment = range / (duration / 16);
+                let current = start;
+                let timer = setInterval(() => {
+                    current += increment;
+                    if (current >= end) {
+                        current = end;
+                        clearInterval(timer);
+                    }
+                    element.innerText = Math.floor(current).toLocaleString();
+                }, 16);
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (entry.target.id === 'counter1') animateCounter(entry.target, 5000, 12840, 2500);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            if (counter1) observer.observe(counter1);
+            if (counter2) counter2.innerText = '2.4M';
+            if (counter3) counter3.innerText = '$89M';
+            if (counter4) counter4.innerText = '450k';
+
+            // SCROLL SUAVE
+            const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        if (navMenu.classList.contains('active')) {
+                            navMenu.classList.remove('active');
+                            hamburger.classList.remove('toggle');
+                        }
+                    }
+                });
+            });
+
+            // ANIMACIÓN FEATURES
+            const animatedBoxes = document.querySelectorAll('.feature-box, .testimonial-card');
+            const appearObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('feature-visible');
+                        appearObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.2 });
+
+            animatedBoxes.forEach(box => {
+                box.classList.add('feature-hidden');
+                appearObserver.observe(box);
+            });
+        })();
+    </script>
+</body>
+
+</html>

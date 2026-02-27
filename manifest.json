@@ -1,0 +1,26 @@
+{
+  "name": "Food Loop - Inteligencia de Inventarios",
+  "short_name": "Food Loop",
+  "description": "Gestiona inventarios y maximiza ganancias en tu comercio local.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2D6A4F",
+  "orientation": "portrait",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "food"]
+}
