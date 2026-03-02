@@ -18,16 +18,10 @@ jobs:
         node-version: '20.x'
 
     - name: Instalar dependencias
-      run: echo "Dependencias de Food-Loop instaladas exitosamente."
+      run: npm install
 
     - name: Ejecutar Pruebas Unitarias (Jest)
-      run: |
-        echo "Ejecutando suite de pruebas para Food-Loop..."
-        echo "PASS discountService.test.js"
-        echo "Test Suites: 1 passed, 1 total"
+      run: npm run test
 
     - name: Compilar PWA (Build)
-      run: |
-        echo "Construyendo la Progressive Web App..."
-        echo "Compiled successfully."
-        echo "Carpeta dist/ generada con los artefactos de producción."
+      run: npm run build
