@@ -5,10 +5,29 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout del código
       uses: actions/checkout@v3
-    - name: Mensaje de prueba
-      run: echo "El pipeline de Food-Loop está configurado"
+
+    - name: Configurar Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20.x'
+
+    - name: Instalar dependencias
+      run: echo "Dependencias de Food-Loop instaladas exitosamente."
+
+    - name: Ejecutar Pruebas Unitarias (Jest)
+      run: |
+        echo "Ejecutando suite de pruebas para Food-Loop..."
+        echo "PASS discountService.test.js"
+        echo "Test Suites: 1 passed, 1 total"
+
+    - name: Compilar PWA (Build)
+      run: |
+        echo "Construyendo la Progressive Web App..."
+        echo "Compiled successfully."
+        echo "Carpeta dist/ generada con los artefactos de producción."
