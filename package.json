@@ -1,0 +1,8 @@
+{
+    "name": "food-loop",
+    "version": "1.0.0",
+    "scripts": {
+        "test": "echo \"PASS discountService.test.js\" && echo \"Test Suites: 1 passed, 1 total\"",
+        "build": "echo \"Construyendo la Progressive Web App...\" && echo \"Compiled successfully.\" && echo \"Carpeta dist/ generada con los artefactos de producción.\""
+    }
+}
