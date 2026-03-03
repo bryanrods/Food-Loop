@@ -33,9 +33,11 @@
         </div>
     </header>
     <main>
+
         <section class="dashboard-section">
             <div class="dashboard-header">
                 <h2>Panel del Local</h2>
+                <span id="nombre-negocio">Cargando...</span>
                 <p>Gestiona tu inventario, ventas y ofertas desde aquí.</p>
             </div>
             <div class="dashboard-grid">
@@ -49,7 +51,7 @@
                     <h3>Ventas</h3>
                     <p>Consulta tus ventas recientes y estadísticas clave.</p>
                 </div>
-                <div class="dashboard-card">
+                <div class="dashboard-card" onclick="window.location.href='crear-oferta.html'" style="cursor: pointer;">
                     <div class="icon"><i class="fas fa-plus-circle"></i></div>
                     <h3>Crear Oferta</h3>
                     <p>Publica nuevas promociones para atraer clientes.</p>
@@ -95,6 +97,23 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
+            if (!usuarioGuardado) { window.location.href = 'login.html'; return; }
+
+            const usuario = JSON.parse(usuarioGuardado);
+
+            // SEGURIDAD EXTRA: Si un "usuario" normal intenta entrar aquí, lo sacamos
+            if (usuario.rol !== 'local') {
+                alert('Acceso denegado. Este panel es solo para comercios.');
+                window.location.href = 'dashboard-usuario.html';
+                return;
+            }
+
+            document.getElementById('nombre-negocio').textContent = usuario.nombre;
+        });
+    </script>
 </body>
 
 </html>

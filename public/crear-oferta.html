@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Publicar Pack - Food Loop</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="navbar-container">
+            <a href="dashboard-local.html" class="logo-brand"><span>← Volver al Panel</span></a>
+        </div>
+    </header>
+    <main>
+        <section class="form-section">
+            <div class="form-container">
+                <h2>Publicar Nuevo Pack</h2>
+                <form id="form-crear-pack">
+                    <div class="form-group">
+                        <label>Nombre del Pack</label>
+                        <input type="text" id="nombre_pack" placeholder="Ej: Bolsa de Pan Dulce" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea id="descripcion" placeholder="¿Qué incluye el pack?" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio Original ($)</label>
+                        <input type="number" id="precio_original" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio con Descuento ($)</label>
+                        <input type="number" id="precio_descuento" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Disponible</label>
+                        <input type="number" id="stock" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Hora de Activación</label>
+                        <input type="time" id="hora_activacion" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Publicar en Food-Loop</button>
+                </form>
+            </div>
+        </section>
+    </main>
+    <script src="js/crear-oferta.js"></script>
+</body>
+
+</html>

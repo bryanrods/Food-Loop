@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
 
-            // ¡AQUÍ ESTÁ LA MAGIA! Ahora busca 'username' tal como está en tu HTML
             const email = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
@@ -19,19 +18,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resultado = await respuesta.json();
 
                 if (resultado.success) {
-                    alert('¡Bienvenido de vuelta a Food-Loop, ' + resultado.user.nombre + '!');
-                    
-                    // Guardamos los datos
+                    // 1. Guardamos los datos completos (incluyendo el ID y el ROL)
                     localStorage.setItem('usuarioFoodLoop', JSON.stringify(resultado.user));
                     
-                    // Lo mandamos a su panel
-                    window.location.href = 'dashboard-usuario.html'; 
+                    // 2. LA GRAN DECISIÓN: ¿A dónde lo mandamos?
+                    if (resultado.user.rol === 'local') {
+                        alert('🏪 Bienvenido, Socio Comercial. Entrando al Panel de Negocios.');
+                        window.location.href = 'dashboard-local.html'; //
+                    } else {
+                        alert('👋 ¡Hola, ' + resultado.user.nombre + '! Entrando a Food-Loop.');
+                        window.location.href = 'dashboard-usuario.html';
+                    }
+                    
                 } else {
                     alert('Error: ' + resultado.message); 
                 }
             } catch (error) {
                 console.error('Error detallado:', error);
-                alert('No se pudo conectar. ¿El servidor en el 3005 sigue encendido?');
+                alert('No se pudo conectar. Revisa que el servidor 3005 esté encendido.');
             }
         });
     }

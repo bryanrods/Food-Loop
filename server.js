@@ -39,23 +39,22 @@ pool.getConnection()
 // RUTA DE REGISTRO (Sincronizada con tu DB)
 // ==========================================
 app.post('/auth/register', async (req, res) => {
-    const { nombre, email, password, plan } = req.body;
+    const { nombre, email, password, plan, rol, direccion, telefono } = req.body;
     const connection = await pool.getConnection();
 
     try {
         await connection.beginTransaction();
 
-        // Encriptación requerida por rúbrica
         const salt = await bcrypt.genSalt(10);
         const hashedPwd = await bcrypt.hash(password, salt);
+        const rolFinal = rol === 'local' ? 'local' : 'usuario';
 
         // 1. Insertar en tabla 'usuario'
         const [userResult] = await connection.query(
-            'INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario) VALUES (?, ?, ?, CURDATE(), "usuario")',
-            [nombre, hashedPwd, email]
+            'INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario) VALUES (?, ?, ?, CURDATE(), ?)',
+            [nombre, hashedPwd, email, rolFinal]
         );
         
-        // id_usuario es el nombre real en tu esquema
         const userId = userResult.insertId;
 
         // 2. Insertar en 'suscripcion_info'
@@ -64,28 +63,22 @@ app.post('/auth/register', async (req, res) => {
             [userId, plan || 'basico']
         );
 
+        // 3. Si es local, insertar en 'comercio' con columnas corregidas
+        if (rolFinal === 'local') {
+            await connection.query(
+                'INSERT INTO comercio (id_comercio, nombre_comercio, direccion_comercio, telefono_comercio, usuario_id) VALUES (?, ?, ?, ?, ?)',
+                [userId, nombre, direccion || '', telefono || '', userId]
+            );
+        }
+
         await connection.commit();
-        console.log(`-----------------------------------------`);
-        console.log(`✅ REGISTRO EXITOSO: ${nombre} (ID: ${userId})`);
-        console.log(`-----------------------------------------`);
-        
+        console.log(`✅ REGISTRO COMPLETO: ${nombre} (ID: ${userId} - ROL: ${rolFinal})`);
         res.status(201).json({ success: true, message: "Usuario registrado con éxito" });
 
     } catch (error) {
         await connection.rollback();
-        
-        // BLOQUE DETECTIVE
-        console.error("-----------------------------------------");
-        console.error("❌ ERROR CRÍTICO EN SQL (AZURE):");
-        console.error("Mensaje:", error.message);
-        console.error("Código de Error:", error.code);
-        console.error("Query completa:", error.sql);
-        console.error("-----------------------------------------");
-        
-        res.status(500).json({ 
-            success: false, 
-            message: `Error de Base de Datos: ${error.message}` 
-        });
+        console.error("❌ ERROR CRÍTICO EN SQL:", error.message);
+        res.status(500).json({ success: false, message: `Error de Base de Datos: ${error.message}` });
     } finally {
         connection.release();
     }
@@ -123,18 +116,19 @@ app.post('/auth/login', async (req, res) => {
 // ==========================================
 // RUTAS DE DATOS (Food-Loop API)
 // ==========================================
+
+// 1. Obtener los Packs (Regla: Solo si ya es la hora de activación)
 app.get('/api/packs', async (req, res) => {
     try {
-        // AQUÍ ESTÁ LA REGLA: AND CURTIME() >= hora_activacion
         const [rows] = await pool.query('SELECT * FROM pack WHERE estado = "disponible" AND CURTIME() >= hora_activacion');
         res.json(rows);
     } catch (error) {
-        console.error("❌ Error al obtener los packs de Azure:", error.message);
+        console.error("❌ Error al obtener los packs:", error.message);
         res.status(500).json({ error: "Error al obtener los packs" });
     }
 });
 
-// 4. Crear una reservación (Sincronizado con tu BD)
+// 2. Crear una reservación (Sincronizado con Stock)
 app.post('/api/reservar', async (req, res) => {
     const { usuario_id, pack_id, cantidad } = req.body;
     const connection = await pool.getConnection();
@@ -142,35 +136,30 @@ app.post('/api/reservar', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. Guardamos la reserva en la tabla 'reservacion' usando NOW() para la fecha exacta
         await connection.query(
             'INSERT INTO reservacion (usuario_id, pack_id, cantidad, fecha_reserva, estado_reserva) VALUES (?, ?, ?, NOW(), "pendiente")',
             [usuario_id, pack_id, cantidad || 1]
         );
 
-        // 2. Le restamos el stock a la tabla 'pack' para que no vendamos de más
         await connection.query(
             'UPDATE pack SET stock_disponible = stock_disponible - ? WHERE id_pack = ?',
             [cantidad || 1, pack_id]
         );
 
         await connection.commit();
-        console.log(`✅ ¡Reserva creada! Usuario ${usuario_id} reservó el Pack ${pack_id}`);
         res.status(201).json({ success: true, message: "¡Reserva confirmada!" });
 
     } catch (error) {
         await connection.rollback();
         console.error("❌ ERROR AL RESERVAR:", error.message);
-        res.status(500).json({ success: false, message: "Error al procesar la reserva en Azure" });
+        res.status(500).json({ success: false, message: "Error al procesar la reserva" });
     } finally {
         connection.release();
     }
 });
 
-// 5. Validar sesión y rol del usuario (GET /me requerido por rúbrica)
+// 3. Validar sesión y rol (GET /me requerido)
 app.get('/api/me', async (req, res) => {
-    // Como en este proyecto no estamos usando tokens complejos (JWT), 
-    // recibiremos el ID del usuario a través de un "header" oculto.
     const userId = req.headers['user-id'];
 
     if (!userId) {
@@ -178,7 +167,6 @@ app.get('/api/me', async (req, res) => {
     }
 
     try {
-        // Buscamos al usuario en la base de datos (¡NUNCA pedimos la contraseña aquí por seguridad!)
         const [rows] = await pool.query(
             'SELECT id_usuario, nombre_usuario, email_usuario, rol_usuario FROM usuario WHERE id_usuario = ?',
             [userId]
@@ -188,12 +176,30 @@ app.get('/api/me', async (req, res) => {
             return res.status(404).json({ success: false, message: "Usuario no encontrado" });
         }
 
-        // Si el usuario existe, le devolvemos sus datos frescos
         res.json({ success: true, user: rows[0] });
 
     } catch (error) {
         console.error("❌ Error en GET /me:", error.message);
-        res.status(500).json({ success: false, message: "Error del servidor al validar sesión" });
+        res.status(500).json({ success: false, message: "Error interno" });
+    }
+});
+
+// 4. Crear un nuevo Pack (Local/Admin)
+app.post('/api/packs', async (req, res) => {
+    const { comercio_id, nombre_pack, descripcion, precio_original, precio_descuento, stock, hora_activacion } = req.body;
+    
+    try {
+        const query = `
+            INSERT INTO pack (comercio_id, nombre_pack, descripcion, precio_original, precio_descuento, stock_disponible, hora_activacion, estado) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'disponible')
+        `;
+        
+        await pool.query(query, [comercio_id, nombre_pack, descripcion, precio_original, precio_descuento, stock, hora_activacion]);
+        
+        res.status(201).json({ success: true, message: "¡Oferta publicada exitosamente!" });
+    } catch (error) {
+        console.error("❌ Error al crear pack:", error.message);
+        res.status(500).json({ success: false, message: "Error al guardar el pack" });
     }
 });
 
@@ -204,3 +210,5 @@ const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => {
     console.log(`🚀 Food-Loop ejecutándose en http://localhost:${PORT}`);
 });
+
+export default app;
