@@ -8,7 +8,8 @@
   // Registro del Service Worker para habilitar el modo offline y la instalación como PWA
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/js/sw.js').catch(function (err) {
+      // register service worker located at root of the public folder
+    navigator.serviceWorker.register('sw.js').catch(function (err) {
         console.log('Service Worker registration failed:', err);
       });
     });
