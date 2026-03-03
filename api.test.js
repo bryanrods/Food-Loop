@@ -8,8 +8,8 @@ describe('🧪 PRUEBAS AUTOMATIZADAS: FOOD-LOOP', () => {
         const res = await request(app)
             .post('/auth/login')
             .send({
-                email: 'bryanrods.t@gmail.com', // 👈 Asegúrate que este email exista en tu seed.sql
-                password: 'Atolin01'
+                email: 'admin@foodloop.com', // 👈 Asegúrate que este email exista en tu seed.sql
+                password: '123456'
             });
         
         expect(res.statusCode).toEqual(200);
