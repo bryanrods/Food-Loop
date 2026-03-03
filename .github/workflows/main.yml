@@ -1,0 +1,40 @@
+name: Food-Loop CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout del código
+        uses: actions/checkout@v3
+
+      - name: 2. Configurar entorno Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: 3. Instalación de dependencias
+        run: npm install
+
+      - name: 4. Configuración de Entorno y Pruebas (DATABASE_ENV)
+        run: |
+          echo "${{ secrets.DATABASE_ENV }}" > .env
+          npm test
+
+      - name: 5. Compilación de PWA (Build)
+        run: npm run build
+
+      - name: 6. Notificación de resultados a Discord
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d "{\"content\": \"Resultado del Pipeline de Food-Loop: ${{ job.status }}\"}" \
+          $DISCORD_WEBHOOK
