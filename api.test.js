@@ -4,19 +4,19 @@ import app from './server.js';
 describe('🧪 PRUEBAS AUTOMATIZADAS: FOOD-LOOP', () => {
     
     // 1. PRUEBA DE LOGIN
-
     test('Debe iniciar sesión correctamente con un usuario existente', async () => {
         const res = await request(app)
             .post('/auth/login')
             .send({
-                email: 'sebas@gmail.com',  // <-- Clave correcta
-                password: '123456'         // <-- Clave correcta en texto plano
+                email: 'sebas@gmail.com',  
+                password: '123456'         
             });
+
+        // 👇 ESTA LÍNEA ES LA CLAVE PARA DESCUBRIR AL CULPABLE 👇
+        console.log("🕵️‍♂️ RESPUESTA DEL BACKEND:", res.body);
 
         expect(res.statusCode).toEqual(200);
         expect(res.body.success).toBe(true);
-        
-        // ¡OJO AQUÍ! Regresa este valor a 'id'
         expect(res.body.user).toHaveProperty('id'); 
     });
 
