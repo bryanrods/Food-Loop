@@ -34,7 +34,7 @@ describe('🧪 PRUEBAS AUTOMATIZADAS: FOOD-LOOP', () => {
         const res = await request(app)
             .post('/api/reservar')
             .send({
-                usuario_id: 1, // ID del cliente
+                usuario_id: 3, // ID del cliente
                 pack_id: 1,    // ID del pack (Pan Dulce/Pastel)
                 cantidad: 1
             });
