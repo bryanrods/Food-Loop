@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ofertas del Día - Food Loop</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2D6A4F">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Estilos específicos para que las tarjetas de comida se vean de lujo */
+        .ofertas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .oferta-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+            transition: transform 0.3s;
+        }
+
+        .oferta-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .precio-original {
+            text-decoration: line-through;
+            color: #888;
+            font-size: 0.9em;
+            margin-right: 10px;
+        }
+
+        .precio-descuento {
+            color: #e63946;
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="logo-brand"><span>Food Loop</span></a>
+            <nav class="nav-menu" id="navMenu">
+                <a href="dashboard-usuario.html" class="nav-link">Volver al Panel</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="dashboard-section">
+            <div class="dashboard-header">
+                <h2>Ofertas del Día</h2>
+                <p>Rescata estos deliciosos packs antes de que se agoten.</p>
+            </div>
+
+            <div id="contenedor-ofertas" class="ofertas-grid">
+                <p style="text-align: center; width: 100%; color: #666;">
+                    <i class="fas fa-spinner fa-spin"></i> Buscando las mejores ofertas...
+                </p>
+            </div>
+
+        </section>
+    </main>
+
+    <script src="js/ofertas.js"></script>
+</body>
+
+</html>
