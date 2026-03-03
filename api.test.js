@@ -4,18 +4,20 @@ import app from './server.js';
 describe('🧪 PRUEBAS AUTOMATIZADAS: FOOD-LOOP', () => {
     
     // 1. PRUEBA DE LOGIN
+
     test('Debe iniciar sesión correctamente con un usuario existente', async () => {
         const res = await request(app)
             .post('/auth/login')
             .send({
-                email_usuario: 'sebas@gmail.com',
-                pswrd_usuario: '123456'
+                email: 'sebas@gmail.com',  // <-- Clave correcta
+                password: '123456'         // <-- Clave correcta en texto plano
             });
-        
+
         expect(res.statusCode).toEqual(200);
         expect(res.body.success).toBe(true);
-        // Validamos que el servidor devuelva el id_usuario real de Azure
-        expect(res.body.user).toHaveProperty('id_usuario');
+        
+        // ¡OJO AQUÍ! Regresa este valor a 'id'
+        expect(res.body.user).toHaveProperty('id'); 
     });
 
     // 2. PRUEBA DE PERMISOS POR ROL (GET /api/me)
