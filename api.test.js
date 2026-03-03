@@ -15,7 +15,7 @@ describe('🧪 PRUEBAS AUTOMATIZADAS: FOOD-LOOP', () => {
         expect(res.statusCode).toEqual(200);
         expect(res.body.success).toBe(true);
         // Validamos que el servidor devuelva el id_usuario real de Azure
-        expect(res.body.user).toHaveProperty('id'); 
+        expect(res.body.user).toHaveProperty('id_usuario');
     });
 
     // 2. PRUEBA DE PERMISOS POR ROL (GET /api/me)
