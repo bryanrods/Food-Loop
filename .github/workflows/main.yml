@@ -27,10 +27,7 @@ jobs:
           echo "${{ secrets.DATABASE_ENV }}" > .env
           npm test
 
-      - name: 5. Compilación de PWA (Build)
-        run: npm run build
-
-      - name: 6. Notificación de resultados a Discord
+      - name: 5. Notificación de resultados a Discord
         if: always()
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
