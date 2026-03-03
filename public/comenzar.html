@@ -6,12 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Comenzar - Food Loop</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2D6A4F">
-    <!-- Iconos -->
+    <meta name="theme-color" content="#2E4235">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Swiper CSS (por si se reutiliza en el futuro) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <!-- Estilos propios -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -21,40 +17,49 @@
             <a href="index.html" class="logo-brand"><span>Food Loop</span></a>
             <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
             <nav class="nav-menu" id="navMenu">
-                <!-- Enlaces de navegación -->
                 <a href="index.html" class="nav-link">Home</a>
                 <a href="galeria.html" class="nav-link">Galería</a>
                 <a href="features.html" class="nav-link">Características</a>
                 <a href="testimonios.html" class="nav-link">Casos de éxito</a>
                 <a href="about.html" class="nav-link">Sobre Nosotros</a>
-
-                <!-- CTA redirige a esta misma página -->
                 <button class="cta-btn" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
             </nav>
         </div>
     </header>
     <main>
-        <section class="comenzar-section" style="padding-top:150px;">
-            <h2 class="section-title">Empieza con <span>Food Loop</span></h2>
-            <p class="section-subtitle">Elige la opción que mejor se adapte a ti</p>
-            <div class="features-grid">
-                <div class="feature-box">
-                    <i class="fas fa-store feature-icon"></i>
-                    <h3>Registra tu Local</h3>
-                    <p>Da de alta tu negocio en nuestra plataforma y convierte tu inventario en ganancias.</p>
-                    <button class="cta-btn" onclick="window.location.href='registro-local.html'">Registrarme</button>
-                </div>
-                <div class="feature-box">
-                    <i class="fas fa-bell feature-icon"></i>
-                    <h3>Suscríbete</h3>
-                    <p>Recibe novedades, promociones y oportunidades para optimizar tus ventas.</p>
-                    <button class="cta-btn" onclick="window.location.href='suscripcion.html'">Suscribirme</button>
-                </div>
-                <div class="feature-box">
-                    <i class="fas fa-sign-in-alt feature-icon"></i>
-                    <h3>Iniciar Sesión</h3>
-                    <p>¿Ya tienes cuenta? Accede para gestionar tu negocio y ver tu progreso.</p>
-                    <button class="cta-btn" onclick="window.location.href='login.html'">Ingresar</button>
+        <section class="form-section" style="padding-top:150px;">
+            <div style="width: 100%; max-width: 1200px;">
+                <h2 class="section-title">Empieza con <span>Food Loop</span></h2>
+                <p class="section-subtitle">Elige la opción que mejor se adapte a ti</p>
+
+                <div class="features-grid">
+                    <div class="feature-box">
+                        <i class="fas fa-store feature-icon"></i>
+                        <h3>Registra tu Local</h3>
+                        <p>Da de alta tu negocio en nuestra plataforma y convierte tu inventario remanente en ganancias.
+                        </p>
+                        <br>
+                        <button class="cta-btn" onclick="window.location.href='registro-local.html'">Registrar
+                            Local</button>
+                    </div>
+
+                    <div class="feature-box">
+                        <i class="fas fa-id-card feature-icon"></i>
+                        <h3>Crear Cuenta y Suscripción</h3>
+                        <p>Obtén tu Food-Loop Card en el plan Básico, o elige Premium para recibir alertas en tiempo
+                            real.</p>
+                        <br>
+                        <button class="cta-btn" onclick="window.location.href='suscripcion.html'">Registrarme</button>
+                    </div>
+
+                    <div class="feature-box">
+                        <i class="fas fa-sign-in-alt feature-icon"></i>
+                        <h3>Iniciar Sesión</h3>
+                        <p>¿Ya tienes tu cuenta y suscripción activa? Accede para ver ofertas o gestionar tu negocio.
+                        </p>
+                        <br>
+                        <button class="cta-btn" onclick="window.location.href='login.html'">Ingresar</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -67,7 +72,6 @@
                 <div class="social-icons">
                     <a href="#"><i class="fab fa-instagram"></i></a>
                     <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-linkedin"></i></a>
                     <a href="#"><i class="fab fa-x-twitter"></i></a>
                 </div>
             </div>
@@ -75,27 +79,17 @@
                 <h4>Producto</h4>
                 <a href="#">Características</a>
                 <a href="#">Precios</a>
-                <a href="#">Demo</a>
-            </div>
-            <div class="footer-links">
-                <h4>Recursos</h4>
-                <a href="#">Blog</a>
-                <a href="#">Centro de ayuda</a>
-                <a href="#">Estado</a>
             </div>
             <div class="footer-links">
                 <h4>Legal</h4>
                 <a href="#">Privacidad</a>
                 <a href="#">Términos</a>
-                <a href="#">Cookies</a>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2025 Food Loop Technologies. Todos los derechos reservados.</p>
+            <p>&copy; 2026 Food Loop Technologies. Todos los derechos reservados.</p>
         </div>
     </footer>
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="js/app.js"></script>
 </body>
 
