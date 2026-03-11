@@ -97,8 +97,8 @@
             <p class="gallery-subtitle">Comercios reales que ya transforman su stock con Food Loop</p>
 
             <div class="swiper mainSwiper">
-                <div class="swiper-wrapper">
-
+               <div class="swiper-wrapper">
+                    <!-- Se reutiliza el mismo contenido de la página principal -->
                     <div class="swiper-slide">
                         <div class="gallery-card">
                             <img src="icons/gallery-1.jpg" alt="Panadería"
@@ -109,11 +109,9 @@
                             </div>
                             <div class="gallery-overlay">
                                 <h4>Panadería El Trigo</h4>
-                                <p>+45% flujo en 3 semanas</p>
                             </div>
                         </div>
                     </div>
-
                     <div class="swiper-slide">
                         <div class="gallery-card">
                             <img src="icons/gallery-2.jpg" alt="Supermercado"
@@ -124,11 +122,9 @@
                             </div>
                             <div class="gallery-overlay">
                                 <h4>Supermercado Don Carlos</h4>
-                                <p>-70% desperdicio</p>
                             </div>
                         </div>
                     </div>
-
                     <div class="swiper-slide">
                         <div class="gallery-card">
                             <img src="icons/gallery-3.jpg" alt="Frutería"
@@ -139,11 +135,9 @@
                             </div>
                             <div class="gallery-overlay">
                                 <h4>Frutería La Aurora</h4>
-                                <p>Gestión inteligente</p>
                             </div>
                         </div>
                     </div>
-
                     <div class="swiper-slide">
                         <div class="gallery-card">
                             <img src="icons/gallery-4.jpg" alt="Carnicería"
@@ -154,11 +148,9 @@
                             </div>
                             <div class="gallery-overlay">
                                 <h4>Carnicería Los Arrieros</h4>
-                                <p>Rotación 24h</p>
                             </div>
                         </div>
                     </div>
-
                     <div class="swiper-slide">
                         <div class="gallery-card">
                             <img src="icons/gallery-5.jpg" alt="Restaurante"
@@ -169,11 +161,9 @@
                             </div>
                             <div class="gallery-overlay">
                                 <h4>Restaurante Sabores</h4>
-                                <p>+30% ticket medio</p>
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="swiper-pagination"></div>
@@ -343,12 +333,12 @@
             <div class="stats-container">
                 <div class="stat-premium-item">
                     <i class="fas fa-store fa-2x"></i>
-                    <span class="stat-premium-number" id="counter1">12,840</span>
+                    <span class="stat-premium-number" id="counter1">0</span>
                     <p>Comercios activos</p>
                 </div>
                 <div class="stat-premium-item">
                     <i class="fas fa-boxes fa-2x"></i>
-                    <span class="stat-premium-number" id="counter2">2.4M</span>
+                    <span class="stat-premium-number" id="counter2">0</span>
                     <p>Productos gestionados</p>
                 </div>
                 <div class="stat-premium-item">
@@ -363,56 +353,52 @@
                 </div>
             </div>
         </section>
+<!-- ABOUT -->
+<section id="about" class="about-section">
+    <div class="about-container">
+        <div class="about-content" style="text-align: center;">
+            <h2 class="section-title">Sobre <span>Food Loop</span></h2>
+            <p class="about-text">
+                Nuestro proyecto integrador nace de la necesidad de transformar y mejorar las prácticas de negocio en comercios locales,
+                enfrentando uno de los problemas más comunes, el desperdicio de alimentos.
+            </p>
+            
+            <!-- Botón centrado -->
+            <button class="cta-btn" style="margin-top: 20px;" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
+        </div>
 
-        <!-- ABOUT -->
-        <section id="about" class="about-section">
-            <div class="about-container">
-                <div class="about-content">
-                    <h2 class="section-title">Sobre <span>Food Loop</span></h2>
-                    <p class="about-text">
-                        Somos un equipo de ingenieros, foodies y expertos en retail que decidieron atacar el problema
-                        del desperdicio de alimentos en comercios locales. Nacimos en 2020 y hoy operamos en 12 países.
-                    </p>
-
-                    <div class="about-features-mini">
-                        <span><i class="fas fa-check-circle"></i> +15.000 horas de desarrollo</span>
-                        <span><i class="fas fa-check-circle"></i> Equipo en 5 países</span>
-                        <span><i class="fas fa-check-circle"></i> Inversión Serie A</span>
+        <div class="about-visual">
+            <div class="swiper teamSwiper">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <img src="icons/team-1.jpg" alt="Equipo"
+                            onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
+                        <div class="team-placeholder" style="display: none;">
+                            <i class="fas fa-users"></i>
+                            <span>Nuestro equipo</span>
+                        </div>
                     </div>
-
-                    <div class="about-culture">
-                        <i class="fas fa-heart"></i> Cultura de impacto: por cada transacción donamos una comida.
+                    <div class="swiper-slide">
+                        <img src="icons/team-2.jpg" alt="Oficina"
+                            onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
+                        <div class="team-placeholder" style="display: none;">
+                            <i class="fas fa-building"></i>
+                            <span>Oficina central</span>
+                        </div>
+                    </div>
+                    <div class="swiper-slide">
+                        <img src="icons/team-3.jpg" alt="Impacto"
+                            onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
+                        <div class="team-placeholder" style="display: none;">
+                            <i class="fas fa-hand-holding-heart"></i>
+                            <span>Impacto social</span>
+                        </div>
                     </div>
                 </div>
-
-                <div class="about-visual">
-                    <div class="swiper teamSwiper">
-                        <div class="swiper-wrapper">
-                            <div class="swiper-slide">
-                                <img src="icons/team-1.jpg" alt="Equipo"
-                                    onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
-                                <div class="team-placeholder" style="display: none;">
-                                    <i class="fas fa-users"></i>
-                                    <span>Nuestro equipo</span>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <img src="icons/team-2.jpg" alt="Oficina"
-                                    onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
-                                <div class="team-placeholder" style="display: none;">
-                                    <i class="fas fa-building"></i>
-                                    <span>Oficina central</span>
-                                </div>
-                            </div>
-                            <div class="swiper-slide">
-                                <img src="icons/team-3.jpg" alt="Impacto"
-                                    onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
-                                <div class="team-placeholder" style="display: none;">
-                                    <i class="fas fa-hand-holding-heart"></i>
-                                    <span>Impacto social</span>
-                                </div>
-                            </div>
-                        </div>
+            </div>
+        </div>
+    </div>
+</section>
                         <div class="swiper-pagination"></div>
                     </div>
                 </div>
