@@ -33,6 +33,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Más adelante usaremos esto para decir: 
             // "Si rol es 'local', muéstrale el botón de 'Publicar Comida'"
             
+            // NUEVO CÓDIGO: Lógica de Folio Persistente
+            // ==========================================
+            // Creamos una clave única usando el ID del usuario para evitar 
+            // que distintos usuarios compartan el mismo folio en la misma PC.
+            const claveFolioUnico = `folioFoodLoop_${usuarioLocal.id}`;
+            let folioUsuario = localStorage.getItem(claveFolioUnico);
+
+            // Si este usuario no tiene un folio guardado, le generamos uno
+            if (!folioUsuario) {
+                const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let codigo = '';
+                for (let i = 0; i < 6; i++) {
+                    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+                }
+                folioUsuario = 'FL-' + codigo;
+                
+                // Se guarda permanentemente en su "casillero" personal del navegador
+                localStorage.setItem(claveFolioUnico, folioUsuario);
+            }
+
+            // Buscamos el elemento en el HTML e inyectamos el folio
+            const elementoFolio = document.getElementById('numero-folio');
+            if (elementoFolio) {
+                elementoFolio.textContent = folioUsuario;
+            }            
         } else {
             // Si el servidor dice que es falso o lo borraron de la BD, lo sacamos.
             localStorage.removeItem('usuarioFoodLoop');

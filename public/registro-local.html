@@ -9,25 +9,90 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2D6A4F">
 
-    <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Swiper CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
-    <!-- TU CSS -->
     <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* Reutilizamos los estilos brutalistas de formulario */
+        .checkout-panel {
+            background: var(--color-accent);
+            border: 2px solid var(--color-primary);
+            box-shadow: 6px 6px 0px var(--color-primary);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .checkout-panel h3 {
+            color: var(--color-primary);
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group-checkout { margin-bottom: 20px; width: 100%; }
+        .form-group-checkout label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--color-primary); }
+        
+        .form-group-checkout input,
+        .form-group-checkout select {
+            width: 100%;
+            padding: 12px;
+            background: var(--color-accent);
+            border: 2px solid var(--color-primary);
+            color: var(--color-primary);
+            font-size: 1rem;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .form-group-checkout input:focus,
+        .form-group-checkout select:focus { outline: none; background: var(--color-primary); color: var(--color-accent); }
+        
+        /* Modificación para el select para que el dropdown list tenga estilo */
+        .form-group-checkout select option {
+             background: var(--color-accent);
+             color: var(--color-primary);
+        }
+
+        .btn-checkout { width: 100%; padding: 15px; font-size: 1.1rem; margin-top: 20px; text-transform: uppercase; }
+
+        @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+
+        /* Estilos de Error */
+        .error-message {
+            color: #d32f2f;
+            font-weight: bold;
+            font-size: 0.85rem;
+            display: none;
+            margin-top: 5px;
+        }
+
+        .input-error {
+            border-color: #d32f2f !important;
+            color: #d32f2f !important;
+        }
+        
+        /* Ajuste de márgenes para separar el hero del formulario */
+        .registration-section {
+            padding: 80px 2rem;
+            background: var(--color-accent);
+        }
+    </style>
 </head>
 
 <body>
-<<<<<<< HEAD
-    
-=======
->>>>>>> 2ee4d7c9c4b4413d1e535849e0d0466cc9e14758
     <header class="navbar" id="navbar-placeholder"></header>
 
     <main>
-        <!-- HERO -->
         <section class="hero-premium">
             <div class="hero-background"></div>
 
@@ -41,33 +106,15 @@
                     </h1>
 
                     <p class="hero-subtitle">
-                        Recupera flujo de caja vendiendo tu inventario remanente a precios inteligentes. Reduce
-                        pérdidas,
+                        Recupera flujo de caja vendiendo tu inventario remanente a precios inteligentes. Reduce pérdidas,
                         multiplica ganancias.
                     </p>
 
                     <div class="hero-stats" id="stats">
-                        <div class="stat-item">
-                            <span class="stat-number">+45%</span>
-                            <p>Flujo de caja</p>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number">-60%</span>
-                            <p>Desperdicio</p>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-number">+12k</span>
-                            <p>Comercios</p>
-                        </div>
                     </div>
 
                     <div class="hero-buttons">
-                        <!-- <button class="btn btn-primary">Descargar Gratis</button>
-                        <button class="btn btn-secondary">Ver Demo</button> -->
-                    </div>
-
-                    <div class="hero-trust">
-                        <i class="fas fa-shield-alt"></i> <span>Sin tarjeta de crédito • 30 días gratis</span>
+                        <a href="#registro-negocio" class="btn btn-primary" style="text-decoration: none; display: inline-block;">Registrar mi Negocio</a>
                     </div>
                 </div>
 
@@ -94,7 +141,6 @@
             </div>
         </section>
 
-        <!-- CONTADORES -->
         <section class="stats-premium">
             <div class="stats-container">
                 <div class="stat-premium-item">
@@ -119,10 +165,81 @@
                 </div>
             </div>
         </section>
+
+        <section id="registro-negocio" class="registration-section">
+            <div style="width:100%; text-align:center; margin-bottom: 40px;">
+                <h2 class="section-title">Únete a la Red de Comercios</h2>
+                <p class="section-subtitle">Completa los datos de tu local y comienza a vender hoy mismo.</p>
+            </div>
+
+            <div class="checkout-panel">
+                <h3>Datos del Negocio y Propietario</h3>
+                <form id="form-registro-local" novalidate>
+                    
+                    <div class="form-group-checkout">
+                        <label for="nombre-local">Nombre del Local</label>
+                        <input type="text" id="nombre-local" placeholder="Ej. Panadería Doña María">
+                        <div id="nombre-localError" class="error-message">El nombre del local es obligatorio.</div>
+                    </div>
+
+                    <div class="form-group-checkout">
+                        <label for="address">Dirección del local</label>
+                        <input type="text" id="address" placeholder="Ej. Calle Principal 123, Colonia Centro">
+                        <div id="addressError" class="error-message">La dirección es obligatoria.</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group-checkout">
+                            <label for="nombre-dueno">Nombre del Dueño / Responsable</label>
+                            <input type="text" id="nombre-dueno" placeholder="Ej. Juan Pérez">
+                            <div id="nombre-duenoError" class="error-message">El nombre es obligatorio y solo acepta letras.</div>
+                        </div>
+                        <div class="form-group-checkout">
+                            <label for="phone">Teléfono de Contacto</label>
+                            <input type="tel" id="phone" placeholder="Ej. 1234567890" maxlength="10">
+                            <div id="phoneError" class="error-message">Debe contener exactamente 10 números.</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 30px;">Datos de Acceso</h3>
+                    
+                    <div class="form-group-checkout">
+                        <label for="email-local">Correo Electrónico Comercial</label>
+                        <input type="email" id="email-local" placeholder="contacto@minegocio.com">
+                        <div id="email-localError" class="error-message">Ingresa un correo electrónico válido.</div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group-checkout">
+                            <label for="password-local">Contraseña Segura</label>
+                            <input type="password" id="password-local" placeholder="Crea tu contraseña">
+                            <div id="password-localError" class="error-message">Mínimo 8 caracteres.</div>
+                        </div>
+                        <div class="form-group-checkout">
+                            <label for="confirm-local">Confirmar Contraseña</label>
+                            <input type="password" id="confirm-local" placeholder="Repite contraseña">
+                            <div id="confirm-localError" class="error-message">Las contraseñas no coinciden.</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-checkout">Crear Cuenta de Negocio</button>
+                    <p style="text-align: center; margin-top: 15px; font-weight: bold; font-size: 0.85rem;">
+                        Al registrarte, aceptas los Términos de Servicio para Comercios Asociados.
+                    </p>
+                </form>
+            </div>
+        </section>
     </main>
 
-    <!-- Swiper JS -->
+    <footer class="footer">
+        <div class="footer-bottom">
+            <p>&copy; 2025 Food Loop Technologies. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/registro-local.js"></script>
 
     <!-- TU JS -->
     <script>
@@ -143,10 +260,10 @@
         }
 
         // Simulación de los valores desde la base de datos
-        let activeBusinesses = 12840; // Este valor puede venir de tu base de datos
-        let managedProducts = 2400000; // Este valor puede venir de tu base de datos
-        let recoveredFlow = 89000000; // Este valor puede venir de tu base de datos
-        let avoidedWaste = 450000; // Este valor puede venir de tu base de datos
+        let activeBusinesses = 0; // Este valor puede venir de tu base de datos
+        let managedProducts = 0; // Este valor puede venir de tu base de datos
+        let recoveredFlow = 0; // Este valor puede venir de tu base de datos
+        let avoidedWaste = 0; // Este valor puede venir de tu base de datos
 
         // Iniciar los contadores con los valores simulados
         startCounter("counter1", 0, activeBusinesses);

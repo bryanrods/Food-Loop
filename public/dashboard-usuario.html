@@ -58,12 +58,20 @@
                     <h3>Mis Compras</h3>
                     <p>Revisa tu historial de compras y seguimiento de pedidos.</p>
                 </div>
+                
                 <div class="dashboard-card">
                     <div class="icon"><i class="fas fa-user-circle"></i></div>
                     <h3>Mi Perfil</h3>
                     <p>Actualiza tus datos personales y preferencias.</p>
+                    
+                    <div id="folio-container" style="margin-top: 15px; padding: 15px; border: 2px dashed var(--color-primary); background: var(--color-accent);">
+                        <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; line-height: 1.3;">
+                            Este es tu número de folio. Presentalo en el local y se procederá a activar tu suscripción:
+                        </p>
+                        <span id="numero-folio" style="font-size: 1.6rem; font-weight: 900; letter-spacing: 2px; color: var(--color-primary);">----</span>
+                    </div>
+                    </div>
                 </div>
-            </div>
 
             <div class="dashboard-header" style="margin-top: 40px;">
                 <h2>Packs Disponibles Hoy</h2>
@@ -115,15 +123,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="js/app.js"></script>
-
     <script src="js/dashboard.js"></script>
-
     <script>
         function cerrarSesion() {
             localStorage.removeItem('usuarioFoodLoop');
             window.location.href = 'login.html';
         }
     </script>
+
 </body>
 
 </html>
