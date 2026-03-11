@@ -10,11 +10,69 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Contenedor centrado a la derecha */
+        .about-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .about-visual {
+            max-width: 250px; /* Tamaño más pequeño del contenedor */
+            width: 100%;
+            margin-right: 20px; /* Separación del borde derecho */
+            overflow: hidden; /* Esconde cualquier parte de la imagen que sobrepase el contenedor */
+        }
+
+        /* Asegurando que todas las imágenes tengan el mismo tamaño y no dejen fondo visible */
+        .about-visual img {
+            width: 100%;  /* Ajusta el ancho al 100% del contenedor */
+            height: 100%; /* Establece la altura para cubrir todo el contenedor */
+            object-fit: cover; /* Asegura que la imagen cubra todo el espacio sin distorsionarse */
+            margin-bottom: 10px; /* Espaciado entre las imágenes */
+        }
+
+        /* Centrar el contenedor del texto y el botón */
+        .about-content {
+            text-align: center; /* Centra el texto dentro del contenedor */
+        }
+
+        .cta-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #2D6A4F;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body>
+<<<<<<< HEAD
         <header class="navbar" id="navbar-placeholder"></header>
 
+=======
+    <header class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="logo-brand"><span>Food Loop</span></a>
+            <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+            <nav class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="galeria.html" class="nav-link">Galería</a>
+                <a href="features.html" class="nav-link">Características</a>
+                <a href="testimonios.html" class="nav-link">Casos de éxito</a>
+                <a href="about.html" class="nav-link">Sobre Nosotros</a>
+                <button class="cta-btn" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
+            </nav>
+        </div>
+    </header>
+>>>>>>> 2ee4d7c9c4b4413d1e535849e0d0466cc9e14758
     <main>
         <!-- SOBRE NOSOTROS -->
         <section id="about" class="about-section" style="padding-top:150px;">
@@ -22,45 +80,27 @@
                 <div class="about-content">
                     <h2 class="section-title">Sobre <span>Food Loop</span></h2>
                     <p class="about-text">
-                        Somos un equipo de ingenieros, foodies y expertos en retail que decidieron atacar el problema
-                        del desperdicio de alimentos en comercios locales. Nacimos en 2020 y hoy operamos en 12 países.
+                        Nuestro proyecto integrador nace de la necesidad de transformar y mejorar las prácticas de negocio en comercios locales,
+                        enfrentando uno de los problemas más comunes, el desperdicio de alimentos.
                     </p>
-                    <div class="about-features-mini">
-                        <span><i class="fas fa-check-circle"></i> +15.000 horas de desarrollo</span>
-                        <span><i class="fas fa-check-circle"></i> Equipo en 5 países</span>
-                        <span><i class="fas fa-check-circle"></i> Inversión Serie A</span>
-                    </div>
-                    <div class="about-culture">
-                        <!-- <i class="fas fa-heart"></i> -->
-                        Cultura de impacto: por cada transacción donamos una comida.
-                    </div>
+                    
+                    <!-- Botón centrado -->
+                    <button class="cta-btn" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
                 </div>
                 <div class="about-visual">
                     <div class="swiper teamSwiper">
                         <div class="swiper-wrapper">
                             <div class="swiper-slide">
-                                <img src="icons/pinacho.png" alt="Equipo" style="width:auto; height:200px;"
+                                <img src="icons/pinacho.jpeg" alt="Equipo" 
                                     onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
-                                <!-- <div class="team-placeholder" style="display: none;">
-                                    <i class="fas fa-users"></i>
-                                    <span>Nuestro equipo</span>
-                                </div> -->
                             </div>
                             <div class="swiper-slide">
                                 <img src="icons/les.png" alt="Oficina"
                                     onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
-                                <div class="team-placeholder" style="display: none;">
-                                    <i class="fas fa-building"></i>
-                                    <span>Oficina central</span>
-                                </div>
                             </div>
                             <div class="swiper-slide">
                                 <img src="icons/sebas.png" alt="Impacto"
                                     onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
-                                <div class="team-placeholder" style="display: none;">
-                                    <i class="fas fa-hand-holding-heart"></i>
-                                    <span>Impacto social</span>
-                                </div>
                             </div>
                         </div>
                         <div class="swiper-pagination"></div>
@@ -68,19 +108,8 @@
                 </div>
             </div>
         </section>
-        <!-- DESCARGA -->
-        <section class="download-banner">
-            <div class="banner-content">
-                <h3>Descarga Food Loop y empieza a recuperar tu inventario</h3>
-                <p>Disponible para iOS, Android y web. Sin permanencia.</p>
-                <div class="badge-container">
-                    <span class="store-badge"><i class="fab fa-apple"></i> App Store</span>
-                    <span class="store-badge"><i class="fab fa-google-play"></i> Google Play</span>
-                    <span class="store-badge"><i class="fas fa-qrcode"></i> Escanea QR</span>
-                </div>
-            </div>
-        </section>
     </main>
+
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-brand">
@@ -116,6 +145,7 @@
             <p>&copy; 2025 Food Loop Technologies. Todos los derechos reservados.</p>
         </div>
     </footer>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script src="js/app.js"></script>
