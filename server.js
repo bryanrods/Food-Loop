@@ -13,22 +13,25 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public')); // Sirve tus archivos HTML/CSS/JS
 
-// Configuración del Pool (Túnel SSH puerto 3307)
+// Configuración del Pool (Conexión directa a Azure MySQL)
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || '127.0.0.1',
-    port: process.env.DB_PORT || 3307,
+    host: process.env.DB_HOST || 'foodloop-db-v2.mysql.database.azure.com',
+    port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    ssl: {
+        rejectUnauthorized: false // Necesario para la conexión segura con Azure
+    }
 });
 
 // Verificación de conexión al arrancar
 pool.getConnection()
     .then(conn => {
-        console.log('✅ Conexión establecida con Azure vía Puerto 3307');
+        console.log('✅ Conexión directa establecida con Azure MySQL');
         conn.release();
     })
     .catch(err => {

@@ -1,33 +1,47 @@
-// Lógica principal de la aplicación Food Loop
-// Este archivo se encarga de registrar el Service Worker, manejar la navegación móvil
-// e inicializar componentes interactivos como los carruseles y animaciones.
+// Lógica principal de la aplicación Food-Loop
 
-(function () {
+(async function () {
   'use strict';
 
-  // Registro del Service Worker para habilitar el modo offline y la instalación como PWA
+  // 1. FUNCIÓN PARA CARGAR EL NAVBAR DINÁMICO
+  async function cargarNavbar() {
+    const placeholder = document.getElementById('navbar-placeholder');
+    if (placeholder) {
+      try {
+        const response = await fetch('navbar.html');
+        const html = await response.text();
+        placeholder.innerHTML = html;
+
+        // Reactivamos la hamburguesa SOLO cuando el menú ya se inyectó
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('navMenu');
+        if (hamburger && navMenu) {
+          hamburger.addEventListener('click', function () {
+            navMenu.classList.toggle('active');
+            hamburger.classList.toggle('toggle');
+          });
+        }
+      } catch (err) {
+        console.error('Error al cargar la barra de navegación:', err);
+      }
+    }
+  }
+
+  // Ejecutamos la carga del menú inmediatamente
+  await cargarNavbar();
+
+  // 2. REGISTRO DEL SERVICE WORKER
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      // register service worker located at root of the public folder
-    navigator.serviceWorker.register('sw.js').catch(function (err) {
+      navigator.serviceWorker.register('sw.js').catch(function (err) {
         console.log('Service Worker registration failed:', err);
       });
     });
   }
 
-  // Menú hamburguesa para navegación en dispositivos móviles
-  var hamburger = document.getElementById('hamburger');
-  var navMenu = document.getElementById('navMenu');
-  if (hamburger && navMenu) {
-    hamburger.addEventListener('click', function () {
-      navMenu.classList.toggle('active');
-      hamburger.classList.toggle('toggle');
-    });
-  }
-
-  // Inicialización condicional de Swiper únicamente si la biblioteca está disponible
+  // 3. INICIALIZACIÓN DE SWIPERS
   if (typeof Swiper !== 'undefined') {
-    var mainSwiperEl = document.querySelector('.mainSwiper');
+    const mainSwiperEl = document.querySelector('.mainSwiper');
     if (mainSwiperEl) {
       new Swiper('.mainSwiper', {
         slidesPerView: 1,
@@ -39,7 +53,7 @@
         breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }
       });
     }
-    var testimonialSwiperEl = document.querySelector('.testimonialSwiper');
+    const testimonialSwiperEl = document.querySelector('.testimonialSwiper');
     if (testimonialSwiperEl) {
       new Swiper('.testimonialSwiper', {
         slidesPerView: 1,
@@ -51,7 +65,7 @@
         breakpoints: { 768: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }
       });
     }
-    var teamSwiperEl = document.querySelector('.teamSwiper');
+    const teamSwiperEl = document.querySelector('.teamSwiper');
     if (teamSwiperEl) {
       new Swiper('.teamSwiper', {
         slidesPerView: 1,
@@ -63,12 +77,12 @@
     }
   }
 
-  // Manejador de errores de carga de imágenes que muestra un marcador de posición
+  // 4. MANEJO DE ERRORES DE IMAGEN
   function handleImageError(img) {
     img.style.display = 'none';
-    var parent = img.parentElement;
+    const parent = img.parentElement;
     if (parent) {
-      var placeholder = parent.querySelector(
+      const placeholder = parent.querySelector(
         '.gallery-placeholder, .img-placeholder, .team-placeholder, .masonry-placeholder, .icon-placeholder'
       );
       if (placeholder) placeholder.style.display = 'flex';
@@ -81,14 +95,13 @@
     });
   });
 
-  // Función genérica para animar contadores numéricos
-  function animateCounter(element, start, end, duration) {
+  // 5. ANIMACIÓN DE CONTADORES
+  function animateCounter(element, start, end, duration = 2000) {
     if (!element) return;
-    if (duration === void 0) { duration = 2000; }
-    var range = end - start;
-    var increment = range / (duration / 16);
-    var current = start;
-    var timer = setInterval(function () {
+    const range = end - start;
+    const increment = range / (duration / 16);
+    let current = start;
+    const timer = setInterval(function () {
       current += increment;
       if (current >= end) {
         current = end;
@@ -98,13 +111,12 @@
     }, 16);
   }
 
-  // Animación de los contadores en la sección de estadísticas
-  var counter1 = document.getElementById('counter1');
-  var counter2 = document.getElementById('counter2');
-  var counter3 = document.getElementById('counter3');
-  var counter4 = document.getElementById('counter4');
+  const counter1 = document.getElementById('counter1');
+  const counter2 = document.getElementById('counter2');
+  const counter3 = document.getElementById('counter3');
+  const counter4 = document.getElementById('counter4');
   if (counter1) {
-    var observer = new IntersectionObserver(function (entries) {
+    const observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
           if (entry.target.id === 'counter1') animateCounter(entry.target, 5000, 12840, 2500);
@@ -118,10 +130,10 @@
     if (counter4) counter4.innerText = '450k';
   }
 
-  // Aparición gradual de cajas de características y testimonios
-  var animatedBoxes = document.querySelectorAll('.feature-box, .testimonial-card');
+  // 6. APARICIÓN GRADUAL DE ELEMENTOS
+  const animatedBoxes = document.querySelectorAll('.feature-box, .testimonial-card');
   if (animatedBoxes.length) {
-    var appearObserver = new IntersectionObserver(function (entries) {
+    const appearObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
           entry.target.classList.add('feature-visible');
@@ -134,4 +146,28 @@
       appearObserver.observe(box);
     });
   }
+
+  // 7. SCROLL SUAVE (Optimizado para el menú dinámico)
+  document.addEventListener('click', function(e) {
+      const link = e.target.closest('.nav-link[href^="#"]');
+      if (!link) return;
+      
+      e.preventDefault();
+      const targetId = link.getAttribute('href');
+      if (targetId === '#') return;
+      
+      const targetSection = document.querySelector(targetId);
+      if (targetSection) {
+          targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          
+          // Ocultar menú móvil tras hacer clic
+          const navMenu = document.getElementById('navMenu');
+          const hamburger = document.getElementById('hamburger');
+          if (navMenu && navMenu.classList.contains('active')) {
+              navMenu.classList.remove('active');
+              hamburger.classList.remove('toggle');
+          }
+      }
+  });
+
 })();
