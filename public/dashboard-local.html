@@ -6,114 +6,315 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Panel del Local - Food Loop</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2D6A4F">
-    <!-- Iconos -->
+    <meta name="theme-color" content="#2E4235">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Swiper CSS (por si se reutiliza en el futuro) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <!-- Estilos propios -->
     <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        /* ESTILOS ESPECÍFICOS DEL DASHBOARD LOCAL (BRUTALISMO) */
+        .dash-layout {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 2rem;
+            align-items: flex-start;
+        }
+
+        /* Menú Lateral */
+        .dash-sidebar {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .dash-tab-btn {
+            background: var(--color-accent);
+            border: 2px solid var(--color-primary);
+            color: var(--color-primary);
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 4px 4px 0px var(--color-primary);
+        }
+
+        .dash-tab-btn:hover, .dash-tab-btn.active {
+            background: var(--color-primary);
+            color: var(--color-accent);
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--color-accent); /* Contraste invertido */
+        }
+
+        .dash-tab-btn i { width: 25px; }
+
+        /* Contenido Central */
+        .dash-content {
+            flex-grow: 1;
+            background: var(--color-accent);
+            border: 2px solid var(--color-primary);
+            box-shadow: 8px 8px 0px var(--color-primary);
+            padding: 40px;
+        }
+
+        .dash-panel { display: none; }
+        .dash-panel.active { display: block; }
+
+        .panel-title {
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        /* Formularios internos */
+        .dash-form-group { margin-bottom: 20px; }
+        .dash-form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--color-primary); }
+        .dash-form-group input, .dash-form-group textarea, .dash-form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--color-primary);
+            background: var(--color-accent);
+            color: var(--color-primary);
+            font-weight: bold;
+        }
+        .dash-form-group input:focus, .dash-form-group textarea:focus {
+            background: var(--color-primary);
+            color: var(--color-accent);
+            outline: none;
+        }
+
+        /* Grilla de Packs y Reservas (Mockups) */
+        .mock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .mock-card {
+            border: 2px solid var(--color-primary);
+            padding: 15px;
+            text-align: center;
+            background: var(--color-accent);
+        }
+
+        .precio-calculado { font-size: 1.5rem; font-weight: 900; color: #d32f2f; }
+
+        @media (max-width: 768px) {
+            .dash-layout { flex-direction: column; }
+            .dash-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
+            .dash-tab-btn { flex: 1 1 calc(50% - 15px); text-align: center; }
+            .dash-content { padding: 20px; width: 100%; }
+        }
+    </style>
 </head>
 
 <body>
     <header class="navbar">
         <div class="navbar-container">
             <a href="index.html" class="logo-brand"><span>Food Loop</span></a>
-            <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
             <nav class="nav-menu" id="navMenu">
-                <!-- Enlaces de navegación -->
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="galeria.html" class="nav-link">Galería</a>
-                <a href="features.html" class="nav-link">Características</a>
-                <a href="testimonios.html" class="nav-link">Casos de éxito</a>
-                <a href="about.html" class="nav-link">Sobre Nosotros</a>
-                <!-- CTA redirige a Comenzar -->
-                <button class="cta-btn" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
+                <button class="cta-btn" onclick="cerrarSesionLocal()">Cerrar Sesión</button>
             </nav>
         </div>
     </header>
-    <main>
 
-        <section class="dashboard-section">
-            <div class="dashboard-header">
-                <h2>Panel del Local</h2>
-                <span id="nombre-negocio">Cargando...</span>
-                <p>Gestiona tu inventario, ventas y ofertas desde aquí.</p>
+    <main style="padding-top: 80px;">
+        <div style="text-align: center; margin-top: 20px;">
+            <h2 class="section-title">Panel de Control: <span id="nombre-negocio">Mi Local</span></h2>
+        </div>
+
+        <div class="dash-layout">
+            <aside class="dash-sidebar">
+                <button class="dash-tab-btn active" data-target="panel-perfil">
+                    <i class="fas fa-store"></i> Perfil del Local
+                </button>
+                <button class="dash-tab-btn" data-target="panel-folios">
+                    <i class="fas fa-ticket-alt"></i> Validar Folios
+                </button>
+                <button class="dash-tab-btn" data-target="panel-crear">
+                    <i class="fas fa-plus-circle"></i> Cargar Loop-Pack
+                </button>
+                <button class="dash-tab-btn" data-target="panel-mis-packs">
+                    <i class="fas fa-box-open"></i> Mis Loop-Packs
+                </button>
+                <button class="dash-tab-btn" data-target="panel-reservas">
+                    <i class="fas fa-hand-holding-heart"></i> Apartados
+                </button>
+            </aside>
+
+            <div class="dash-content">
+                
+                <div id="panel-perfil" class="dash-panel active">
+                    <h3 class="panel-title">Configuración del Perfil</h3>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <div class="dash-form-group">
+                                <label>Foto de Portada / Logo</label>
+                                <input type="file" accept="image/*">
+                            </div>
+                            <div class="dash-form-group">
+                                <label>Ubicación (Google Maps URL o Dirección)</label>
+                                <input type="text" placeholder="Ej. Av. de las Américas 123">
+                            </div>
+                        </div>
+                        <div style="flex: 1; min-width: 250px;">
+                            <div class="dash-form-group">
+                                <label>Horario de Apertura</label>
+                                <input type="time">
+                            </div>
+                            <div class="dash-form-group">
+                                <label>Horario de Cierre</label>
+                                <input type="time">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn">Guardar Perfil</button>
+                </div>
+
+                <div id="panel-folios" class="dash-panel">
+                    <h3 class="panel-title">Activación y Renovación de Usuarios</h3>
+                    <p>Ingresa el folio que te muestra el cliente para registrar su pago.</p>
+                    
+                    <div class="dash-form-group" style="max-width: 400px; margin-top: 20px;">
+                        <label>Ingresar Folio (Ej. FL-A8F9B2)</label>
+                        <input type="text" id="input-folio" placeholder="FL-XXXXXX" style="text-transform: uppercase; font-size: 1.2rem; text-align: center;">
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <button class="btn" onclick="alert('Folio simulado: Activado exitosamente.')">Activar Nuevo Usuario</button>
+                        <button class="btn btn-secondary" style="color:var(--color-primary); border-color:var(--color-primary)!important;" onclick="alert('Folio simulado: Suscripción renovada por 1 mes.')">Renovar Suscripción</button>
+                    </div>
+                </div>
+
+                <div id="panel-crear" class="dash-panel">
+                    <h3 class="panel-title">Publicar Nuevo Loop-Pack</h3>
+                    
+                    <div class="dash-form-group">
+                        <label>Foto del Pack</label>
+                        <input type="file" accept="image/*">
+                    </div>
+                    
+                    <div class="dash-form-group">
+                        <label>Descripción / Contenido</label>
+                        <textarea rows="3" placeholder="Ej. 3 piezas de pan dulce de ayer, 2 bolillos..."></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div class="dash-form-group">
+                            <label>Precio Original ($)</label>
+                            <input type="number" id="pack-precio-original" placeholder="100" oninput="calcularDescuento()">
+                        </div>
+                        <div class="dash-form-group">
+                            <label>Descuento (%)</label>
+                            <input type="number" id="pack-descuento" placeholder="50" oninput="calcularDescuento()">
+                        </div>
+                        <div class="dash-form-group">
+                            <label>Precio Final Auto</label>
+                            <span id="pack-precio-final" class="precio-calculado">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="dash-form-group" style="max-width: 200px;">
+                        <label>Cantidad Disponible</label>
+                        <input type="number" placeholder="Ej. 5" min="1">
+                    </div>
+
+                    <button class="btn">Publicar Pack Ahora</button>
+                </div>
+
+                <div id="panel-mis-packs" class="dash-panel">
+                    <h3 class="panel-title">Inventario Activo</h3>
+                    <div class="mock-grid">
+                        <div class="mock-card">
+                            <i class="fas fa-bread-slice fa-3x" style="color:var(--color-primary); margin-bottom:10px;"></i>
+                            <h4>Pack Pan Dulce</h4>
+                            <p>Disp: 3 | <strong>$45.00</strong></p>
+                            <div style="margin-top: 10px; display:flex; gap:5px; justify-content:center;">
+                                <button class="btn" style="padding: 5px 10px; font-size:0.8rem;">Editar</button>
+                                <button class="btn" style="padding: 5px 10px; font-size:0.8rem; background:#d32f2f; color:white; border-color:#d32f2f;">Borrar</button>
+                            </div>
+                        </div>
+                        </div>
+                </div>
+
+                <div id="panel-reservas" class="dash-panel">
+                    <h3 class="panel-title">Reservas Pendientes de Recoger</h3>
+                    <div class="mock-grid">
+                        <div class="mock-card" style="border-style: dashed;">
+                            <i class="fas fa-user-clock fa-2x" style="margin-bottom:10px;"></i>
+                            <h4>Cliente: Yusa</h4>
+                            <p>Pack: Pan Dulce (x1)</p>
+                            <p style="color: #d32f2f; font-weight:bold;">Pago pendiente: $45.00</p>
+                            <button class="btn" style="margin-top: 10px; width:100%;">Marcar Entregado</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <div class="dashboard-grid">
-                <div class="dashboard-card">
-                    <div class="icon"><i class="fas fa-boxes"></i></div>
-                    <h3>Inventario</h3>
-                    <p>Controla los productos disponibles y sus fechas de vencimiento.</p>
-                </div>
-                <div class="dashboard-card">
-                    <div class="icon"><i class="fas fa-chart-line"></i></div>
-                    <h3>Ventas</h3>
-                    <p>Consulta tus ventas recientes y estadísticas clave.</p>
-                </div>
-                <div class="dashboard-card" onclick="window.location.href='crear-oferta.html'" style="cursor: pointer;">
-                    <div class="icon"><i class="fas fa-plus-circle"></i></div>
-                    <h3>Crear Oferta</h3>
-                    <p>Publica nuevas promociones para atraer clientes.</p>
-                </div>
-            </div>
-        </section>
+        </div>
     </main>
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-brand">
-                <i class="fas fa-leaf"></i> Food Loop
-                <p>Transformamos inventario en flujo de efectivo.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-linkedin"></i></a>
-                    <a href="#"><i class="fab fa-x-twitter"></i></a>
-                </div>
-            </div>
-            <div class="footer-links">
-                <h4>Producto</h4>
-                <a href="#">Características</a>
-                <a href="#">Precios</a>
-                <a href="#">Demo</a>
-            </div>
-            <div class="footer-links">
-                <h4>Recursos</h4>
-                <a href="#">Blog</a>
-                <a href="#">Centro de ayuda</a>
-                <a href="#">Estado</a>
-            </div>
-            <div class="footer-links">
-                <h4>Legal</h4>
-                <a href="#">Privacidad</a>
-                <a href="#">Términos</a>
-                <a href="#">Cookies</a>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2025 Food Loop Technologies. Todos los derechos reservados.</p>
-        </div>
-    </footer>
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script src="js/app.js"></script>
+
     <script>
+        // LÓGICA DE PESTAÑAS (TABS)
+        document.querySelectorAll('.dash-tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Quitar activo de todos los botones
+                document.querySelectorAll('.dash-tab-btn').forEach(btn => btn.classList.remove('active'));
+                // Ocultar todos los paneles
+                document.querySelectorAll('.dash-panel').forEach(panel => panel.classList.remove('active'));
+                
+                // Activar el botón clicado y su panel correspondiente
+                button.classList.add('active');
+                const targetId = button.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active');
+            });
+        });
+
+        // LÓGICA DE CÁLCULO DE DESCUENTO AUTOMÁTICO
+        function calcularDescuento() {
+            const original = parseFloat(document.getElementById('pack-precio-original').value) || 0;
+            const descuento = parseFloat(document.getElementById('pack-descuento').value) || 0;
+            const precioFinalElement = document.getElementById('pack-precio-final');
+
+            if (original > 0 && descuento >= 0 && descuento <= 100) {
+                const final = original - (original * (descuento / 100));
+                precioFinalElement.textContent = '$' + final.toFixed(2);
+            } else {
+                precioFinalElement.textContent = '$0.00';
+            }
+        }
+
+        // SEGURIDAD FRONTEND BÁSICA
         document.addEventListener('DOMContentLoaded', () => {
             const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
-            if (!usuarioGuardado) { window.location.href = 'login.html'; return; }
+            if (!usuarioGuardado) { 
+                window.location.href = 'login.html'; 
+                return; 
+            }
 
             const usuario = JSON.parse(usuarioGuardado);
 
-            // SEGURIDAD EXTRA: Si un "usuario" normal intenta entrar aquí, lo sacamos
+            // Verificación estricta de rol
             if (usuario.rol !== 'local') {
-                alert('Acceso denegado. Este panel es solo para comercios.');
+                alert('Acceso denegado. Este panel es exclusivo para comercios registrados.');
                 window.location.href = 'dashboard-usuario.html';
                 return;
             }
 
             document.getElementById('nombre-negocio').textContent = usuario.nombre;
         });
+
+        function cerrarSesionLocal() {
+            localStorage.removeItem('usuarioFoodLoop');
+            window.location.href = 'login.html';
+        }
     </script>
 </body>
-
 </html>
