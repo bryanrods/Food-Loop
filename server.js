@@ -3,11 +3,14 @@ import cors from 'cors';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-
+import crypto from 'crypto'; // <-- NUEVO: Para generar el folio seguro
 dotenv.config();
 
 const app = express();
 
+function generarFolio() {
+    return 'FL-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+}
 // Middlewares
 app.use(cors());
 app.use(express.json());
@@ -28,6 +31,7 @@ const pool = mysql.createPool({
     }
 });
 
+
 // Verificación de conexión al arrancar
 pool.getConnection()
     .then(conn => {
@@ -39,10 +43,25 @@ pool.getConnection()
     });
 
 // ==========================================
-// RUTA DE REGISTRO (Sincronizada con tu DB)
+// RUTA DE REGISTRO (Sincronizada con tu DB y Frontend)
+// ==========================================
+// ==========================================
+// RUTA DE REGISTRO (Sincronizada con tu DB y Frontend)
 // ==========================================
 app.post('/auth/register', async (req, res) => {
-    const { nombre, email, password, plan, rol, direccion, telefono } = req.body;
+    const { 
+        nombre, 
+        nombre_usuario, 
+        edad, // <-- NUEVO: Atrapamos la edad que manda el frontend
+        email, 
+        password, 
+        plan, 
+        rol, 
+        nombre_comercio, 
+        direccion, 
+        telefono 
+    } = req.body;
+    
     const connection = await pool.getConnection();
 
     try {
@@ -51,36 +70,63 @@ app.post('/auth/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPwd = await bcrypt.hash(password, salt);
         const rolFinal = rol === 'local' ? 'local' : 'usuario';
+        
+        const nombreFinal = nombre_usuario || nombre;
 
-        // 1. Insertar en tabla 'usuario'
+        if (!nombreFinal) {
+            await connection.rollback();
+            connection.release();
+            return res.status(400).json({ success: false, message: "El nombre es obligatorio." });
+        }
+
+        // Generamos el folio único en el servidor
+        const folioNuevo = generarFolio();
+
+        // 1. Insertar identidad central en tabla 'usuario' (Añadimos folio_usuario)
         const [userResult] = await connection.query(
-            'INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario) VALUES (?, ?, ?, CURDATE(), ?)',
-            [nombre, hashedPwd, email, rolFinal]
+            'INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario, folio_usuario) VALUES (?, ?, ?, CURDATE(), ?, ?)',
+            [nombreFinal, hashedPwd, email, rolFinal, folioNuevo]
         );
         
         const userId = userResult.insertId;
 
-        // 2. Insertar en 'suscripcion_info'
+        // 2. Insertar suscripción base
         await connection.query(
             'INSERT INTO suscripcion_info (usuario_id, tipo_plan, estado_suscripcion, fecha_corte) VALUES (?, ?, "activa", DATE_ADD(CURDATE(), INTERVAL 1 MONTH))',
             [userId, plan || 'basico']
         );
 
-        // 3. Si es local, insertar en 'comercio' con columnas corregidas
+        // 3. Bifurcación: Insertar datos extra dependiendo del rol
         if (rolFinal === 'local') {
+            // Es un comercio
             await connection.query(
-                'INSERT INTO comercio (id_comercio, nombre_comercio, direccion_comercio, telefono_comercio, usuario_id) VALUES (?, ?, ?, ?, ?)',
-                [userId, nombre, direccion || '', telefono || '', userId]
+                'INSERT INTO comercio (nombre_comercio, direccion_comercio, telefono_comercio, usuario_id) VALUES (?, ?, ?, ?)',
+                [nombre_comercio, direccion || '', telefono || '', userId]
+            );
+        } else {
+            // Es un usuario normal, insertamos en la nueva tabla
+            if (!edad || !telefono) {
+                throw new Error("Faltan datos obligatorios del usuario (edad o teléfono).");
+            }
+            
+            await connection.query(
+                'INSERT INTO datos_usuario (usuario_id, edad, telefono) VALUES (?, ?, ?)',
+                [userId, edad, telefono]
             );
         }
 
+        // Si llegó hasta aquí, todo fue un éxito
         await connection.commit();
-        console.log(`✅ REGISTRO COMPLETO: ${nombre} (ID: ${userId} - ROL: ${rolFinal})`);
+        console.log(`✅ REGISTRO COMPLETO: ${nombreFinal} (ID: ${userId} - ROL: ${rolFinal})`);
         res.status(201).json({ success: true, message: "Usuario registrado con éxito" });
 
     } catch (error) {
         await connection.rollback();
-        console.error("❌ ERROR CRÍTICO EN SQL:", error.message);
+        console.error("❌ ERROR CRÍTICO EN SQL AL REGISTRAR:", error);
+        
+        if (error.code === 'ER_DUP_ENTRY') {
+             return res.status(409).json({ success: false, message: 'Este correo ya está registrado.' });
+        }
         res.status(500).json({ success: false, message: `Error de Base de Datos: ${error.message}` });
     } finally {
         connection.release();
@@ -171,7 +217,7 @@ app.get('/api/me', async (req, res) => {
 
     try {
         const [rows] = await pool.query(
-            'SELECT id_usuario, nombre_usuario, email_usuario, rol_usuario FROM usuario WHERE id_usuario = ?',
+            'SELECT id_usuario, nombre_usuario, email_usuario, rol_usuario, folio_usuario FROM usuario WHERE id_usuario = ?',
             [userId]
         );
 

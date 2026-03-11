@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Verificamos si hay una sesión activa en el navegador
     const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
     
-    // 1. Verificación básica: ¿Hay un gafete en el navegador?
     if (!usuarioGuardado) {
         window.location.href = 'login.html';
         return; 
@@ -10,56 +10,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const usuarioLocal = JSON.parse(usuarioGuardado);
 
     try {
-        // 2. VERIFICACIÓN AVANZADA (GET /me): Le preguntamos a Azure si el gafete es real
+        // 2. Le preguntamos a tu servidor (Azure) por los datos reales y frescos
         const respuesta = await fetch('http://localhost:3005/api/me', {
             method: 'GET',
-            headers: {
-                'user-id': usuarioLocal.id // Mandamos el ID oculto en los headers
-            }
+            headers: { 'user-id': usuarioLocal.id }
         });
 
         const resultado = await respuesta.json();
 
         if (resultado.success) {
-            // El servidor confirmó que es real. Ponemos su nombre.
+            // 3. Pintamos el nombre del usuario
             const saludoElemento = document.getElementById('nombre-usuario');
             if (saludoElemento) {
                 saludoElemento.textContent = resultado.user.nombre_usuario;
             }
             
-            // ¡AQUÍ ESTÁ LA MAGIA DEL ROL!
-            console.log("Rol oficial validado por Azure:", resultado.user.rol_usuario);
-            
-            // Más adelante usaremos esto para decir: 
-            // "Si rol es 'local', muéstrale el botón de 'Publicar Comida'"
-            
-            // NUEVO CÓDIGO: Lógica de Folio Persistente
-            // ==========================================
-            // Creamos una clave única usando el ID del usuario para evitar 
-            // que distintos usuarios compartan el mismo folio en la misma PC.
-            const claveFolioUnico = `folioFoodLoop_${usuarioLocal.id}`;
-            let folioUsuario = localStorage.getItem(claveFolioUnico);
-
-            // Si este usuario no tiene un folio guardado, le generamos uno
-            if (!folioUsuario) {
-                const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                let codigo = '';
-                for (let i = 0; i < 6; i++) {
-                    codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-                }
-                folioUsuario = 'FL-' + codigo;
-                
-                // Se guarda permanentemente en su "casillero" personal del navegador
-                localStorage.setItem(claveFolioUnico, folioUsuario);
-            }
-
-            // Buscamos el elemento en el HTML e inyectamos el folio
+            // 4. ¡LA MAGIA DEL FOLIO! Pintamos el folio oficial que viene de la base de datos
             const elementoFolio = document.getElementById('numero-folio');
-            if (elementoFolio) {
-                elementoFolio.textContent = folioUsuario;
-            }            
+            if (elementoFolio && resultado.user.folio_usuario) {
+                elementoFolio.textContent = resultado.user.folio_usuario;
+                // Le ponemos un pequeño estilo dinámico si quieres que resalte que ya cargó
+                elementoFolio.style.color = 'var(--color-primary)';
+            }
+            
         } else {
-            // Si el servidor dice que es falso o lo borraron de la BD, lo sacamos.
+            // Si el servidor no lo reconoce, lo sacamos por seguridad
             localStorage.removeItem('usuarioFoodLoop');
             window.location.href = 'login.html';
         }

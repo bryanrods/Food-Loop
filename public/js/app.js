@@ -119,15 +119,15 @@
     const observer = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
-          if (entry.target.id === 'counter1') animateCounter(entry.target, 5000, 12840, 2500);
+          if (entry.target.id === 'counter1') animateCounter(entry.target, 5000, 0, 2500);
           observer.unobserve(entry.target);
         }
       });
     }, { threshold: 0.5 });
     observer.observe(counter1);
-    if (counter2) counter2.innerText = '2.4M';
-    if (counter3) counter3.innerText = '$89M';
-    if (counter4) counter4.innerText = '450k';
+    if (counter2) counter2.innerText = '0';
+    if (counter3) counter3.innerText = '$0';
+    if (counter4) counter4.innerText = '0';
   }
 
   // 6. APARICIÓN GRADUAL DE ELEMENTOS

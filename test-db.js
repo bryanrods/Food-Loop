@@ -48,7 +48,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 async function getComercioData() {
-    console.log('⏳ Conectando para consultar la tabla "comercio"...');
+    console.log('⏳ Conectando para consultar la tabla "suscripcion_info"...');
     
     try {
         const connection = await mysql.createConnection({
