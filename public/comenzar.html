@@ -8,11 +8,25 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2E4235">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="css/style.css">
 </head>
+<style>
+    body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+    }
+
+    main {
+        flex: 1;
+    }
+</style>
+
 
 <body>
-    
+
     <header class="navbar" id="navbar-placeholder"></header>
 
     <main>
@@ -40,41 +54,11 @@
                         <br>
                         <button class="cta-btn" onclick="window.location.href='suscripcion.html'">Registrarme</button>
                     </div>
-
-                    <div class="feature-box">
-                        <i class="fas fa-sign-in-alt feature-icon"></i>
-                        <h3>Iniciar Sesión</h3>
-                        <p>¿Ya tienes tu cuenta y suscripción activa? Accede para ver ofertas o gestionar tu negocio.
-                        </p>
-                        <br>
-                        <button class="cta-btn" onclick="window.location.href='login.html'">Ingresar</button>
-                    </div>
                 </div>
             </div>
         </section>
     </main>
     <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-brand">
-                <i class="fas fa-leaf"></i> Food Loop
-                <p>Transformamos inventario en flujo de efectivo.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-x-twitter"></i></a>
-                </div>
-            </div>
-            <div class="footer-links">
-                <h4>Producto</h4>
-                <a href="#">Características</a>
-                <a href="#">Precios</a>
-            </div>
-            <div class="footer-links">
-                <h4>Legal</h4>
-                <a href="#">Privacidad</a>
-                <a href="#">Términos</a>
-            </div>
-        </div>
         <div class="footer-bottom">
             <p>&copy; 2026 Food Loop Technologies. Todos los derechos reservados.</p>
         </div>

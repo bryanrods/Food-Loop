@@ -10,69 +10,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        /* Contenedor centrado a la derecha */
-        .about-container {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-        }
-
-        .about-visual {
-            max-width: 250px; /* Tamaño más pequeño del contenedor */
-            width: 100%;
-            margin-right: 20px; /* Separación del borde derecho */
-            overflow: hidden; /* Esconde cualquier parte de la imagen que sobrepase el contenedor */
-        }
-
-        /* Asegurando que todas las imágenes tengan el mismo tamaño y no dejen fondo visible */
-        .about-visual img {
-            width: 100%;  /* Ajusta el ancho al 100% del contenedor */
-            height: 100%; /* Establece la altura para cubrir todo el contenedor */
-            object-fit: cover; /* Asegura que la imagen cubra todo el espacio sin distorsionarse */
-            margin-bottom: 10px; /* Espaciado entre las imágenes */
-        }
-
-        /* Centrar el contenedor del texto y el botón */
-        .about-content {
-            text-align: center; /* Centra el texto dentro del contenedor */
-        }
-
-        .cta-btn {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #2D6A4F;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            text-align: center;
-        }
-    </style>
 </head>
 
 <body>
-<<<<<<< HEAD
-        <header class="navbar" id="navbar-placeholder"></header>
 
-=======
-    <header class="navbar">
-        <div class="navbar-container">
-            <a href="index.html" class="logo-brand"><span>Food Loop</span></a>
-            <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
-            <nav class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="galeria.html" class="nav-link">Galería</a>
-                <a href="features.html" class="nav-link">Características</a>
-                <a href="testimonios.html" class="nav-link">Casos de éxito</a>
-                <a href="about.html" class="nav-link">Sobre Nosotros</a>
-                <button class="cta-btn" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
-            </nav>
-        </div>
-    </header>
->>>>>>> 2ee4d7c9c4b4413d1e535849e0d0466cc9e14758
+    <header class="navbar" id="navbar-placeholder"></header>
+
     <main>
         <!-- SOBRE NOSOTROS -->
         <section id="about" class="about-section" style="padding-top:150px;">
@@ -80,10 +23,11 @@
                 <div class="about-content">
                     <h2 class="section-title">Sobre <span>Food Loop</span></h2>
                     <p class="about-text">
-                        Nuestro proyecto integrador nace de la necesidad de transformar y mejorar las prácticas de negocio en comercios locales,
+                        Nuestro proyecto integrador nace de la necesidad de transformar y mejorar las prácticas de
+                        negocio en comercios locales,
                         enfrentando uno de los problemas más comunes, el desperdicio de alimentos.
                     </p>
-                    
+
                     <!-- Botón centrado -->
                     <button class="cta-btn" onclick="window.location.href='comenzar.html'">Comenzar Ahora</button>
                 </div>
@@ -91,7 +35,7 @@
                     <div class="swiper teamSwiper">
                         <div class="swiper-wrapper">
                             <div class="swiper-slide">
-                                <img src="icons/pinacho.jpeg" alt="Equipo" 
+                                <img src="icons/pinacho.jpeg" alt="Equipo"
                                     onerror="this.style.display='none'; this.parentElement.querySelector('.team-placeholder').style.display='flex';">
                             </div>
                             <div class="swiper-slide">
@@ -111,36 +55,6 @@
     </main>
 
     <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-brand">
-                <i class="fas fa-leaf"></i> Food Loop
-                <p>Transformamos inventario en flujo de efectivo.</p>
-                <div class="social-icons">
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-linkedin"></i></a>
-                    <a href="#"><i class="fab fa-x-twitter"></i></a>
-                </div>
-            </div>
-            <div class="footer-links">
-                <h4>Producto</h4>
-                <a href="#">Características</a>
-                <a href="#">Precios</a>
-                <a href="#">Demo</a>
-            </div>
-            <div class="footer-links">
-                <h4>Recursos</h4>
-                <a href="#">Blog</a>
-                <a href="#">Centro de ayuda</a>
-                <a href="#">Estado</a>
-            </div>
-            <div class="footer-links">
-                <h4>Legal</h4>
-                <a href="#">Privacidad</a>
-                <a href="#">Términos</a>
-                <a href="#">Cookies</a>
-            </div>
-        </div>
         <div class="footer-bottom">
             <p>&copy; 2025 Food Loop Technologies. Todos los derechos reservados.</p>
         </div>
