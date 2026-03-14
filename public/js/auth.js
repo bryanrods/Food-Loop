@@ -93,14 +93,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const resultado = await respuesta.json();
 
             if (resultado.success) {
-                alert('¡Suscripción exitosa en Azure!');
-                window.location.href = 'login.html';
+                Swal.fire({
+                    title: '¡Registro Exitoso!',
+                    text: resultado.message, // "¡Bienvenido a Food-Loop!..."
+                    icon: 'success',
+                    confirmButtonColor: '#2D6A4F',
+                    confirmButtonText: 'Ir a Iniciar Sesión'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'login.html';
+                    }
+                });
             } else {
-                alert('Error al registrar: ' + (resultado.message || 'Inténtalo de nuevo.'));
+                Swal.fire({
+                    title: 'No pudimos registrarte',
+                    text: resultado.message, 
+                    icon: 'warning',
+                    confirmButtonColor: '#d32f2f'
+                });
             }
         } catch (error) {
-            console.error('Error detallado:', error);
-            alert('Hubo un problema con el registro. Intenta de nuevo.');
+            console.error("Error al registrar:", error);
+                Swal.fire({
+                    title: 'Error de conexion',
+                    text: 'No es posible registrar con el servidor. Revisa tu internet.',
+                    icon: 'error',
+                    confirmButtonColor: '#d32f2f'
+                });
         }
     });
 });

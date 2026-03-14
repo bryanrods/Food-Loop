@@ -27,8 +27,61 @@
     }
   }
 
-  // Ejecutamos la carga del menú inmediatamente
+  // ==========================================
+  // NUEVA FUNCIÓN: CONTROLADOR GLOBAL DE SESIÓN
+  // ==========================================
+  function verificarEstadoSesionNav() {
+      const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
+      const navMenu = document.getElementById('navMenu');
+
+      if (usuarioGuardado && navMenu) {
+          const usuario = JSON.parse(usuarioGuardado);
+          
+          const enlaceDashboard = usuario.rol === 'local' ? 'dashboard-local.html' : 'dashboard-usuario.html';
+          const textoBoton = usuario.rol === 'local' ? 'Mi Local' : 'Mi Perfil';
+
+          // Buscamos el botón principal dentro del menú recién inyectado
+          const ctaBtn = navMenu.querySelector('.cta-btn');
+          
+          if (ctaBtn) {
+              ctaBtn.textContent = textoBoton;
+              // Removemos el onclick viejo (que llevaba a comenzar.html)
+              ctaBtn.removeAttribute('onclick');
+              // Le asignamos el nuevo destino
+              ctaBtn.addEventListener('click', (e) => {
+                  e.preventDefault();
+                  window.location.href = enlaceDashboard;
+              });
+              
+              // Inyectamos el botón de Cerrar Sesión si no existe
+              if (!document.getElementById('btn-cerrar-global')) {
+                  const btnCerrar = document.createElement('button');
+                  btnCerrar.id = 'btn-cerrar-global';
+                  btnCerrar.className = 'nav-link'; 
+                  
+                  btnCerrar.style.background = 'none';
+                  btnCerrar.style.border = 'none';
+                  btnCerrar.style.color = '#d32f2f'; 
+                  btnCerrar.style.fontWeight = 'bold';
+                  btnCerrar.style.cursor = 'pointer';
+                  btnCerrar.style.fontSize = '1rem';
+                  
+                  btnCerrar.textContent = 'Cerrar Sesión';
+                  
+                  btnCerrar.addEventListener('click', () => {
+                      localStorage.removeItem('usuarioFoodLoop');
+                      window.location.href = 'index.html';
+                  });
+                  
+                  navMenu.insertBefore(btnCerrar, ctaBtn);
+              }
+          }
+      }
+  }
+
+  // Ejecutamos la carga del menú e inmediatamente después verificamos la sesión
   await cargarNavbar();
+  verificarEstadoSesionNav(); // <-- ¡AQUÍ ESTÁ LA MAGIA!
 
   // 2. REGISTRO DEL SERVICE WORKER
   if ('serviceWorker' in navigator) {
@@ -147,7 +200,7 @@
     });
   }
 
-  // 7. SCROLL SUAVE (Optimizado para el menú dinámico)
+  // 7. SCROLL SUAVE
   document.addEventListener('click', function(e) {
       const link = e.target.closest('.nav-link[href^="#"]');
       if (!link) return;
@@ -160,7 +213,6 @@
       if (targetSection) {
           targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
           
-          // Ocultar menú móvil tras hacer clic
           const navMenu = document.getElementById('navMenu');
           const hamburger = document.getElementById('hamburger');
           if (navMenu && navMenu.classList.contains('active')) {

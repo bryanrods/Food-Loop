@@ -48,93 +48,106 @@ pool.getConnection()
 // ==========================================
 // RUTA DE REGISTRO (Sincronizada con tu DB y Frontend)
 // ==========================================
+// ==========================================
+// RUTA DE REGISTRO (CON VALIDACIÓN DE DUPLICADOS)
+// ==========================================
 app.post('/auth/register', async (req, res) => {
     const { 
-        nombre, 
-        nombre_usuario, 
-        edad, // <-- NUEVO: Atrapamos la edad que manda el frontend
-        email, 
-        password, 
-        plan, 
-        rol, 
-        nombre_comercio, 
-        direccion, 
-        telefono 
+        nombre, nombre_usuario, email, password, plan, rol, nombre_comercio, direccion, telefono 
     } = req.body;
     
-    const connection = await pool.getConnection();
+    const rolFinal = rol === 'local' ? 'local' : 'usuario';
+    const nombreFinal = nombre_usuario || nombre;
+
+    if (!nombreFinal) {
+        return res.status(400).json({ success: false, message: "El nombre es obligatorio." });
+    }
 
     try {
-        await connection.beginTransaction();
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPwd = await bcrypt.hash(password, salt);
-        const rolFinal = rol === 'local' ? 'local' : 'usuario';
-        
-        const nombreFinal = nombre_usuario || nombre;
-
-        if (!nombreFinal) {
-            await connection.rollback();
-            connection.release();
-            return res.status(400).json({ success: false, message: "El nombre es obligatorio." });
-        }
-
-        // Generamos el folio único en el servidor
-        const folioNuevo = generarFolio();
-
-        // 1. Insertar identidad central en tabla 'usuario' (Añadimos folio_usuario)
-        const [userResult] = await connection.query(
-            'INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario, folio_usuario) VALUES (?, ?, ?, CURDATE(), ?, ?)',
-            [nombreFinal, hashedPwd, email, rolFinal, folioNuevo]
-        );
-        
-        const userId = userResult.insertId;
-
-        // 2. Insertar suscripción base
-        await connection.query(
-            'INSERT INTO suscripcion_info (usuario_id, tipo_plan, estado_suscripcion, fecha_corte) VALUES (?, ?, "activa", DATE_ADD(CURDATE(), INTERVAL 1 MONTH))',
-            [userId, plan || 'basico']
+        // --- 🛑 NUEVO: FILTRO ANTI-DUPLICADOS PROACTIVO 🛑 ---
+        // 1. Buscamos si el correo o el nombre del usuario/dueño ya existen
+        const [existeUsuario] = await pool.query(
+            'SELECT email_usuario, nombre_usuario FROM usuario WHERE email_usuario = ? OR nombre_usuario = ?',
+            [email, nombreFinal]
         );
 
-        // 3. Bifurcación: Insertar datos extra dependiendo del rol
-        if (rolFinal === 'local') {
-            // Es un comercio
-            await connection.query(
-                'INSERT INTO comercio (nombre_comercio, direccion_comercio, telefono_comercio, usuario_id) VALUES (?, ?, ?, ?)',
-                [nombre_comercio, direccion || '', telefono || '', userId]
-            );
-        } else {
-            // Es un usuario normal, insertamos en la nueva tabla
-            if (!edad || !telefono) {
-                throw new Error("Faltan datos obligatorios del usuario (edad o teléfono).");
+        if (existeUsuario.length > 0) {
+            // Identificamos exactamente qué se duplicó para decirle al frontend
+            if (existeUsuario[0].email_usuario === email) {
+                return res.status(409).json({ success: false, message: 'Este correo electrónico ya está registrado.' });
             }
-            
-            await connection.query(
-                'INSERT INTO datos_usuario (usuario_id, edad, telefono) VALUES (?, ?, ?)',
-                [userId, edad, telefono]
-            );
+            if (existeUsuario[0].nombre_usuario === nombreFinal) {
+                return res.status(409).json({ success: false, message: 'Este nombre de usuario ya está en uso. Elige otro.' });
+            }
         }
 
-        // Si llegó hasta aquí, todo fue un éxito
-        await connection.commit();
-        console.log(`✅ REGISTRO COMPLETO: ${nombreFinal} (ID: ${userId} - ROL: ${rolFinal})`);
-        res.status(201).json({ success: true, message: "Usuario registrado con éxito" });
+        // 2. Si es local, verificamos que el nombre de la tienda no esté repetido
+        if (rolFinal === 'local') {
+            const [existeLocal] = await pool.query(
+                'SELECT nombre_comercio FROM comercio WHERE nombre_comercio = ?',
+                [nombre_comercio]
+            );
+            if (existeLocal.length > 0) {
+                return res.status(409).json({ success: false, message: 'Ya existe un comercio registrado con ese nombre.' });
+            }
+        }
+        // --- FIN DEL FILTRO ---
+
+        // Si pasó los filtros, ahora sí abrimos la conexión y guardamos
+        const connection = await pool.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const salt = await bcrypt.genSalt(10);
+            const hashedPwd = await bcrypt.hash(password, salt);
+            
+            // Generamos el folio único
+            const folioNuevo = 'FL-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+
+            // Insertar en 'usuario'
+            const [userResult] = await connection.query(
+                'INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario, folio_usuario) VALUES (?, ?, ?, CURDATE(), ?, ?)',
+                [nombreFinal, hashedPwd, email, rolFinal, folioNuevo]
+            );
+            const userId = userResult.insertId;
+
+            // Insertar en 'suscripcion_info'
+            await connection.query(
+                'INSERT INTO suscripcion_info (usuario_id, tipo_plan, estado_suscripcion, fecha_corte) VALUES (?, ?, "activa", DATE_ADD(CURDATE(), INTERVAL 1 MONTH))',
+                [userId, plan || 'basico']
+            );
+
+            // Insertar datos extra según el rol
+            if (rolFinal === 'local') {
+                await connection.query(
+                    'INSERT INTO comercio (nombre_comercio, direccion_comercio, telefono_comercio, usuario_id) VALUES (?, ?, ?, ?)',
+                    [nombre_comercio, direccion || '', telefono || '', userId]
+                );
+            } else {
+                const edad = req.body.edad || 18; // Aseguramos que no se vaya null si olvidan mandarlo
+                await connection.query(
+                    'INSERT INTO datos_usuario (usuario_id, edad, telefono) VALUES (?, ?, ?)',
+                    [userId, edad, telefono || '']
+                );
+            }
+
+            await connection.commit();
+            res.status(201).json({ success: true, message: "¡Registro completado con éxito!" });
+        } catch (dbError) {
+            await connection.rollback();
+            throw dbError; // Lo mandamos al catch exterior
+        } finally {
+            connection.release();
+        }
 
     } catch (error) {
-        await connection.rollback();
-        console.error("❌ ERROR CRÍTICO EN SQL AL REGISTRAR:", error);
-        
-        if (error.code === 'ER_DUP_ENTRY') {
-             return res.status(409).json({ success: false, message: 'Este correo ya está registrado.' });
-        }
-        res.status(500).json({ success: false, message: `Error de Base de Datos: ${error.message}` });
-    } finally {
-        connection.release();
+        console.error("❌ ERROR CRÍTICO AL REGISTRAR:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
     }
 });
 
 // ==========================================
-// RUTA DE LOGIN
+// RUTA DE LOGIN (Lista para SweetAlert)
 // ==========================================
 app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
@@ -142,23 +155,24 @@ app.post('/auth/login', async (req, res) => {
         const [rows] = await pool.query('SELECT * FROM usuario WHERE email_usuario = ?', [email]);
         
         if (rows.length === 0) {
-            return res.status(401).json({ success: false, message: "Usuario no encontrado" });
+            return res.status(401).json({ success: false, message: "No encontramos ninguna cuenta con este correo." });
         }
 
         const user = rows[0];
         const validPass = await bcrypt.compare(password, user.pswrd_usuario);
 
         if (!validPass) {
-            return res.status(401).json({ success: false, message: "Contraseña incorrecta" });
+            return res.status(401).json({ success: false, message: "La contraseña es incorrecta." });
         }
 
         res.json({ 
             success: true, 
-            user: { id: user.id_usuario, nombre: user.nombre_usuario, rol: user.rol_usuario } 
+            message: `¡Bienvenido de nuevo, ${user.nombre_usuario}!`,
+            user: { id: user.id_usuario, nombre: user.nombre_usuario, rol: user.rol_usuario, folio: user.folio_usuario } 
         });
     } catch (error) {
         console.error("Error en Login:", error.message);
-        res.status(500).json({ success: false, message: "Error interno" });
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
     }
 });
 

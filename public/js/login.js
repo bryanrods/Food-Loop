@@ -23,19 +23,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // 2. LA GRAN DECISIÓN: ¿A dónde lo mandamos?
                     if (resultado.user.rol === 'local') {
-                        alert('🏪 Bienvenido, Socio Comercial. Entrando al Panel de Negocios.');
-                        window.location.href = 'dashboard-local.html'; //
+                        Swal.fire({
+                        title: 'Bienvenido, Socio Comercial. Entrando al Panel de Negocios.',
+                        text: resultado.message,
+                        icon: 'success',
+                        confirmButtonColor: '#2D6A4F',
+                        timer: 2000, // Se cierra sola en 2 segundos
+                        showConfirmButton: false
+                        }).then(() =>{
+                          window.location.href = 'dashboard-local.html'; //
+                        });
                     } else {
-                        alert('👋 ¡Hola, ' + resultado.user.nombre + '! Entrando a Food-Loop.');
-                        window.location.href = 'dashboard-usuario.html';
+                        Swal.fire({
+                        title: '¡Hola, ' + resultado.user.nombre + '! Entrando a Food-Loop.',
+                        text: resultado.message,
+                        icon: 'success',
+                        confirmButtonColor: '#2D6A4F',
+                        timer: 2000, // Se cierra sola en 2 segundos
+                        showConfirmButton: false
+                        }).then(() =>{
+                          window.location.href = 'dashboard-usuario.html'; //
+                        });
                     }
                     
                 } else {
-                    alert('Error: ' + resultado.message); 
+                    Swal.fire({
+                        title: 'Ups...',
+                        text: resultado.message,
+                        icon: 'error',
+                        confirmButtonColor: '#d32f2f'
+                    });
                 }
             } catch (error) {
-                console.error('Error detallado:', error);
-                alert('No se pudo conectar. Revisa que el servidor 3005 esté encendido.');
+                console.error('Error al conectar:', error);
+                Swal.fire({
+                    title: 'Error de conexión',
+                    text: 'No pudimos conectar con el servidor. Revisa tu internet.',
+                    icon: 'error',
+                    confirmButtonColor: '#d32f2f'
+                });
             }
         });
     }

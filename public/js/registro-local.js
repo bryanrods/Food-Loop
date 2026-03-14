@@ -103,14 +103,33 @@ document.addEventListener('DOMContentLoaded', () => {
             const resultado = await respuesta.json();
 
             if (resultado.success) {
-                alert('🏪 ¡Bienvenido a Food-Loop! Tu comercio ha sido registrado con éxito. Por favor inicia sesión.');
-                window.location.href = 'login.html'; 
+                Swal.fire({
+                    title: '¡Registro Exitoso!',
+                    text: resultado.message, // "¡Bienvenido a Food-Loop!..."
+                    icon: 'success',
+                    confirmButtonColor: '#2D6A4F',
+                    confirmButtonText: 'Ir a Iniciar Sesión'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'login.html';
+                    }
+                });
             } else {
-                alert('Error al registrar: ' + (resultado.message || 'Inténtalo de nuevo.'));
+                Swal.fire({
+                    title: 'No pudimos registrarte',
+                    text: resultado.message || ' intentalo de nuevo', 
+                    icon: 'warning',
+                    confirmButtonColor: '#d32f2f'
+                });
             }
         } catch (error) {
-            console.error('Error detallado:', error);
-            alert('No se pudo conectar con el servidor. Verifica tu conexión.');
+            console.error('Error de registro:', error);
+            Swal.fire({
+                    title: 'Error de conexion',
+                    text: 'No pudimos conectar con el servidor. Revisa tu internet.',
+                    icon: 'error',
+                    confirmButtonColor: '#d32f2f'
+                });
         }
     });
 });

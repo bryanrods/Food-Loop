@@ -64,12 +64,12 @@ async function getComercioData() {
 
         // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
         // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
-        const [rows] = await connection.execute('SELECT * FROM usuario;');
+        const [rows] = await connection.execute('SELECT * FROM comercio;');
 
         if (rows.length === 0) {
-            console.log('⚠️ La tabla "usuario" está vacía.');
+            console.log('⚠️ La tabla "comerio" está vacía.');
         } else {
-            console.log(`✅ Se encontraron ${rows.length} registros en "usuario":`);
+            console.log(`✅ Se encontraron ${rows.length} registros en "comercio":`);
             // console.table es genial para visualizar datos de bases de datos en la terminal
             console.table(rows);
         }
