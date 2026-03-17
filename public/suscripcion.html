@@ -229,6 +229,17 @@
                 
                 <div class="checkout-panel">
                     <h3>1. Datos de Usuario</h3>
+
+                    <div class="form-group-checkout" style="text-align: center; margin-bottom: 25px;">
+                        <div class="profile-preview-wrapper" style="width: 120px; height: 120px; border-radius: 50%; background: var(--color-primary); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--color-primary);">
+                            <i class="fas fa-user" id="profileIconUser" style="font-size: 3rem; color: var(--color-accent);"></i>
+                            <img id="profilePreviewUser" src="#" alt="Vista previa" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <label for="profilePictureUser" class="btn btn-upload">Subir Foto de Perfil</label>
+                        <input type="file" id="profilePictureUser" name="foto_perfil" accept="image/*" style="display: none;">
+                        <div id="profilePictureErrorUser" class="error-message" style="color: #d32f2f; font-weight: bold; font-size: 0.85rem; display: none; margin-top: 5px;">La foto de perfil es obligatoria.</div>
+                    </div>
+
                     <div class="form-group-checkout">
                         <label for="name">Nombre Completo</label>
                         <input type="text" id="name" placeholder="Ej. Juan Pérez">

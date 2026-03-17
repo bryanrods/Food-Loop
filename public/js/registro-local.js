@@ -3,6 +3,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!formRegistroLocal) return;
 
+    // --- LÓGICA DE VISTA PREVIA DE LA FOTO ---
+    const profileInput = document.getElementById('profilePicture');
+    const profilePreview = document.getElementById('profilePreview');
+    const profileIcon = document.getElementById('profileIcon');
+
+    if (profileInput) {
+        profileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    profilePreview.src = event.target.result;
+                    profilePreview.style.display = 'block';
+                    profileIcon.style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+                document.getElementById('profilePictureError').style.display = 'none';
+            }
+        });
+    }
+
     // --- RESTRICCIONES FÍSICAS DE TECLADO ---
     const phoneInput = document.getElementById('phone');
     const nombreDuenoInput = document.getElementById('nombre-dueno');
@@ -62,42 +83,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ENVÍO DE DATOS AL SERVIDOR ---
     formRegistroLocal.addEventListener('submit', async (e) => {
         e.preventDefault(); 
+        
+        let isFormValid = true; // Asumo que haces tus validaciones aquí
 
-        let isFormValid = true;
-
-        // Validar todo antes de enviar
+        // Validamos que suban una foto
+        if (!profileInput.files.length) {
+            document.getElementById('profilePictureError').style.display = 'block';
+            isFormValid = false;
+        }
+        
+        //Validamos todos los campos de texto al hacer clic
         inputsToValidate.forEach(id => {
             const el = document.getElementById(id);
             const errEl = document.getElementById(`${id}Error`);
-            if (el && errEl) {
-                if (!validators[id](el.value)) {
-                    errEl.style.display = 'block';
-                    el.classList.add('input-error');
-                    isFormValid = false;
-                }
+            
+            // Si el campo existe, tiene su mensaje de error, y no pasa la validación
+            if (el && errEl && !validators[id](el.value)) {
+                errEl.style.display = 'block';
+                el.classList.add('input-error');
+                isFormValid = false;
             }
         });
 
-        if (!isFormValid) {
-            return; // Se detiene si hay errores
-        }
+        if (!isFormValid) return; // Si falla algo, no avanzamos
 
-        // Extraemos los datos estructurados para tus dos tablas
-        const payload = {
-            nombre_usuario: document.getElementById('nombre-dueno').value,
-            nombre_comercio: document.getElementById('nombre-local').value,
-            email: document.getElementById('email-local').value,
-            password: document.getElementById('password-local').value,
-            direccion: document.getElementById('address').value,
-            telefono: document.getElementById('phone').value,
-            rol: 'local'
-        };
+        // 🛑 LA MAGIA DEL FORMDATA 🛑
+        const formData = new FormData();
+        formData.append('nombre_usuario', document.getElementById('nombre-dueno').value);
+        formData.append('nombre_comercio', document.getElementById('nombre-local').value);
+        formData.append('email', document.getElementById('email-local').value);
+        formData.append('password', document.getElementById('password-local').value);
+        formData.append('direccion', document.getElementById('address').value);
+        formData.append('telefono', document.getElementById('phone').value);
+        formData.append('rol', 'local');
+        
+        // Adjuntamos el archivo binario
+        formData.append('foto_perfil', profileInput.files[0]);
 
         try {
+            // Fíjate que ya no usamos 'Content-Type': 'application/json'
+            // Fetch arma el paquete multiparte automáticamente al detectar FormData
             const respuesta = await fetch('http://localhost:3005/auth/register', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: formData 
             });
 
             const resultado = await respuesta.json();
@@ -109,18 +137,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     icon: 'success',
                     confirmButtonColor: '#2D6A4F',
                     confirmButtonText: 'Ir a Iniciar Sesión'
-                }).then((result) => {
-                    if (result.isConfirmed) {
+                }).then(() => {
                         window.location.href = 'login.html';
-                    }
                 });
             } else {
                 Swal.fire({
                     title: 'No pudimos registrarte',
                     text: resultado.message || ' intentalo de nuevo', 
-                    icon: 'warning',
-                    confirmButtonColor: '#d32f2f'
-                });
+                    icon: 'warning'
+                    });
             }
         } catch (error) {
             console.error('Error de registro:', error);
@@ -128,7 +153,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: 'Error de conexion',
                     text: 'No pudimos conectar con el servidor. Revisa tu internet.',
                     icon: 'error',
-                    confirmButtonColor: '#d32f2f'
                 });
         }
     });

@@ -2,6 +2,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const registroForm = document.getElementById('registration-form');
     if (!registroForm) return;
 
+    // --- 0. LÓGICA DE VISTA PREVIA DE LA FOTO ---
+    const profileInputUser = document.getElementById('profilePictureUser');
+    const profilePreviewUser = document.getElementById('profilePreviewUser');
+    const profileIconUser = document.getElementById('profileIconUser');
+    const profileErrorUser = document.getElementById('profilePictureErrorUser');
+
+    if (profileInputUser) {
+        profileInputUser.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    if (profilePreviewUser) {
+                        profilePreviewUser.src = event.target.result;
+                        profilePreviewUser.style.display = 'block';
+                    }
+                    if (profileIconUser) {
+                        profileIconUser.style.display = 'none';
+                    }
+                }
+                reader.readAsDataURL(file);
+                if (profileErrorUser) profileErrorUser.style.display = 'none';
+            }
+        });
+    }
+
     // --- 1. RESTRICCIONES DE TECLADO (Keydown) ---
     const nameInput = document.getElementById('name');
     const phoneInput = document.getElementById('phone');
@@ -71,23 +97,34 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Validar que se haya subido una foto
+        if (profileInputUser && !profileInputUser.files.length) {
+            if (profileErrorUser) profileErrorUser.style.display = 'block';
+            isValid = false;
+        }
+
         if (!isValid) return;
 
-        const datos = {
-            nombre: nameInput.value,
-            edad: parseInt(document.getElementById('age').value),
-            telefono: phoneInput.value,
-            email: document.getElementById('email').value,
-            password: document.getElementById('password').value,
-            plan: document.querySelector('input[name="subscription_plan"]:checked')?.id === 'plan-premium' ? 'premium' : 'basico',
-            rol: 'usuario'
-        };
+        // 🛑 LA MAGIA DEL FORMDATA (Adiós JSON) 🛑
+        const formData = new FormData();
+        formData.append('nombre', nameInput.value);
+        formData.append('edad', parseInt(document.getElementById('age').value));
+        formData.append('telefono', phoneInput.value);
+        formData.append('email', document.getElementById('email').value);
+        formData.append('password', document.getElementById('password').value);
+        formData.append('plan', document.querySelector('input[name="subscription_plan"]:checked')?.id === 'plan-premium' ? 'premium' : 'basico');
+        formData.append('rol', 'usuario');
+
+        // Adjuntamos el archivo binario
+        if (profileInputUser && profileInputUser.files.length > 0) {
+            formData.append('foto_perfil', profileInputUser.files[0]);
+        }
 
         try {
+            // Ya no mandamos headers de 'application/json'
             const respuesta = await fetch('http://localhost:3005/auth/register', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datos)
+                body: formData 
             });
 
             const resultado = await respuesta.json();
