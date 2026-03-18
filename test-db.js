@@ -40,59 +40,90 @@
 
 
 
-                                                    /*CONSULTA DE TABLAS */
+                                                    /*CONSULTA DE TABLA INDIVIDUAL */
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+async function getComercioData() {
+    console.log('⏳ Conectando para consultar la tabla "pack"...');
+    
+    try {
+        const connection = await mysql.createConnection({
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+            ssl: {
+                rejectUnauthorized: false 
+            }
+        });
+
+        // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
+        // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
+        const [rows] = await connection.execute('SELECT * FROM pack;');
+
+        if (rows.length === 0) {
+            console.log('⚠️ La tabla "comercio" está vacía.');
+        } else {
+            console.log(`✅ Se encontraron ${rows.length} registros en "comercio":`);
+            // console.table es genial para visualizar datos de bases de datos en la terminal
+            console.table(rows);
+        }
+
+        await connection.end();
+        console.log('🔌 Conexión cerrada.');
+
+    } catch (error) {
+        console.error('❌ Error al consultar la tabla:');
+        console.error(error.message);
+    }
+}
+
+getComercioData();
+
+
+                            /*Borrado TOTAL de datos  */
 // import mysql from 'mysql2/promise';
 // import dotenv from 'dotenv';
+// import fs from 'fs';
+// import path from 'path';
 
 // dotenv.config();
 
-// async function getComercioData() {
-//     console.log('⏳ Conectando para consultar la tabla "pack"...');
+// async function resetNuclear() {
+//     console.log('⚠️ INICIANDO PROTOCOLO NUCLEAR: DESTRUCCIÓN DE DATOS Y FOTOS...');
+    
+//     // ==========================================
+//     // FASE 1: BARRIDO FÍSICO (FOTOS)
+//     // ==========================================
+//     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     
 //     try {
-//         const connection = await mysql.createConnection({
-//             host: process.env.DB_HOST,
-//             port: process.env.DB_PORT,
-//             user: process.env.DB_USER,
-//             password: process.env.DB_PASS,
-//             database: process.env.DB_NAME,
-//             ssl: {
-//                 rejectUnauthorized: false 
+//         if (fs.existsSync(uploadsDir)) {
+//             const archivos = fs.readdirSync(uploadsDir);
+//             let borrados = 0;
+            
+//             for (const archivo of archivos) {
+//                 // Evitamos borrar carpetas ocultas o archivos del sistema si los hubiera
+//                 if (archivo !== '.gitkeep') { 
+//                     fs.unlinkSync(path.join(uploadsDir, archivo));
+//                     borrados++;
+//                 }
 //             }
-//         });
-
-//         // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
-//         // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
-//         const [rows] = await connection.execute('SELECT * FROM datos_usuario;');
-
-//         if (rows.length === 0) {
-//             console.log('⚠️ La tabla "comercio" está vacía.');
+//             console.log(`🧹 FASE 1 COMPLETADA: ${borrados} foto(s) eliminada(s) físicamente del servidor.`);
 //         } else {
-//             console.log(`✅ Se encontraron ${rows.length} registros en "comercio":`);
-//             // console.table es genial para visualizar datos de bases de datos en la terminal
-//             console.table(rows);
+//             console.log('⚠️ La carpeta public/uploads no existe, saltando barrido físico.');
 //         }
-
-//         await connection.end();
-//         console.log('🔌 Conexión cerrada.');
-
-//     } catch (error) {
-//         console.error('❌ Error al consultar la tabla:');
-//         console.error(error.message);
+//     } catch (err) {
+//         console.error('❌ Error al intentar borrar las fotos físicas:', err.message);
 //     }
-// }
 
-// getComercioData();
-
-                                    /*Temporal */
-// import mysql from 'mysql2/promise';
-// import dotenv from 'dotenv';
-
-// dotenv.config();
-
-// async function agregarColumnaFoto() {
-//     console.log('⏳ Conectando a Azure para modificar la tabla "usuario"...');
-    
+//     // ==========================================
+//     // FASE 2: BARRIDO LÓGICO (BASE DE DATOS)
+//     // ==========================================
 //     try {
 //         const connection = await mysql.createConnection({
 //             host: process.env.DB_HOST,
@@ -103,107 +134,36 @@
 //             ssl: { rejectUnauthorized: false }
 //         });
 
-//         console.log('🛠️ Inyectando la columna foto_perfil...');
+//         // Apagamos llaves foráneas para evitar bloqueos
+//         await connection.execute('SET FOREIGN_KEY_CHECKS = 0;');
         
-//         await connection.execute(`
-//             ALTER TABLE usuario 
-//             ADD COLUMN foto_perfil VARCHAR(255) DEFAULT NULL;
-//         `);
+//         const tablas = [
+//             'comercio', 
+//             'datos_usuario', 
+//             'suscripcion_info', 
+//             'reservacion', 
+//             'pack',      
+//             'usuario'
+//         ];
 
-//         console.log('✅ ¡Éxito! La columna foto_perfil fue agregada correctamente.');
+//         for (const tabla of tablas) {
+//             await connection.execute(`TRUNCATE TABLE ${tabla};`);
+//         }
+
+//         // Encendemos seguridad de nuevo
+//         await connection.execute('SET FOREIGN_KEY_CHECKS = 1;');
+
+//         console.log(`🧹 FASE 2 COMPLETADA: ${tablas.length} tablas vaciadas y IDs reiniciados a 1.`);
+//         console.log('\n✅ PROTOCOLO EXITOSO: Tu sistema está como recién instalado.');
+
 //         await connection.end();
 
 //     } catch (error) {
-//         if (error.code === 'ER_DUP_FIELDNAME') {
-//             console.log('⚠️ La columna "foto_perfil" ya existe. No necesitas hacer nada más.');
-//         } else {
-//             console.error('❌ Error al modificar la tabla:', error.message);
-//         }
-//         process.exit(1);
+//         console.error('❌ Error en la base de datos durante la demolición:', error.message);
 //     }
 // }
 
-// agregarColumnaFoto();
-
-                            /*Borrado TOTAL de datos  */
-    import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
-
-dotenv.config();
-
-async function resetNuclear() {
-    console.log('⚠️ INICIANDO PROTOCOLO NUCLEAR: DESTRUCCIÓN DE DATOS Y FOTOS...');
-    
-    // ==========================================
-    // FASE 1: BARRIDO FÍSICO (FOTOS)
-    // ==========================================
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    
-    try {
-        if (fs.existsSync(uploadsDir)) {
-            const archivos = fs.readdirSync(uploadsDir);
-            let borrados = 0;
-            
-            for (const archivo of archivos) {
-                // Evitamos borrar carpetas ocultas o archivos del sistema si los hubiera
-                if (archivo !== '.gitkeep') { 
-                    fs.unlinkSync(path.join(uploadsDir, archivo));
-                    borrados++;
-                }
-            }
-            console.log(`🧹 FASE 1 COMPLETADA: ${borrados} foto(s) eliminada(s) físicamente del servidor.`);
-        } else {
-            console.log('⚠️ La carpeta public/uploads no existe, saltando barrido físico.');
-        }
-    } catch (err) {
-        console.error('❌ Error al intentar borrar las fotos físicas:', err.message);
-    }
-
-    // ==========================================
-    // FASE 2: BARRIDO LÓGICO (BASE DE DATOS)
-    // ==========================================
-    try {
-        const connection = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASS,
-            database: process.env.DB_NAME,
-            ssl: { rejectUnauthorized: false }
-        });
-
-        // Apagamos llaves foráneas para evitar bloqueos
-        await connection.execute('SET FOREIGN_KEY_CHECKS = 0;');
-        
-        const tablas = [
-            'comercio', 
-            'datos_usuario', 
-            'suscripcion_info', 
-            'reservacion', 
-            'pack',      
-            'usuario'
-        ];
-
-        for (const tabla of tablas) {
-            await connection.execute(`TRUNCATE TABLE ${tabla};`);
-        }
-
-        // Encendemos seguridad de nuevo
-        await connection.execute('SET FOREIGN_KEY_CHECKS = 1;');
-
-        console.log(`🧹 FASE 2 COMPLETADA: ${tablas.length} tablas vaciadas y IDs reiniciados a 1.`);
-        console.log('\n✅ PROTOCOLO EXITOSO: Tu sistema está como recién instalado.');
-
-        await connection.end();
-
-    } catch (error) {
-        console.error('❌ Error en la base de datos durante la demolición:', error.message);
-    }
-}
-
-resetNuclear();
+// resetNuclear();
 
                                         /*Borrar columnas en TABLAS */
 
@@ -241,3 +201,70 @@ resetNuclear();
 //     }
 // }
 // reestructurarFotos();
+
+                                    /*Agregar horario en LOCAL */
+// import mysql from 'mysql2/promise';
+// import dotenv from 'dotenv';
+// dotenv.config();
+
+// async function agregarHorarios() {
+//     console.log('⏳ Conectando a Azure para modificar la tabla comercio...');
+//     try {
+//         const connection = await mysql.createConnection({
+//             host: process.env.DB_HOST,
+//             port: process.env.DB_PORT,
+//             user: process.env.DB_USER,
+//             password: process.env.DB_PASS,
+//             database: process.env.DB_NAME,
+//             ssl: { rejectUnauthorized: false }
+//         });
+
+//         console.log('🛠️ Añadiendo hora_apertura...');
+//         try { await connection.execute('ALTER TABLE comercio ADD COLUMN hora_apertura TIME DEFAULT NULL;'); } catch(e) {}
+
+//         console.log('🛠️ Añadiendo hora_cierre...');
+//         try { await connection.execute('ALTER TABLE comercio ADD COLUMN hora_cierre TIME DEFAULT NULL;'); } catch(e) {}
+
+//         console.log('✅ ¡Listo! La tabla comercio ya puede guardar los horarios.');
+//         await connection.end();
+//     } catch (error) {
+//         console.error('❌ Error:', error.message);
+//         process.exit(1);
+//     }
+// }
+// agregarHorarios();
+
+
+                                        /* CONSULTAR COLUMNAS DE TABLA */
+// import mysql from 'mysql2/promise';
+// import dotenv from 'dotenv';
+
+// dotenv.config();
+
+// async function verColumnasPack() {
+//     console.log('🔍 Conectando a Azure para inspeccionar la tabla "pack"...');
+    
+//     try {
+//         const connection = await mysql.createConnection({
+//             host: process.env.DB_HOST,
+//             port: process.env.DB_PORT,
+//             user: process.env.DB_USER,
+//             password: process.env.DB_PASS,
+//             database: process.env.DB_NAME,
+//             ssl: { rejectUnauthorized: false }
+//         });
+
+//         // DESCRIBE nos devuelve el nombre de las columnas, sus tipos de datos y si aceptan nulos
+//         const [rows] = await connection.execute('DESCRIBE pack;');
+
+//         console.log('\n📋 Estructura exacta de la tabla "pack":');
+//         console.table(rows);
+
+//         await connection.end();
+
+//     } catch (error) {
+//         console.error('❌ Error al consultar la tabla:', error.message);
+//     }
+// }
+
+// verColumnasPack();

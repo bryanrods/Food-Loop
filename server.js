@@ -262,22 +262,165 @@ app.get('/api/me', async (req, res) => {
     }
 });
 
-// 4. Crear un nuevo Pack (Local/Admin)
-app.post('/api/packs', async (req, res) => {
-    const { comercio_id, nombre_pack, descripcion, precio_original, precio_descuento, stock, hora_activacion } = req.body;
+// 4. Crear un nuevo Pack (Local)
+app.post('/api/packs', upload.single('foto_pack'), async (req, res) => {
+    const { usuario_id, nombre_pack, descripcion, precio_original, descuento, stock } = req.body;
     
+    if (!usuario_id || !nombre_pack || !precio_original || !stock) {
+        return res.status(400).json({ success: false, message: "Faltan datos obligatorios." });
+    }
+
+    // Calculamos el precio final en el backend por seguridad (no confiamos en el frontend)
+    const precioFinal = precio_original - (precio_original * (descuento / 100));
+    const fotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const connection = await pool.getConnection();
     try {
+        // 1. Traducimos el usuario_id al id_comercio real
+        const [comercio] = await connection.query('SELECT id_comercio FROM comercio WHERE usuario_id = ?', [usuario_id]);
+        
+        if (comercio.length === 0) {
+            return res.status(404).json({ success: false, message: "No se encontró el comercio asociado a este usuario." });
+        }
+        const comercioId = comercio[0].id_comercio;
+
+        // 2. Insertamos el pack usando NOW() para la hora exacta del servidor
         const query = `
-            INSERT INTO pack (comercio_id, nombre_pack, descripcion, precio_original, precio_descuento, stock_disponible, hora_activacion, estado) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'disponible')
+            INSERT INTO pack (comercio_id, nombre_pack, descripcion, precio_original, precio_descuento, stock_disponible, hora_activacion, estado, foto_pack) 
+            VALUES (?, ?, ?, ?, ?, ?, NOW(), 'disponible', ?)
         `;
         
-        await pool.query(query, [comercio_id, nombre_pack, descripcion, precio_original, precio_descuento, stock, hora_activacion]);
+        await connection.query(query, [comercioId, nombre_pack, descripcion || '', precio_original, precioFinal, stock, fotoUrl]);
         
-        res.status(201).json({ success: true, message: "¡Oferta publicada exitosamente!" });
+        res.status(201).json({ success: true, message: "¡Loop-Pack publicado exitosamente!" });
     } catch (error) {
         console.error("❌ Error al crear pack:", error.message);
-        res.status(500).json({ success: false, message: "Error al guardar el pack" });
+        res.status(500).json({ success: false, message: "Error interno al guardar el pack." });
+    } finally {
+        connection.release();
+    }
+});
+
+// 5. OBTENER EL PERFIL DEL LOCAL (Para prellenar el dashboard)
+app.get('/api/comercio/me', async (req, res) => {
+    // Leemos el ID que nos manda el frontend en la URL
+    const { userId } = req.query; 
+    
+    if (!userId) {
+        return res.status(400).json({ success: false, message: "Falta el ID del usuario" });
+    }
+
+    try {
+        // Buscamos los datos actuales del local
+        const [rows] = await pool.query(
+            'SELECT direccion_comercio, hora_apertura, hora_cierre, foto_local FROM comercio WHERE usuario_id = ?', 
+            [userId]
+        );
+        
+        if (rows.length > 0) {
+            // Se los mandamos al frontend para que los pinte
+            res.json({ success: true, comercio: rows[0] });
+        } else {
+            res.status(404).json({ success: false, message: "Comercio no encontrado" });
+        }
+    } catch (error) {
+        console.error("❌ Error al obtener el perfil del local:", error.message);
+        res.status(500).json({ success: false, message: "Error interno del servidor" });
+    }
+});
+
+// 6. ACTUALIZAR EL PERFIL DEL LOCAL (Dirección, horarios y reemplazar foto)
+app.put('/api/comercio/actualizar', upload.single('foto_perfil'), async (req, res) => {
+    const { usuario_id, direccion, apertura, cierre } = req.body;
+
+    if (!usuario_id) {
+        return res.status(400).json({ success: false, message: "ID de usuario requerido" });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        // Revisamos si el frontend nos mandó un archivo nuevo
+        let nuevaFotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+        if (nuevaFotoUrl) {
+            // 🛑 LÓGICA PRO: Si hay foto nueva, buscamos la vieja y la destruimos físicamente
+            const [comercioActual] = await connection.query('SELECT foto_local FROM comercio WHERE usuario_id = ?', [usuario_id]);
+            
+            if (comercioActual.length > 0 && comercioActual[0].foto_local) {
+                const rutaFisicaVieja = path.join(process.cwd(), 'public', comercioActual[0].foto_local);
+                fs.unlink(rutaFisicaVieja, (err) => {
+                    if (err) console.error('⚠️ No se pudo borrar la foto vieja del servidor:', err);
+                    else console.log('🗑️ Foto vieja reemplazada y destruida.');
+                });
+            }
+
+            // Actualizamos la base de datos incluyendo la ruta de la nueva foto
+            await connection.query(
+                'UPDATE comercio SET direccion_comercio = ?, hora_apertura = ?, hora_cierre = ?, foto_local = ? WHERE usuario_id = ?',
+                [direccion, apertura || null, cierre || null, nuevaFotoUrl, usuario_id]
+            );
+        } else {
+            // Si NO subieron foto nueva, solo actualizamos los puros textos
+            await connection.query(
+                'UPDATE comercio SET direccion_comercio = ?, hora_apertura = ?, hora_cierre = ? WHERE usuario_id = ?',
+                [direccion, apertura || null, cierre || null, usuario_id]
+            );
+        }
+
+        res.json({ success: true, message: "Perfil actualizado correctamente." });
+    } catch (error) {
+        console.error("❌ Error al actualizar perfil:", error.message);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
+    } finally {
+        connection.release();
+    }
+});
+
+// ==========================================
+// 7. OBTENER LOS PACKS DE UN LOCAL ESPECÍFICO
+// ==========================================
+app.get('/api/packs/comercio/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        // 1. Traducimos el usuario_id al id_comercio
+        const [comercio] = await pool.query('SELECT id_comercio FROM comercio WHERE usuario_id = ?', [userId]);
+        if (comercio.length === 0) {
+            return res.status(404).json({ success: false, message: "Comercio no encontrado." });
+        }
+
+        // 2. Traemos todos los packs de este comercio ordenados del más nuevo al más viejo
+        const [packs] = await pool.query('SELECT * FROM pack WHERE comercio_id = ? ORDER BY id_pack DESC', [comercio[0].id_comercio]);
+        
+        res.json({ success: true, packs });
+    } catch (error) {
+        console.error("❌ Error al obtener los packs del comercio:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
+    }
+});
+
+// ==========================================
+// 8. BORRAR UN LOOP-PACK (Y su foto física)
+// ==========================================
+app.delete('/api/packs/:packId', async (req, res) => {
+    const packId = req.params.packId;
+    try {
+        // 1. Buscamos si el pack tiene foto para destruirla del disco duro
+        const [pack] = await pool.query('SELECT foto_pack FROM pack WHERE id_pack = ?', [packId]);
+        
+        if (pack.length > 0 && pack[0].foto_pack) {
+            const rutaFisica = path.join(process.cwd(), 'public', pack[0].foto_pack);
+            fs.unlink(rutaFisica, (err) => {
+                if (err) console.error('⚠️ No se pudo borrar la foto del pack físicamente:', err);
+                else console.log(`🗑️ Foto del pack eliminada del servidor: ${pack[0].foto_pack}`);
+            });
+        }
+
+        // 2. Lo borramos de la base de datos SQL
+        await pool.query('DELETE FROM pack WHERE id_pack = ?', [packId]);
+        res.json({ success: true, message: "Pack eliminado exitosamente." });
+    } catch (error) {
+        console.error("❌ Error al borrar el pack:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
     }
 });
 

@@ -153,29 +153,35 @@
                 
                 <div id="panel-perfil" class="dash-panel active">
                     <h3 class="panel-title">Configuración del Perfil</h3>
+                    
+                    <div class="form-group-checkout" style="text-align: center; margin-bottom: 30px;">
+                        <div class="profile-preview-wrapper" style="width: 120px; height: 120px; border-radius: 50%; background: var(--color-primary); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--color-primary);">
+                            <i class="fas fa-store" id="dashProfileIcon" style="font-size: 3rem; color: var(--color-accent);"></i>
+                            <img id="dashProfilePreview" src="#" alt="Logo del Local" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <label for="dashProfilePicture" class="btn btn-upload" style="display: inline-block; cursor: pointer; background-color: var(--color-primary); color: var(--color-accent) !important; padding: 10px 20px; border-radius: 5px;">Actualizar Logo</label>
+                        <input type="file" id="dashProfilePicture" name="foto_perfil" accept="image/*" style="display: none;">
+                    </div>
+
                     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 250px;">
                             <div class="dash-form-group">
-                                <label>Foto de Portada / Logo</label>
-                                <input type="file" accept="image/*">
-                            </div>
-                            <div class="dash-form-group">
-                                <label>Ubicación (Google Maps URL o Dirección)</label>
-                                <input type="text" placeholder="Ej. Av. de las Américas 123">
+                                <label>Dirección del Local</label>
+                                <input type="text" id="dashDireccion" placeholder="Ej. Av. de las Américas 123">
                             </div>
                         </div>
                         <div style="flex: 1; min-width: 250px;">
                             <div class="dash-form-group">
                                 <label>Horario de Apertura</label>
-                                <input type="time">
+                                <input type="time" id="dashApertura">
                             </div>
                             <div class="dash-form-group">
                                 <label>Horario de Cierre</label>
-                                <input type="time">
+                                <input type="time" id="dashCierre">
                             </div>
                         </div>
                     </div>
-                    <button class="btn">Guardar Perfil</button>
+                    <button class="btn" id="btnGuardarPerfil">Guardar Cambios</button>
                 </div>
 
                 <div id="panel-folios" class="dash-panel">
@@ -196,37 +202,56 @@
                 <div id="panel-crear" class="dash-panel">
                     <h3 class="panel-title">Publicar Nuevo Loop-Pack</h3>
                     
-                    <div class="dash-form-group">
-                        <label>Foto del Pack</label>
-                        <input type="file" accept="image/*">
-                    </div>
-                    
-                    <div class="dash-form-group">
-                        <label>Descripción / Contenido</label>
-                        <textarea rows="3" placeholder="Ej. 3 piezas de pan dulce de ayer, 2 bolillos..."></textarea>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                        <div class="dash-form-group">
-                            <label>Precio Original ($)</label>
-                            <input type="number" id="pack-precio-original" placeholder="100" oninput="calcularDescuento()">
+                    <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+                        <div style="text-align: center; width: 150px; flex-shrink: 0;">
+                            <div class="profile-preview-wrapper" style="width: 100px; height: 100px; border-radius: 50%; background: var(--color-primary); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--color-primary);">
+                                <i class="fas fa-box-open" id="packIcon" style="font-size: 2rem; color: var(--color-accent);"></i>
+                                <img id="packPreview" src="#" alt="Vista previa" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <label for="packPicture" class="btn btn-upload" style="font-size: 0.8rem; padding: 8px 12px; width: 100%;">Subir Foto</label>
+                            <input type="file" id="packPicture" accept="image/*" style="display: none;">
                         </div>
-                        <div class="dash-form-group">
-                            <label>Descuento (%)</label>
-                            <input type="number" id="pack-descuento" placeholder="50" oninput="calcularDescuento()">
-                        </div>
-                        <div class="dash-form-group">
-                            <label>Precio Final Auto</label>
-                            <span id="pack-precio-final" class="precio-calculado">$0.00</span>
+
+                        <div style="flex-grow: 1; min-width: 300px;">
+                            <div class="dash-form-group">
+                                <label>Nombre del Pack (Obligatorio)</label>
+                                <input type="text" id="pack-nombre" placeholder="Ej. Paquete Pan Dulce Sorpresa">
+                            </div>
+
+                            <div class="dash-form-group">
+                                <label>Descripción / Contenido</label>
+                                <textarea id="pack-descripcion" rows="3" placeholder="Ej. 3 piezas de pan dulce de ayer, 2 bolillos..."></textarea>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;">
+                                <div class="dash-form-group">
+                                    <label>Precio Original ($)</label>
+                                    <input type="number" id="pack-precio-original" placeholder="100" oninput="calcularDescuento()">
+                                </div>
+                                
+                                <div class="dash-form-group">
+                                    <label>Descuento Aplicado</label>
+                                    <select id="pack-descuento" onchange="calcularDescuento()" style="cursor: pointer;">
+                                        <option value="35">35% (Mínimo)</option>
+                                        <option value="50" selected>50% (Sugerido)</option>
+                                        <option value="75">75% (Liquidación)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="dash-form-group">
+                                    <label>Precio Final</label>
+                                    <span id="pack-precio-final" class="precio-calculado">$0.00</span>
+                                </div>
+                            </div>
+
+                            <div class="dash-form-group" style="max-width: 200px;">
+                                <label>Cantidad Disponible</label>
+                                <input type="number" id="pack-cantidad" placeholder="Ej. 5" min="1">
+                            </div>
+                            
+                            <button class="btn" id="btn-publicar-pack" style="width: 100%;">Publicar Pack Ahora</button>
                         </div>
                     </div>
-
-                    <div class="dash-form-group" style="max-width: 200px;">
-                        <label>Cantidad Disponible</label>
-                        <input type="number" placeholder="Ej. 5" min="1">
-                    </div>
-
-                    <button class="btn">Publicar Pack Ahora</button>
                 </div>
 
                 <div id="panel-mis-packs" class="dash-panel">
@@ -260,7 +285,7 @@
             </div>
         </div>
     </main>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         // LÓGICA DE PESTAÑAS (TABS)
         document.querySelectorAll('.dash-tab-btn').forEach(button => {
@@ -309,6 +334,275 @@
             }
 
             document.getElementById('nombre-negocio').textContent = usuario.nombre;
+
+            // ==========================================
+            // 1. LÓGICA DE VISTA PREVIA (FOTO CIRCULAR)
+            // ==========================================
+            const dashProfileInput = document.getElementById('dashProfilePicture');
+            const dashProfilePreview = document.getElementById('dashProfilePreview');
+            const dashProfileIcon = document.getElementById('dashProfileIcon');
+
+            if (dashProfileInput) {
+                dashProfileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            dashProfilePreview.src = event.target.result;
+                            dashProfilePreview.style.display = 'block';
+                            dashProfileIcon.style.display = 'none';
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            // ==========================================
+            // VISTA PREVIA: FOTO DEL LOOP-PACK
+            // ==========================================
+            const packInput = document.getElementById('packPicture');
+            const packPreview = document.getElementById('packPreview');
+            const packIcon = document.getElementById('packIcon');
+
+            if (packInput) {
+                packInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            packPreview.src = event.target.result;
+                            packPreview.style.display = 'block';
+                            packIcon.style.display = 'none';
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+            
+            // ==========================================
+            // 2. CARGAR DATOS EXISTENTES (Al entrar)
+            // ==========================================
+            // Aquí le preguntaremos al backend por los datos actuales del local
+            async function cargarDatosPerfil() {
+                try {
+                    // Nota: Esta ruta /api/comercio/me la tendremos que crear en el backend
+                    const response = await fetch(`http://localhost:3005/api/comercio/me?userId=${usuario.id}`);
+                    const data = await response.json();
+
+                    if (data.success && data.comercio) {
+                        // Prellenar dirección y horarios
+                        if(data.comercio.direccion_comercio) document.getElementById('dashDireccion').value = data.comercio.direccion_comercio;
+                        if(data.comercio.hora_apertura) document.getElementById('dashApertura').value = data.comercio.hora_apertura;
+                        if(data.comercio.hora_cierre) document.getElementById('dashCierre').value = data.comercio.hora_cierre;
+
+                        // Mostrar la foto si ya existe en la base de datos
+                        if (data.comercio.foto_local) {
+                            dashProfilePreview.src = `http://localhost:3005${data.comercio.foto_local}`;
+                            dashProfilePreview.style.display = 'block';
+                            dashProfileIcon.style.display = 'none';
+                        }
+                    }
+                } catch (error) {
+                    console.error("No se pudieron cargar los datos del perfil", error);
+                }
+            }
+            
+            cargarDatosPerfil(); // Ejecutamos la carga al iniciar
+
+            // ==========================================
+            // 3. GUARDAR CAMBIOS (Al hacer clic)
+            // ==========================================
+            document.getElementById('btnGuardarPerfil').addEventListener('click', async () => {
+                const formData = new FormData();
+                formData.append('usuario_id', usuario.id);
+                formData.append('direccion', document.getElementById('dashDireccion').value);
+                formData.append('apertura', document.getElementById('dashApertura').value);
+                formData.append('cierre', document.getElementById('dashCierre').value);
+
+                // Si seleccionó una nueva foto, la adjuntamos
+                if (dashProfileInput.files.length > 0) {
+                    formData.append('foto_perfil', dashProfileInput.files[0]);
+                }
+
+                try {
+                    // Nota: Esta ruta PUT también la tendremos que crear en el backend
+                    const response = await fetch('http://localhost:3005/api/comercio/actualizar', {
+                        method: 'PUT',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('¡Perfil actualizado correctamente!'); // Cámbialo por SweetAlert si quieres
+                    } else {
+                        alert('Error al actualizar: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error al guardar:', error);
+                    alert('Error de conexión.');
+                }
+            });
+            // ==========================================
+            // 4. PUBLICAR NUEVO LOOP-PACK (FormData)
+            // ==========================================
+            const btnPublicarPack = document.getElementById('btn-publicar-pack');
+            if (btnPublicarPack) {
+                btnPublicarPack.addEventListener('click', async () => {
+                    const nombre = document.getElementById('pack-nombre').value;
+                    const descripcion = document.getElementById('pack-descripcion').value;
+                    const precioOriginal = document.getElementById('pack-precio-original').value;
+                    const descuento = document.getElementById('pack-descuento').value;
+                    const cantidad = document.getElementById('pack-cantidad').value;
+                    const fotoInput = document.getElementById('packPicture');
+
+                    // Validación básica
+                    if (!nombre || !precioOriginal || !cantidad) {
+                        alert("Por favor, llena el nombre, el precio y la cantidad. Son obligatorios.");
+                        return;
+                    }
+
+                    // Preparamos el paquete de datos
+                    const formData = new FormData();
+                    formData.append('usuario_id', usuario.id); // El backend lo traducirá
+                    formData.append('nombre_pack', nombre);
+                    formData.append('descripcion', descripcion);
+                    formData.append('precio_original', precioOriginal);
+                    formData.append('descuento', descuento);
+                    formData.append('stock', cantidad);
+
+                    if (fotoInput.files.length > 0) {
+                        formData.append('foto_pack', fotoInput.files[0]);
+                    }
+
+                    try {
+                        const response = await fetch('http://localhost:3005/api/packs', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert(result.message); // Cámbialo por SweetAlert si quieres que se vea mejor
+                            
+                            // Limpiamos el formulario después de publicar
+                            document.getElementById('pack-nombre').value = '';
+                            document.getElementById('pack-descripcion').value = '';
+                            document.getElementById('pack-precio-original').value = '';
+                            document.getElementById('pack-cantidad').value = '';
+                            document.getElementById('packPreview').style.display = 'none';
+                            document.getElementById('packIcon').style.display = 'block';
+                            document.getElementById('pack-precio-final').textContent = '$0.00';
+                            
+                            // Opcional: Redirigir a la pestaña de "Mis Loop-Packs"
+                            document.querySelector('[data-target="panel-mis-packs"]').click();
+                        } else {
+                            alert("Error: " + result.message);
+                        }
+                    } catch (error) {
+                        console.error('Error al publicar pack:', error);
+                        alert("Error de conexión con el servidor.");
+                    }
+                });
+            }
+
+            // ==========================================
+            // 5. CARGAR INVENTARIO (MIS LOOP-PACKS)
+            // ==========================================
+            async function cargarMisPacks() {
+                const gridPacks = document.querySelector('#panel-mis-packs .mock-grid');
+                if (!gridPacks) return;
+
+                try {
+                    // Le pedimos al servidor los packs de ESTE local
+                    const response = await fetch(`http://localhost:3005/api/packs/comercio/${usuario.id}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        gridPacks.innerHTML = ''; // Destruimos el "Pan Dulce" falso del HTML
+
+                        if (data.packs.length === 0) {
+                            gridPacks.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--color-primary); font-weight: bold; font-size: 1.2rem;">No tienes packs publicados todavía.</p>';
+                            return;
+                        }
+
+                        // Dibujamos una tarjeta por cada pack real
+                        data.packs.forEach(pack => {
+                            // Si el pack tiene foto la mostramos, si no, ponemos el ícono de la cajita
+                            const visualHTML = pack.foto_pack 
+                                ? `<img src="http://localhost:3005${pack.foto_pack}" alt="Pack" style="width: 100%; height: 140px; object-fit: cover; border-bottom: 2px solid var(--color-primary);">`
+                                : `<div style="height: 140px; border-bottom: 2px solid var(--color-primary); display:flex; align-items:center; justify-content:center;"><i class="fas fa-box-open fa-3x" style="color:var(--color-primary);"></i></div>`;
+
+                            const cardHTML = `
+                                <div class="mock-card" style="padding: 0; display: flex; flex-direction: column; overflow: hidden; height: 100%;">
+                                    ${visualHTML}
+                                    <div style="padding: 15px; display: flex; flex-direction: column; flex-grow: 1;">
+                                        <h4 style="margin: 0 0 5px 0; color: var(--color-primary);">${pack.nombre_pack}</h4>
+                                        <p style="margin: 0 0 15px 0; font-size: 0.9rem;">Disp: <strong>${pack.stock_disponible}</strong> | <strong style="color: #d32f2f; font-size: 1.1rem;">$${parseFloat(pack.precio_descuento).toFixed(2)}</strong></p>
+                                        
+                                        <div style="margin-top: auto; display:flex; gap:10px; justify-content:center;">
+                                            <button class="btn" style="padding: 8px 10px; font-size:0.8rem; flex: 1;" onclick="editarPack(${pack.id_pack})">Editar</button>
+                                            
+                                            <button class="btn" style="padding: 8px 10px; font-size:0.8rem; flex: 1; background:#d32f2f; color:white; border-color:#d32f2f;" onclick="borrarPack(${pack.id_pack})">Borrar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            gridPacks.innerHTML += cardHTML;
+                        });
+                    }
+                } catch (error) {
+                    console.error("Error al cargar los packs:", error);
+                }
+            }
+
+            // ==========================================
+            // 6. FUNCIÓN: BORRAR PACK (Con SweetAlert)
+            // ==========================================
+            window.borrarPack = function(packId) {
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "Esta acción borrará el Loop-Pack para siempre.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d32f2f', // Rojo alerta
+                    cancelButtonColor: '#2D6A4F',  // Verde de tu marca
+                    confirmButtonText: '<i class="fas fa-trash"></i> Sí, borrar pack',
+                    cancelButtonText: 'Cancelar'
+                }).then(async (result) => {
+                    // Si el usuario confirma, le disparamos al servidor
+                    if (result.isConfirmed) {
+                        try {
+                            const response = await fetch(`http://localhost:3005/api/packs/${packId}`, { method: 'DELETE' });
+                            const data = await response.json();
+
+                            if (data.success) {
+                                Swal.fire({
+                                    title: '¡Eliminado!',
+                                    text: 'Tu Loop-Pack ha sido borrado de la plataforma.',
+                                    icon: 'success',
+                                    confirmButtonColor: '#2D6A4F'
+                                });
+                                cargarMisPacks(); // Recargamos el inventario visualmente
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        } catch (error) {
+                            console.error("Error al borrar el pack:", error);
+                            Swal.fire('Error de conexión', 'No pudimos conectar con el servidor.', 'error');
+                        }
+                    }
+                });
+            }
+
+            // Función temporal para el botón Editar (para que no marque error al darle clic)
+            window.editarPack = function(packId) {
+                alert("🛠️ La función para editar el pack #" + packId + " la armaremos en breve.");
+            }
+
+            // 🔥 IMPORTANTE: Ejecutamos la carga al iniciar la página
+            cargarMisPacks();
+
         });
 
         function cerrarSesionLocal() {
