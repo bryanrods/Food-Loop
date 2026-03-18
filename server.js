@@ -113,40 +113,43 @@ app.post('/auth/register', upload.single('foto_perfil'), async (req, res) => {
         // Si pasó los filtros, ahora sí abrimos la conexión y guardamos
             const connection = await pool.getConnection();
             try {
-                await connection.beginTransaction();
-                const salt = await bcrypt.genSalt(10);
-                const hashedPwd = await bcrypt.hash(password, salt);
-                const folioNuevo = 'FL-' + crypto.randomBytes(3).toString('hex').toUpperCase();
-
-            // 🛑 MODIFICAMOS EL INSERT PARA GUARDAR LA URL DE LA FOTO 🛑
+            await connection.beginTransaction();
+            const salt = await bcrypt.genSalt(10);
+            const hashedPwd = await bcrypt.hash(password, salt);
+            
+            // 🛑 1. Insertamos en usuario SIN EL FOLIO (ya no existe esa columna aquí)
             const [userResult] = await connection.query(
-                'INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario, folio_usuario) VALUES (?, ?, ?, CURDATE(), ?, ?)',
-                [nombreFinal, hashedPwd, email, rolFinal, folioNuevo]
+                'INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario) VALUES (?, ?, ?, CURDATE(), ?)',
+                [nombreFinal, hashedPwd, email, rolFinal]
             );
             const userId = userResult.insertId;
 
-            
-                // Insertar en 'suscripcion_info'
-                await connection.query(
-                    'INSERT INTO suscripcion_info (usuario_id, tipo_plan, estado_suscripcion, fecha_corte) VALUES (?, ?, "activa", DATE_ADD(CURDATE(), INTERVAL 1 MONTH))',
-                    [userId, plan || 'basico']
-                );
-
-                // Insertar datos extra según el rol
-                if (rolFinal === 'local') {
+            // 🛑 2. SEPARAMOS LA LÓGICA POR ROL
+            if (rolFinal === 'local') {
+                // Si es local, SOLO guardamos en la tabla comercio. (No generamos folio ni suscripción)
                 await connection.query(
                     'INSERT INTO comercio (nombre_comercio, direccion_comercio, telefono_comercio, usuario_id, foto_local) VALUES (?, ?, ?, ?, ?)',
-                    [nombre_comercio, direccion || '', telefono || '', userId, fotoUrl] // <-- fotoUrl aquí
+                    [nombre_comercio, direccion || '', telefono || '', userId, fotoUrl]
                 );
             } else {
-                const edad = req.body.edad || 18;
+                // Si es usuario regular, SÍ generamos folio y SÍ le creamos su membresía
+                const folioNuevo = 'FL-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+                
+                // Primero inactivo y con fecha de corte en NULL porque aún no paga
+                await connection.query(
+                    'INSERT INTO suscripcion_info (usuario_id, tipo_plan, estado_suscripcion, fecha_corte, folio_suscripcion) VALUES (?, ?, "inactiva", NULL, ?)',
+                    [userId, plan || 'basico', folioNuevo]
+                );
+
+                // Insertamos sus datos extra
+                const edad = req.body.edad || 18; 
                 await connection.query(
                     'INSERT INTO datos_usuario (usuario_id, edad, telefono, foto_usuario) VALUES (?, ?, ?, ?)',
-                    [userId, edad, telefono || '', fotoUrl] // <-- fotoUrl aquí
+                    [userId, edad, telefono || '', fotoUrl]
                 );
             }
 
-                await connection.commit();
+            await connection.commit();
                 res.status(201).json({ success: true, message: "¡Registro completado con éxito!" });
             } catch (dbError) {
                 await connection.rollback();
@@ -164,10 +167,21 @@ app.post('/auth/register', upload.single('foto_perfil'), async (req, res) => {
 // ==========================================
 // RUTA DE LOGIN (Lista para SweetAlert)
 // ==========================================
+// ==========================================
+// RUTA DE LOGIN (Actualizada para leer el folio mudado)
+// ==========================================
 app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const [rows] = await pool.query('SELECT * FROM usuario WHERE email_usuario = ?', [email]);
+        // LEFT JOIN es clave: Deja entrar a los locales (que no tienen suscripción) 
+        // y a los usuarios (trayendo su folio de la otra tabla)
+        const query = `
+            SELECT u.*, s.folio_suscripcion 
+            FROM usuario u 
+            LEFT JOIN suscripcion_info s ON u.id_usuario = s.usuario_id 
+            WHERE u.email_usuario = ?
+        `;
+        const [rows] = await pool.query(query, [email]);
         
         if (rows.length === 0) {
             return res.status(401).json({ success: false, message: "No encontramos ninguna cuenta con este correo." });
@@ -183,7 +197,13 @@ app.post('/auth/login', async (req, res) => {
         res.json({ 
             success: true, 
             message: `¡Bienvenido de nuevo, ${user.nombre_usuario}!`,
-            user: { id: user.id_usuario, nombre: user.nombre_usuario, rol: user.rol_usuario, folio: user.folio_usuario } 
+            user: { 
+                id: user.id_usuario, 
+                nombre: user.nombre_usuario, 
+                rol: user.rol_usuario, 
+                // Mandamos el folio correcto, y si es un local, mandamos null para no causar errores
+                folio: user.folio_suscripcion || null 
+            } 
         });
     } catch (error) {
         console.error("Error en Login:", error.message);
@@ -245,10 +265,20 @@ app.get('/api/me', async (req, res) => {
     }
 
     try {
-        const [rows] = await pool.query(
-            'SELECT id_usuario, nombre_usuario, email_usuario, rol_usuario, folio_usuario FROM usuario WHERE id_usuario = ?',
-            [userId]
-        );
+        // Usamos LEFT JOIN para no bloquear a los locales, y usamos AS para engañar al frontend
+        // haciéndole creer que la columna se sigue llamando folio_usuario
+        const query = `
+            SELECT u.id_usuario, u.nombre_usuario, u.email_usuario, u.rol_usuario, 
+                   s.folio_suscripcion AS folio_usuario, 
+                   s.estado_suscripcion, 
+                   s.fecha_corte,
+                   d.telefono, d.foto_usuario
+            FROM usuario u 
+            LEFT JOIN suscripcion_info s ON u.id_usuario = s.usuario_id 
+            LEFT JOIN datos_usuario d ON u.id_usuario = d.usuario_id
+            WHERE u.id_usuario = ?
+        `;
+        const [rows] = await pool.query(query, [userId]);
 
         if (rows.length === 0) {
             return res.status(404).json({ success: false, message: "Usuario no encontrado" });
@@ -421,6 +451,138 @@ app.delete('/api/packs/:packId', async (req, res) => {
     } catch (error) {
         console.error("❌ Error al borrar el pack:", error);
         res.status(500).json({ success: false, message: "Error interno del servidor." });
+    }
+});
+
+// ==========================================
+// 9. EDITAR UN LOOP-PACK (Con o sin foto nueva)
+// ==========================================
+app.put('/api/packs/:packId', upload.single('foto_pack'), async (req, res) => {
+    const packId = req.params.packId;
+    const { nombre_pack, descripcion, precio_original, descuento, stock } = req.body;
+    
+    // Calculamos el nuevo precio final por seguridad
+    const precioFinal = precio_original - (precio_original * (descuento / 100));
+
+    const connection = await pool.getConnection();
+    try {
+        let nuevaFotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+        if (nuevaFotoUrl) {
+            // 🛑 Si mandaron foto nueva, buscamos la vieja para destruirla
+            const [packViejo] = await connection.query('SELECT foto_pack FROM pack WHERE id_pack = ?', [packId]);
+            
+            if (packViejo.length > 0 && packViejo[0].foto_pack) {
+                const rutaFisica = path.join(process.cwd(), 'public', packViejo[0].foto_pack);
+                fs.unlink(rutaFisica, (err) => { if(err) console.error("Error borrando foto vieja del pack"); });
+            }
+
+            // Actualizamos todo, incluyendo la nueva ruta de la foto
+            await connection.query(
+                'UPDATE pack SET nombre_pack = ?, descripcion = ?, precio_original = ?, precio_descuento = ?, stock_disponible = ?, foto_pack = ? WHERE id_pack = ?',
+                [nombre_pack, descripcion, precio_original, precioFinal, stock, nuevaFotoUrl, packId]
+            );
+        } else {
+            // Actualizamos solo los textos, dejando la foto que ya tenía
+            await connection.query(
+                'UPDATE pack SET nombre_pack = ?, descripcion = ?, precio_original = ?, precio_descuento = ?, stock_disponible = ? WHERE id_pack = ?',
+                [nombre_pack, descripcion, precio_original, precioFinal, stock, packId]
+            );
+        }
+
+        res.json({ success: true, message: "¡Loop-Pack actualizado exitosamente!" });
+    } catch (error) {
+        console.error("❌ Error al editar pack:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
+    } finally {
+        connection.release();
+    }
+});
+
+// ==========================================
+// 10. CONSULTAR FOLIO DE USUARIO ANTES DE COBRAR
+// ==========================================
+app.get('/api/suscripcion/consultar/:folio', async (req, res) => {
+    const folio = req.params.folio;
+    try {
+        // Ahora buscamos el 'folio_suscripcion' dentro de la tabla 's' (suscripcion_info)
+        const query = `
+            SELECT u.id_usuario, u.nombre_usuario, s.tipo_plan, s.estado_suscripcion, s.fecha_corte 
+            FROM usuario u
+            JOIN suscripcion_info s ON u.id_usuario = s.usuario_id
+            WHERE s.folio_suscripcion = ? AND u.rol_usuario = 'usuario'
+        `;
+        const [rows] = await pool.query(query, [folio]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Folio no encontrado o no pertenece a un cliente." });
+        }
+
+        const datos = rows[0];
+        // Definir precios según el plan (Ajusta estos precios a tu modelo de negocio)
+        const costo = datos.tipo_plan === 'premium' ? 75 : 45;
+
+        res.json({ success: true, usuario: datos, costo: costo });
+    } catch (error) {
+        console.error("❌ Error al consultar folio:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
+    }
+});
+
+// ==========================================
+// 11. ACTIVAR O RENOVAR SUSCRIPCIÓN (El folio NO cambia)
+// ==========================================
+app.put('/api/suscripcion/renovar', async (req, res) => {
+    const { usuario_id } = req.body;
+    if (!usuario_id) return res.status(400).json({ success: false, message: "ID de usuario requerido." });
+
+    try {
+        // Actualizamos el estado a activo y le sumamos 1 mes a la fecha actual
+        const query = `
+            UPDATE suscripcion_info 
+            SET estado_suscripcion = 'activa', fecha_corte = DATE_ADD(CURDATE(), INTERVAL 1 MONTH) 
+            WHERE usuario_id = ?
+        `;
+        await pool.query(query, [usuario_id]);
+        
+        res.json({ success: true, message: "¡Suscripción actualizada y activa por 1 mes!" });
+    } catch (error) {
+        console.error("❌ Error al renovar suscripción:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
+    }
+});
+
+// ==========================================
+// 12. ACTUALIZAR PERFIL DE USUARIO NORMAL
+// ==========================================
+app.put('/api/usuarios/actualizar', upload.single('foto_perfil'), async (req, res) => {
+    const { usuario_id, telefono } = req.body;
+    if (!usuario_id) return res.status(400).json({ success: false, message: "ID requerido" });
+
+    const connection = await pool.getConnection();
+    try {
+        let nuevaFotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+        if (nuevaFotoUrl) {
+            // Buscamos y destruimos la foto vieja
+            const [viejo] = await connection.query('SELECT foto_usuario FROM datos_usuario WHERE usuario_id = ?', [usuario_id]);
+            if (viejo.length > 0 && viejo[0].foto_usuario) {
+                const rutaFisica = path.join(process.cwd(), 'public', viejo[0].foto_usuario);
+                fs.unlink(rutaFisica, () => {});
+            }
+            // Actualizamos teléfono y foto
+            await connection.query('UPDATE datos_usuario SET telefono = ?, foto_usuario = ? WHERE usuario_id = ?', [telefono, nuevaFotoUrl, usuario_id]);
+        } else {
+            // Actualizamos solo el teléfono
+            await connection.query('UPDATE datos_usuario SET telefono = ? WHERE usuario_id = ?', [telefono, usuario_id]);
+        }
+
+        res.json({ success: true, message: "Perfil actualizado con éxito." });
+    } catch (error) {
+        console.error("❌ Error al actualizar usuario:", error);
+        res.status(500).json({ success: false, message: "Error interno" });
+    } finally {
+        connection.release();
     }
 });
 

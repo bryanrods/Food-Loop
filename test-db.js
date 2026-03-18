@@ -63,7 +63,7 @@ async function getComercioData() {
 
         // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
         // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
-        const [rows] = await connection.execute('SELECT * FROM pack;');
+        const [rows] = await connection.execute('SELECT * FROM suscripcion_info;');
 
         if (rows.length === 0) {
             console.log('⚠️ La tabla "comercio" está vacía.');
@@ -241,9 +241,7 @@ getComercioData();
 
 // dotenv.config();
 
-// async function verColumnasPack() {
-//     console.log('🔍 Conectando a Azure para inspeccionar la tabla "pack"...');
-    
+// async function verColumnasPack() {    
 //     try {
 //         const connection = await mysql.createConnection({
 //             host: process.env.DB_HOST,
@@ -255,9 +253,9 @@ getComercioData();
 //         });
 
 //         // DESCRIBE nos devuelve el nombre de las columnas, sus tipos de datos y si aceptan nulos
-//         const [rows] = await connection.execute('DESCRIBE pack;');
+//         const [rows] = await connection.execute('DESCRIBE suscripcion_pago;');
 
-//         console.log('\n📋 Estructura exacta de la tabla "pack":');
+//         console.log('\n📋 Estructura exacta de la tabla "suscripcion_pago":');
 //         console.table(rows);
 
 //         await connection.end();

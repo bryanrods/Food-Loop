@@ -186,16 +186,14 @@
 
                 <div id="panel-folios" class="dash-panel">
                     <h3 class="panel-title">Activación y Renovación de Usuarios</h3>
-                    <p>Ingresa el folio que te muestra el cliente para registrar su pago.</p>
+                    <p>Ingresa el folio que te muestra el cliente para registrar su pago mensual.</p>
                     
                     <div class="dash-form-group" style="max-width: 400px; margin-top: 20px;">
                         <label>Ingresar Folio (Ej. FL-A8F9B2)</label>
-                        <input type="text" id="input-folio" placeholder="FL-XXXXXX" style="text-transform: uppercase; font-size: 1.2rem; text-align: center;">
-                    </div>
-                    
-                    <div style="display: flex; gap: 15px;">
-                        <button class="btn" onclick="alert('Folio simulado: Activado exitosamente.')">Activar Nuevo Usuario</button>
-                        <button class="btn btn-secondary" style="color:var(--color-primary); border-color:var(--color-primary)!important;" onclick="alert('Folio simulado: Suscripción renovada por 1 mes.')">Renovar Suscripción</button>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="input-folio" placeholder="FL-XXXXXX" style="text-transform: uppercase; font-size: 1.2rem; text-align: center;">
+                            <button class="btn" id="btn-buscar-folio" style="flex-shrink: 0;"><i class="fas fa-search"></i> Buscar</button>
+                        </div>
                     </div>
                 </div>
 
@@ -286,7 +284,9 @@
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <script>
+        let misPacksGlobales = []; // Guardará los packs temporalmente
         // LÓGICA DE PESTAÑAS (TABS)
         document.querySelectorAll('.dash-tab-btn').forEach(button => {
             button.addEventListener('click', () => {
@@ -455,15 +455,13 @@
                     const cantidad = document.getElementById('pack-cantidad').value;
                     const fotoInput = document.getElementById('packPicture');
 
-                    // Validación básica
                     if (!nombre || !precioOriginal || !cantidad) {
-                        alert("Por favor, llena el nombre, el precio y la cantidad. Son obligatorios.");
+                        Swal.fire('Atención', 'Nombre, precio y cantidad son obligatorios.', 'warning');
                         return;
                     }
 
-                    // Preparamos el paquete de datos
                     const formData = new FormData();
-                    formData.append('usuario_id', usuario.id); // El backend lo traducirá
+                    formData.append('usuario_id', usuario.id);
                     formData.append('nombre_pack', nombre);
                     formData.append('descripcion', descripcion);
                     formData.append('precio_original', precioOriginal);
@@ -475,17 +473,26 @@
                     }
 
                     try {
-                        const response = await fetch('http://localhost:3005/api/packs', {
-                            method: 'POST',
-                            body: formData
-                        });
+                        // 🛑 REVISAMOS EL BOTÓN: ¿Estamos creando o editando?
+                        const packIdEditando = btnPublicarPack.dataset.editandoId;
+                        
+                        let urlFetch = 'http://localhost:3005/api/packs'; // URL por defecto (Crear)
+                        let metodoFetch = 'POST'; // Método por defecto (Crear)
 
+                        if (packIdEditando) {
+                            // Si el botón tiene un ID oculto, cambiamos a modo Editar
+                            urlFetch = `http://localhost:3005/api/packs/${packIdEditando}`;
+                            metodoFetch = 'PUT';
+                        }
+
+                        // Hacemos el disparo
+                        const response = await fetch(urlFetch, { method: metodoFetch, body: formData });
                         const result = await response.json();
 
                         if (result.success) {
-                            alert(result.message); // Cámbialo por SweetAlert si quieres que se vea mejor
+                            Swal.fire('¡Éxito!', result.message, 'success');
                             
-                            // Limpiamos el formulario después de publicar
+                            // RESETEAMOS TODO EL FORMULARIO A SU ESTADO ORIGINAL (Modo Crear)
                             document.getElementById('pack-nombre').value = '';
                             document.getElementById('pack-descripcion').value = '';
                             document.getElementById('pack-precio-original').value = '';
@@ -494,14 +501,20 @@
                             document.getElementById('packIcon').style.display = 'block';
                             document.getElementById('pack-precio-final').textContent = '$0.00';
                             
-                            // Opcional: Redirigir a la pestaña de "Mis Loop-Packs"
+                            // Le quitamos la mutación al botón
+                            document.querySelector('#panel-crear .panel-title').textContent = "Publicar Nuevo Loop-Pack";
+                            btnPublicarPack.textContent = "Publicar Pack Ahora";
+                            delete btnPublicarPack.dataset.editandoId; 
+                            
+                            // Recargamos datos y devolvemos al usuario a su inventario
+                            cargarMisPacks();
                             document.querySelector('[data-target="panel-mis-packs"]').click();
                         } else {
-                            alert("Error: " + result.message);
+                            Swal.fire('Error', result.message, 'error');
                         }
                     } catch (error) {
-                        console.error('Error al publicar pack:', error);
-                        alert("Error de conexión con el servidor.");
+                        console.error('Error al guardar pack:', error);
+                        Swal.fire('Error de conexión', 'No pudimos conectar con el servidor.', 'error');
                     }
                 });
             }
@@ -519,6 +532,7 @@
                     const data = await response.json();
 
                     if (data.success) {
+                        misPacksGlobales = data.packs; // <--- 
                         gridPacks.innerHTML = ''; // Destruimos el "Pan Dulce" falso del HTML
 
                         if (data.packs.length === 0) {
@@ -579,7 +593,7 @@
                             if (data.success) {
                                 Swal.fire({
                                     title: '¡Eliminado!',
-                                    text: 'Tu Loop-Pack ha sido borrado de la plataforma.',
+                                    text: 'Tu Loop-Pack ha sido borrado exitosamente.',
                                     icon: 'success',
                                     confirmButtonColor: '#2D6A4F'
                                 });
@@ -595,14 +609,116 @@
                 });
             }
 
-            // Función temporal para el botón Editar (para que no marque error al darle clic)
             window.editarPack = function(packId) {
-                alert("🛠️ La función para editar el pack #" + packId + " la armaremos en breve.");
+                // Buscamos los datos exactos del pack en nuestra variable global
+                const pack = misPacksGlobales.find(p => p.id_pack === packId);
+                if (!pack) return;
+
+                // Llenamos el formulario con los datos del pack
+                document.getElementById('pack-nombre').value = pack.nombre_pack;
+                document.getElementById('pack-descripcion').value = pack.descripcion;
+                document.getElementById('pack-precio-original').value = pack.precio_original;
+                document.getElementById('pack-cantidad').value = pack.stock_disponible;
+                
+                // Calculamos y seleccionamos el descuento correcto
+                const descuentoCalculado = Math.round(100 - ((pack.precio_descuento * 100) / pack.precio_original));
+                const selectDescuento = document.getElementById('pack-descuento');
+                selectDescuento.value = descuentoCalculado >= 75 ? "75" : (descuentoCalculado <= 35 ? "35" : "50");
+                
+                calcularDescuento(); // Actualiza el texto rojo del precio final
+
+                // Mostramos la foto si tiene
+                if (pack.foto_pack) {
+                    document.getElementById('packPreview').src = `http://localhost:3005${pack.foto_pack}`;
+                    document.getElementById('packPreview').style.display = 'block';
+                    document.getElementById('packIcon').style.display = 'none';
+                }
+
+                // MUTAMOS LA INTERFAZ: Cambiamos títulos y el comportamiento del botón
+                document.querySelector('#panel-crear .panel-title').textContent = "Editar Loop-Pack";
+                const btn = document.getElementById('btn-publicar-pack');
+                btn.textContent = "Guardar Cambios";
+                btn.dataset.editandoId = packId; // Le pegamos el ID de forma oculta al botón
+
+                // Viajamos a la pestaña de "Cargar Loop-Pack" automáticamente
+                document.querySelector('[data-target="panel-crear"]').click();
             }
 
             // 🔥 IMPORTANTE: Ejecutamos la carga al iniciar la página
             cargarMisPacks();
 
+            // ==========================================
+            // 7. LÓGICA DE ACTIVACIÓN / RENOVACIÓN DE FOLIOS
+            // ==========================================
+            const btnBuscarFolio = document.getElementById('btn-buscar-folio');
+            const inputFolio = document.getElementById('input-folio');
+
+            if (btnBuscarFolio && inputFolio) {
+                btnBuscarFolio.addEventListener('click', async () => {
+                    const folio = inputFolio.value.trim().toUpperCase();
+                    
+                    if (!folio) {
+                        Swal.fire('Atención', 'Por favor ingresa un folio válido.', 'warning');
+                        return;
+                    }
+
+                    try {
+                        // 1. Consultamos quién es el dueño del folio y cuánto debe pagar
+                        const resConsulta = await fetch(`http://localhost:3005/api/suscripcion/consultar/${folio}`);
+                        const dataConsulta = await resConsulta.json();
+
+                        if (!dataConsulta.success) {
+                            Swal.fire('Folio Inválido', dataConsulta.message, 'error');
+                            return;
+                        }
+
+                        const user = dataConsulta.usuario;
+                        const estadoActual = user.estado_suscripcion.toUpperCase();
+                        
+                        // 2. Le mostramos al local los datos para que cobre el dinero en físico
+                        Swal.fire({
+                            title: 'Usuario Encontrado',
+                            html: `
+                                <div style="text-align: left; background: var(--color-accent); padding: 15px; border: 2px solid var(--color-primary); border-radius: 5px;">
+                                    <p><strong>Cliente:</strong> ${user.nombre_usuario}</p>
+                                    <p><strong>Plan:</strong> ${user.tipo_plan.toUpperCase()}</p>
+                                    <p><strong>Estado Actual:</strong> <span style="color: ${estadoActual === 'ACTIVA' ? '#2D6A4F' : '#d32f2f'}; font-weight: bold;">${estadoActual}</span></p>
+                                    <hr style="border-top: 1px solid var(--color-primary); margin: 10px 0;">
+                                    <h3 style="color: #d32f2f; text-align: center; margin: 0;">Monto a cobrar: $${dataConsulta.costo}.00</h3>
+                                </div>
+                            `,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonColor: '#2D6A4F',
+                            cancelButtonColor: '#d32f2f',
+                            confirmButtonText: 'Confirmar Pago y Activar',
+                            cancelButtonText: 'Cancelar'
+                        }).then(async (result) => {
+                            // 3. Si el local confirma que ya recibió el dinero, activamos en DB
+                            if (result.isConfirmed) {
+                                const resRenovar = await fetch('http://localhost:3005/api/suscripcion/renovar', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ usuario_id: user.id_usuario })
+                                });
+                                
+                                const dataRenovar = await resRenovar.json();
+                                
+                                if (dataRenovar.success) {
+                                    Swal.fire('¡Activado!', `La suscripción de ${user.nombre_usuario} ya está activa por 1 mes.`, 'success');
+                                    inputFolio.value = ''; // Limpiamos el input
+                                } else {
+                                    Swal.fire('Error', dataRenovar.message, 'error');
+                                }
+                            }
+                        });
+
+                    } catch (error) {
+                        console.error('Error al procesar folio:', error);
+                        Swal.fire('Error de red', 'No se pudo contactar al servidor.', 'error');
+                    }
+                });
+            }
         });
 
         function cerrarSesionLocal() {
