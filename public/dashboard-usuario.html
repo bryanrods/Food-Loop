@@ -123,7 +123,7 @@
             </div>
 
                 <div class="dashboard-header" style="margin-top: 40px;">
-                    <h2>Packs Disponibles Hoy</h2>
+                    <!-- <h2>Packs Disponibles Hoy</h2> -->
                     <p>Rescata comida deliciosa y ahorra dinero.</p>
             </div>
 
@@ -171,7 +171,7 @@
     </footer>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Declaramos estadoSuscripcionActual afuera para que otras funciones puedan leerla
+        // Declaramos variables globales
         let estadoSuscripcionActual = 'inactiva'; 
         let usuarioGlobal = null;
 
@@ -185,7 +185,7 @@
 
             usuarioGlobal = JSON.parse(usuarioGuardado);
 
-            // Verificación de seguridad (Si es un local, lo botamos)
+            // Verificación de seguridad
             if (usuarioGlobal.rol === 'local') {
                 window.location.href = 'dashboard-local.html';
                 return;
@@ -194,7 +194,7 @@
             document.getElementById('nombre-usuario').textContent = usuarioGlobal.nombre;
 
             // ==========================================
-            // LÓGICA DE ESTADO, BLOQUEOS Y PERFIL
+            // 2. LÓGICA DE ESTADO Y PERFIL (GET /me)
             // ==========================================
             try {
                 const response = await fetch(`http://localhost:3005/api/me`, {
@@ -208,17 +208,17 @@
                     estadoSuscripcionActual = estadoData.estado_suscripcion || 'inactiva';
                     const folioContainer = document.getElementById('folio-container');
                     
-                    // LLENAMOS LOS DATOS DEL PERFIL SI YA EXISTEN EN LA BASE DE DATOS
+                    // Llenar datos de perfil en el modal y tarjeta principal
                     if (estadoData.telefono) document.getElementById('userTelefono').value = estadoData.telefono;
                     if (estadoData.foto_usuario) {
                         const rutaFoto = `http://localhost:3005${estadoData.foto_usuario}`;
                         
-                        // 1. Pintamos en el Modal (Vista previa)
+                        // En el modal
                         document.getElementById('userProfilePreview').src = rutaFoto;
                         document.getElementById('userProfilePreview').style.display = 'block';
                         document.getElementById('userProfileIcon').style.display = 'none';
 
-                        // 2. Pintamos en la Tarjeta Principal (Dashboard)
+                        // En la tarjeta principal
                         const mainImg = document.getElementById('main-img-profile');
                         const mainIcon = document.getElementById('main-icon-profile');
                         if (mainImg && mainIcon) {
@@ -228,7 +228,7 @@
                         }
                     }
 
-                    // PINTAMOS EL FOLIO SEGÚN ESTADO
+                    // PINTAR FOLIO Y ALERTAS SEGÚN ESTADO
                     if (estadoSuscripcionActual === 'inactiva') {
                         folioContainer.style.borderColor = '#d32f2f';
                         folioContainer.style.backgroundColor = '#ffebee';
@@ -248,18 +248,6 @@
                             </p>
                             <span style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary); display:block; text-align:center;">${estadoData.folio_usuario}</span>
                         `;
-
-                        // SweetAlert de bienvenida (solo la primera vez)
-                        const yaVioAlerta = sessionStorage.getItem('alertaMembresiaVista');
-                        if (!yaVioAlerta) {
-                            Swal.fire({
-                                title: '¡Membresía Activada!',
-                                text: 'Tu suscripción a Food Loop está lista. ¡Empieza a rescatar comida!',
-                                icon: 'success',
-                                confirmButtonColor: '#2D6A4F'
-                            });
-                            sessionStorage.setItem('alertaMembresiaVista', 'true');
-                        }
                     }
                 }
             } catch (error) {
@@ -267,13 +255,12 @@
             }
 
             // ==========================================
-            // ACTUALIZACIÓN DE PERFIL (VISTA PREVIA Y GUARDADO)
+            // 3. ACTUALIZACIÓN DE PERFIL (GUARDAR FOTO Y TEL)
             // ==========================================
             const userFotoInput = document.getElementById('userProfilePicture');
             const userFotoPreview = document.getElementById('userProfilePreview');
             const userFotoIcon = document.getElementById('userProfileIcon');
 
-            // 1. Mostrar vista previa de la foto al seleccionarla
             if (userFotoInput) {
                 userFotoInput.addEventListener('change', function(e) {
                     const file = e.target.files[0];
@@ -289,30 +276,20 @@
                 });
             }
 
-            // 2. Disparar los datos al servidor al darle Guardar
             const btnGuardarPerfil = document.getElementById('btn-guardar-perfil');
             if (btnGuardarPerfil) {
                 btnGuardarPerfil.addEventListener('click', async () => {
                     const tel = document.getElementById('userTelefono').value;
                     const formData = new FormData();
-                    
                     formData.append('usuario_id', usuarioGlobal.id);
                     formData.append('telefono', tel);
-                    if (userFotoInput.files.length > 0) {
-                        formData.append('foto_perfil', userFotoInput.files[0]);
-                    }
+                    if (userFotoInput.files.length > 0) formData.append('foto_perfil', userFotoInput.files[0]);
 
                     try {
-                        const res = await fetch('http://localhost:3005/api/usuarios/actualizar', { 
-                            method: 'PUT', 
-                            body: formData 
-                        });
+                        const res = await fetch('http://localhost:3005/api/usuarios/actualizar', { method: 'PUT', body: formData });
                         const result = await res.json();
-                        
                         if (result.success) {
-                            Swal.fire('¡Listo!', 'Tu perfil ha sido actualizado.', 'success').then(() => {
-                                window.location.reload(); 
-                            });
+                            Swal.fire('¡Listo!', 'Tu perfil ha sido actualizado.', 'success').then(() => window.location.reload());
                         } else {
                             Swal.fire('Error', result.message, 'error');
                         }
@@ -321,11 +298,85 @@
                     }
                 });
             }
+
+            // ==========================================
+            // 4. CARGAR LOS PACKS (PARA EL AVANCE ESCOLAR)
+            // ==========================================
+            cargarPacksDisponibles();
         }); // FIN DEL DOMContentLoaded
 
+        async function cargarPacksDisponibles() {
+            const contenedor = document.getElementById('contenedor-packs');
+            if (!contenedor) return;
+
+            try {
+                const response = await fetch('http://localhost:3005/api/packs');
+                const packs = await response.json();
+
+                contenedor.innerHTML = ''; 
+
+                if (packs.length === 0) {
+                    contenedor.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; font-weight: bold; color: var(--color-primary);">No hay packs disponibles en este momento. Los locales están preparando sorpresas.</p>';
+                    return;
+                }
+
+                packs.forEach(pack => {
+                    const visualHTML = pack.foto_pack 
+                        ? `<img src="http://localhost:3005${pack.foto_pack}" alt="Pack" style="width: 100%; height: 180px; object-fit: cover; border-bottom: 2px solid var(--color-primary);">`
+                        : `<div style="height: 180px; border-bottom: 2px solid var(--color-primary); background: var(--color-primary); display:flex; align-items:center; justify-content:center;"><i class="fas fa-box-open fa-4x" style="color:var(--color-accent);"></i></div>`;
+
+                    const card = `
+                        <div class="dashboard-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer;" onclick="interactuarConPack('${pack.nombre_pack}')">
+                            ${visualHTML}
+                            <div style="padding: 20px; display: flex; flex-direction: column; flex-grow: 1;">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                    <h3 style="margin:0; font-size:1.2rem; color:var(--color-primary);">${pack.nombre_pack}</h3>
+                                </div>
+                                <p style="font-size:0.85rem; margin-top:5px; color:#555;"><i class="fas fa-store"></i> ${pack.nombre_comercio || 'Negocio Local'}</p>
+                                <p style="font-size:0.9rem; margin-top:10px; flex-grow:1;">${pack.descripcion}</p>
+                                
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; border-top: 2px dashed var(--color-primary); padding-top: 15px;">
+                                    <p style="margin:0; font-size:1.5rem; font-weight:900; color:#d32f2f;">$${parseFloat(pack.precio_descuento).toFixed(2)}</p>
+                                    <button class="btn" style="padding: 8px 15px;">Ver más</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    contenedor.innerHTML += card;
+                });
+            } catch (error) {
+                contenedor.innerHTML = '<p style="color: red; grid-column: 1 / -1; text-align: center;">Error de conexión. No pudimos cargar el catálogo.</p>';
+            }
+        }
+
         // ==========================================
-        // RESTRICCIÓN DE RUTAS (CANDADOS DE LAS TARJETAS)
+        // 5. ALERTAS SWEETALERT (BLOQUEOS Y MOCKUPS)
         // ==========================================
+        window.interactuarConPack = function(nombrePack) {
+            if (estadoSuscripcionActual !== 'activa') {
+                Swal.fire({
+                    title: '¡Oferta Bloqueada!',
+                    html: `
+                        <i class="fas fa-lock fa-3x" style="color: #d32f2f; margin-bottom: 15px;"></i>
+                        <p style="font-size: 1.1rem;">Presenta tu folio en un local afiliado para activar tu membresía y poder apartar comida.</p>
+                    `,
+                    confirmButtonColor: '#d32f2f', 
+                    confirmButtonText: 'Entendido'
+                });
+            } else {
+                Swal.fire({
+                    title: '¡Gracias por tu suscripción!',
+                    html: `
+                        <p>Tienes tu cuenta activa y lista para rescatar comida.</p>
+                        <p style="margin-top: 10px;">El pack <b>${nombrePack}</b> estará disponible para apartar en la siguiente actualización del sistema.</p>
+                    `,
+                    icon: 'success', 
+                    confirmButtonColor: '#2D6A4F', 
+                    confirmButtonText: '¡Genial!'
+                });
+            }
+        }
+
         function validarAcceso(destinoUrl) {
             if (estadoSuscripcionActual === 'inactiva') {
                 Swal.fire({
@@ -341,16 +392,10 @@
         }
 
         // ==========================================
-        // FUNCIONES GLOBALES (CERRAR SESIÓN Y MODAL)
+        // 6. MODALES Y SESIÓN
         // ==========================================
-        function abrirModalPerfil() {
-            document.getElementById('modal-perfil').style.display = 'flex';
-        }
-
-        function cerrarModalPerfil() {
-            document.getElementById('modal-perfil').style.display = 'none';
-        }
-
+        function abrirModalPerfil() { document.getElementById('modal-perfil').style.display = 'flex'; }
+        function cerrarModalPerfil() { document.getElementById('modal-perfil').style.display = 'none'; }
         function cerrarSesion() {
             localStorage.removeItem('usuarioFoodLoop');
             sessionStorage.removeItem('alertaMembresiaVista'); 

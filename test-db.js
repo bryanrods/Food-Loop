@@ -63,7 +63,7 @@ async function getComercioData() {
 
         // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
         // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
-        const [rows] = await connection.execute('SELECT * FROM suscripcion_info;');
+        const [rows] = await connection.execute('SELECT * FROM usuario;');
 
         if (rows.length === 0) {
             console.log('⚠️ La tabla "comercio" está vacía.');

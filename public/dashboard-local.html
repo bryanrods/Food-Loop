@@ -719,6 +719,83 @@
                     }
                 });
             }
+
+            // ==========================================
+            // CARGAR CATÁLOGO DE LOOP-PACKS (MOCKUP VISUAL PARA AVANCE)
+            // ==========================================
+            async function cargarPacksDisponibles() {
+                const contenedor = document.getElementById('contenedor-packs');
+                
+                try {
+                    const response = await fetch('http://localhost:3005/api/packs');
+                    const packs = await response.json();
+
+                    contenedor.innerHTML = ''; // Limpiamos el "Buscando..."
+
+                    if (packs.length === 0) {
+                        contenedor.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; font-weight: bold; color: var(--color-primary);">No hay packs disponibles en este momento. Los locales están preparando sorpresas.</p>';
+                        return;
+                    }
+
+                    packs.forEach(pack => {
+                        // Si el pack tiene foto la mostramos, si no, un icono gigante
+                        const visualHTML = pack.foto_pack 
+                            ? `<img src="http://localhost:3005${pack.foto_pack}" alt="Pack" style="width: 100%; height: 180px; object-fit: cover; border-bottom: 2px solid var(--color-primary);">`
+                            : `<div style="height: 180px; border-bottom: 2px solid var(--color-primary); background: var(--color-primary); display:flex; align-items:center; justify-content:center;"><i class="fas fa-box-open fa-4x" style="color:var(--color-accent);"></i></div>`;
+
+                        // Tarjeta brutalista. OJO: El onclick le manda el estado y el nombre del pack
+                        const card = `
+                            <div class="dashboard-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer;" onclick="interactuarConPack('${pack.nombre_pack}')">
+                                ${visualHTML}
+                                <div style="padding: 20px; display: flex; flex-direction: column; flex-grow: 1;">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                        <h3 style="margin:0; font-size:1.2rem; color:var(--color-primary);">${pack.nombre_pack}</h3>
+                                        <span style="background:var(--color-primary); color:var(--color-accent); font-weight:bold; padding:3px 8px; border-radius:3px; font-size:0.8rem;">Stock: ${pack.stock_disponible}</span>
+                                    </div>
+                                    <p style="font-size:0.85rem; margin-top:5px; color:#555;"><i class="fas fa-store"></i> ${pack.nombre_comercio || 'Negocio Local'}</p>
+                                    <p style="font-size:0.9rem; margin-top:10px; flex-grow:1;">${pack.descripcion}</p>
+                                    
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; border-top: 2px dashed var(--color-primary); padding-top: 15px;">
+                                        <p style="margin:0; font-size:1.5rem; font-weight:900; color:#d32f2f;">$${parseFloat(pack.precio_descuento).toFixed(2)}</p>
+                                        <button class="btn" style="padding: 8px 15px;">Ver más</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        contenedor.innerHTML += card;
+                    });
+                } catch (error) {
+                    contenedor.innerHTML = '<p style="color: red; grid-column: 1 / -1; text-align: center;">Error de conexión. No pudimos cargar el catálogo.</p>';
+                }
+            }
+
+            // Ejecutamos la función de inmediato para que pinte la pantalla
+            cargarPacksDisponibles();
+
+        // ==========================================
+        // LÓGICA DE INTERACCIÓN (CONDICIONADA A LA SUSCRIPCIÓN)
+        // ==========================================
+        window.interactuarConPack = function(nombrePack) {
+            if (estadoSuscripcionActual !== 'activa') {
+                // ESTADO INACTIVO: Bloqueamos y pedimos dinero
+                Swal.fire({
+                    title: '¡Oferta Bloqueada!',
+                    text: 'Presenta tu folio en un local afiliado para activar tu membresía y acceder a las ofertas.',
+                    icon: 'lock',
+                    confirmButtonColor: '#d32f2f', // Rojo
+                    confirmButtonText: '<i class="fas fa-store"></i> Entendido'
+                });
+            } else {
+                // ESTADO ACTIVO: Agradecimiento (Finge que funciona para el avance de la escuela)
+                Swal.fire({
+                    title: '¡Gracias por tu suscripción!',
+                    html: `Tienes tu cuenta activa y lista para rescatar comida.<br><br><b>${nombrePack}</b> estará disponible para apartar en la siguiente actualización del sistema.`,
+                    icon: 'success',
+                    confirmButtonColor: '#2D6A4F', // Verde
+                    confirmButtonText: '¡Genial!'
+                });
+            }
+        }
         });
 
         function cerrarSesionLocal() {
