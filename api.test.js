@@ -8,8 +8,8 @@ describe('🧪 PRUEBAS AUTOMATIZADAS: FOOD-LOOP', () => {
         const res = await request(app)
             .post('/auth/login')
             .send({
-                email: 'sebas@gmail.com',  
-                password: '123456'         
+                email: 'flor@gmail.com',  
+                password: '123456789'         
             });
 
         // 👇 ESTA LÍNEA ES LA CLAVE PARA DESCUBRIR AL CULPABLE 👇

@@ -66,9 +66,9 @@
 //         const [rows] = await connection.execute('SELECT * FROM usuario;');
 
 //         if (rows.length === 0) {
-//             console.log('⚠️ La tabla "comercio" está vacía.');
+//             console.log('⚠️ La tabla "reservacion" está vacía.');
 //         } else {
-//             console.log(`✅ Se encontraron ${rows.length} registros en "comercio":`);
+//             console.log(`✅ Se encontraron ${rows.length} registros en "reservacion":`);
 //             // console.table es genial para visualizar datos de bases de datos en la terminal
 //             console.table(rows);
 //         }
@@ -86,84 +86,84 @@
 
 
                             /*Borrado TOTAL de datos  */
-import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
+// import mysql from 'mysql2/promise';
+// import dotenv from 'dotenv';
+// import fs from 'fs';
+// import path from 'path';
 
-dotenv.config();
+// dotenv.config();
 
-async function resetNuclear() {
-    console.log('⚠️ INICIANDO PROTOCOLO NUCLEAR: DESTRUCCIÓN DE DATOS Y FOTOS...');
+// async function resetNuclear() {
+//     console.log('⚠️ INICIANDO PROTOCOLO NUCLEAR: DESTRUCCIÓN DE DATOS Y FOTOS...');
     
-    // ==========================================
-    // FASE 1: BARRIDO FÍSICO (FOTOS)
-    // ==========================================
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+//     // ==========================================
+//     // FASE 1: BARRIDO FÍSICO (FOTOS)
+//     // ==========================================
+//     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     
-    try {
-        if (fs.existsSync(uploadsDir)) {
-            const archivos = fs.readdirSync(uploadsDir);
-            let borrados = 0;
+//     try {
+//         if (fs.existsSync(uploadsDir)) {
+//             const archivos = fs.readdirSync(uploadsDir);
+//             let borrados = 0;
             
-            for (const archivo of archivos) {
-                // Evitamos borrar carpetas ocultas o archivos del sistema si los hubiera
-                if (archivo !== '.gitkeep') { 
-                    fs.unlinkSync(path.join(uploadsDir, archivo));
-                    borrados++;
-                }
-            }
-            console.log(`🧹 FASE 1 COMPLETADA: ${borrados} foto(s) eliminada(s) físicamente del servidor.`);
-        } else {
-            console.log('⚠️ La carpeta public/uploads no existe, saltando barrido físico.');
-        }
-    } catch (err) {
-        console.error('❌ Error al intentar borrar las fotos físicas:', err.message);
-    }
+//             for (const archivo of archivos) {
+//                 // Evitamos borrar carpetas ocultas o archivos del sistema si los hubiera
+//                 if (archivo !== '.gitkeep') { 
+//                     fs.unlinkSync(path.join(uploadsDir, archivo));
+//                     borrados++;
+//                 }
+//             }
+//             console.log(`🧹 FASE 1 COMPLETADA: ${borrados} foto(s) eliminada(s) físicamente del servidor.`);
+//         } else {
+//             console.log('⚠️ La carpeta public/uploads no existe, saltando barrido físico.');
+//         }
+//     } catch (err) {
+//         console.error('❌ Error al intentar borrar las fotos físicas:', err.message);
+//     }
 
-    // ==========================================
-    // FASE 2: BARRIDO LÓGICO (BASE DE DATOS)
-    // ==========================================
-    try {
-        const connection = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASS,
-            database: process.env.DB_NAME,
-            ssl: { rejectUnauthorized: false }
-        });
+//     // ==========================================
+//     // FASE 2: BARRIDO LÓGICO (BASE DE DATOS)
+//     // ==========================================
+//     try {
+//         const connection = await mysql.createConnection({
+//             host: process.env.DB_HOST,
+//             port: process.env.DB_PORT,
+//             user: process.env.DB_USER,
+//             password: process.env.DB_PASS,
+//             database: process.env.DB_NAME,
+//             ssl: { rejectUnauthorized: false }
+//         });
 
-        // Apagamos llaves foráneas para evitar bloqueos
-        await connection.execute('SET FOREIGN_KEY_CHECKS = 0;');
+//         // Apagamos llaves foráneas para evitar bloqueos
+//         await connection.execute('SET FOREIGN_KEY_CHECKS = 0;');
         
-        const tablas = [
-            'comercio', 
-            'datos_usuario', 
-            'suscripcion_info', 
-            'reservacion', 
-            'pack',      
-            'usuario'
-        ];
+//         const tablas = [
+//             'comercio', 
+//             'datos_usuario', 
+//             'suscripcion_info', 
+//             'reservacion', 
+//             'pack',      
+//             'usuario'
+//         ];
 
-        for (const tabla of tablas) {
-            await connection.execute(`TRUNCATE TABLE ${tabla};`);
-        }
+//         for (const tabla of tablas) {
+//             await connection.execute(`TRUNCATE TABLE ${tabla};`);
+//         }
 
-        // Encendemos seguridad de nuevo
-        await connection.execute('SET FOREIGN_KEY_CHECKS = 1;');
+//         // Encendemos seguridad de nuevo
+//         await connection.execute('SET FOREIGN_KEY_CHECKS = 1;');
 
-        console.log(`🧹 FASE 2 COMPLETADA: ${tablas.length} tablas vaciadas y IDs reiniciados a 1.`);
-        console.log('\n✅ PROTOCOLO EXITOSO: Tu sistema está como recién instalado.');
+//         console.log(`🧹 FASE 2 COMPLETADA: ${tablas.length} tablas vaciadas y IDs reiniciados a 1.`);
+//         console.log('\n✅ PROTOCOLO EXITOSO: Tu sistema está como recién instalado.');
 
-        await connection.end();
+//         await connection.end();
 
-    } catch (error) {
-        console.error('❌ Error en la base de datos durante la demolición:', error.message);
-    }
-}
+//     } catch (error) {
+//         console.error('❌ Error en la base de datos durante la demolición:', error.message);
+//     }
+// }
 
-resetNuclear();
+// resetNuclear();
 
                                         /*Borrar columnas en TABLAS */
 
@@ -202,13 +202,13 @@ resetNuclear();
 // }
 // reestructurarFotos();
 
-                                    /*Agregar horario en LOCAL */
+                                        /*AGREGAR COLUMNA A TABLAS*/
 // import mysql from 'mysql2/promise';
 // import dotenv from 'dotenv';
 // dotenv.config();
 
-// async function agregarHorarios() {
-//     console.log('⏳ Conectando a Azure para modificar la tabla comercio...');
+// async function actualizarTablaReservacion() {
+//     console.log('⏳ Conectando a la base de datos de Food Loop...');
 //     try {
 //         const connection = await mysql.createConnection({
 //             host: process.env.DB_HOST,
@@ -219,20 +219,27 @@ resetNuclear();
 //             ssl: { rejectUnauthorized: false }
 //         });
 
-//         console.log('🛠️ Añadiendo hora_apertura...');
-//         try { await connection.execute('ALTER TABLE comercio ADD COLUMN hora_apertura TIME DEFAULT NULL;'); } catch(e) {}
+//         console.log('🛠️ Inyectando la columna "total" en la tabla reservacion...');
+        
+//         // Agregamos la columna como DECIMAL (para manejar centavos)
+//         await connection.execute(`
+//             ALTER TABLE reservacion 
+//             ADD COLUMN total DECIMAL(10,2) NOT NULL DEFAULT 0.00 AFTER estado_reserva;
+//         `);
 
-//         console.log('🛠️ Añadiendo hora_cierre...');
-//         try { await connection.execute('ALTER TABLE comercio ADD COLUMN hora_cierre TIME DEFAULT NULL;'); } catch(e) {}
-
-//         console.log('✅ ¡Listo! La tabla comercio ya puede guardar los horarios.');
+//         console.log('✅ ¡Operación exitosa! La columna "total" ha sido creada.');
 //         await connection.end();
 //     } catch (error) {
-//         console.error('❌ Error:', error.message);
-//         process.exit(1);
+//         // Si el error es "Duplicate column name", significa que ya la tenías y no pasa nada.
+//         if (error.code === 'ER_DUP_FIELDNAME') {
+//             console.log('⚠️ La columna "total" ya existe. ¡Estás listo para continuar!');
+//         } else {
+//             console.error('❌ Error crítico:', error.message);
+//         }
 //     }
 // }
-// agregarHorarios();
+
+// actualizarTablaReservacion();
 
 
                                         /* CONSULTAR COLUMNAS DE TABLA */
@@ -253,7 +260,7 @@ resetNuclear();
 //         });
 
 //         // DESCRIBE nos devuelve el nombre de las columnas, sus tipos de datos y si aceptan nulos
-//         const [rows] = await connection.execute('DESCRIBE suscripcion_pago;');
+//         const [rows] = await connection.execute('DESCRIBE reservacion;');
 
 //         console.log('\n📋 Estructura exacta de la tabla "suscripcion_pago":');
 //         console.table(rows);

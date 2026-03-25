@@ -586,6 +586,122 @@ app.put('/api/usuarios/actualizar', upload.single('foto_perfil'), async (req, re
     }
 });
 
+// // ==========================================
+// // A. CREAR RESERVA (Resta stock)
+// // ==========================================
+// app.post('/api/reservar', async (req, res) => {
+//     const { usuario_id, pack_id, cantidad } = req.body;
+//     const connection = await pool.getConnection();
+
+//     try {
+//         await connection.beginTransaction();
+
+//         // 1. Verificamos stock actual y precio con bloqueo de lectura (FOR UPDATE) para evitar compras fantasma
+//         const [pack] = await connection.query('SELECT stock_disponible, precio_descuento, nombre_pack FROM pack WHERE id_pack = ? FOR UPDATE', [pack_id]);
+        
+//         if (pack.length === 0 || pack[0].stock_disponible < cantidad) {
+//             await connection.rollback();
+//             return res.status(400).json({ success: false, message: "Stock insuficiente o pack no encontrado." });
+//         }
+
+//         const totalCalculado = pack[0].precio_descuento * cantidad;
+
+//         // 2. Insertamos la reserva
+//         await connection.query(
+//             'INSERT INTO reservacion (usuario_id, pack_id, cantidad, fecha_reserva, estado_reserva, total) VALUES (?, ?, ?, NOW(), "pendiente", ?)',
+//             [usuario_id, pack_id, cantidad, totalCalculado]
+//         );
+
+//         // 3. Descontamos del inventario
+//         await connection.query(
+//             'UPDATE pack SET stock_disponible = stock_disponible - ? WHERE id_pack = ?',
+//             [cantidad, pack_id]
+//         );
+
+//         await connection.commit();
+//         res.json({ success: true, message: `¡Apartaste ${cantidad}x ${pack[0].nombre_pack} con éxito!` });
+//     } catch (error) {
+//         await connection.rollback();
+//         console.error("❌ Error en reserva:", error);
+//         res.status(500).json({ success: false, message: "Error interno del servidor." });
+//     } finally {
+//         connection.release();
+//     }
+// });
+
+// // ==========================================
+// // B. MIS COMPRAS (Para el dashboard del usuario)
+// // ==========================================
+// app.get('/api/reservaciones/usuario/:id', async (req, res) => {
+//     try {
+//         const query = `
+//             SELECT r.id_reserva, r.cantidad, r.estado_reserva, r.total, r.fecha_reserva,
+//                    p.nombre_pack, p.foto_pack, c.nombre_comercio
+//             FROM reservacion r
+//             JOIN pack p ON r.pack_id = p.id_pack
+//             JOIN comercio c ON p.comercio_id = c.id_comercio
+//             WHERE r.usuario_id = ?
+//             ORDER BY r.id_reserva DESC
+//         `;
+//         const [rows] = await pool.query(query, [req.params.id]);
+//         res.json({ success: true, reservaciones: rows });
+//     } catch (error) {
+//         console.error("❌ Error al obtener compras:", error);
+//         res.status(500).json({ success: false, message: "Error al cargar tus compras." });
+//     }
+// });
+
+// // ==========================================
+// // C. CANCELAR RESERVA (Devuelve el stock)
+// // ==========================================
+// app.put('/api/reservaciones/cancelar/:id', async (req, res) => {
+//     const connection = await pool.getConnection();
+//     try {
+//         await connection.beginTransaction();
+
+//         // 1. Buscamos la reserva para saber cuántos packs devolver
+//         const [reserva] = await connection.query('SELECT pack_id, cantidad, estado_reserva FROM reservacion WHERE id_reserva = ? FOR UPDATE', [req.params.id]);
+        
+//         if (reserva.length === 0 || reserva[0].estado_reserva !== 'pendiente') {
+//             await connection.rollback();
+//             return res.status(400).json({ success: false, message: "No se puede cancelar esta reserva." });
+//         }
+
+//         // 2. Cambiamos estado a cancelada
+//         await connection.query('UPDATE reservacion SET estado_reserva = "cancelada" WHERE id_reserva = ?', [req.params.id]);
+
+//         // 3. ¡Regresamos el stock al local!
+//         await connection.query('UPDATE pack SET stock_disponible = stock_disponible + ? WHERE id_pack = ?', [reserva[0].cantidad, reserva[0].pack_id]);
+
+//         await connection.commit();
+//         res.json({ success: true, message: "Reserva cancelada. El stock ha sido devuelto." });
+//     } catch (error) {
+//         await connection.rollback();
+//         console.error("❌ Error al cancelar:", error);
+//         res.status(500).json({ success: false, message: "Error interno." });
+//     } finally {
+//         connection.release();
+//     }
+// });
+
+// // ==========================================
+// // D. COBRAR RESERVA (Para el dashboard del local)
+// // ==========================================
+// app.put('/api/reservaciones/cobrar/:id', async (req, res) => {
+//     try {
+//         const [result] = await pool.query('UPDATE reservacion SET estado_reserva = "completada" WHERE id_reserva = ? AND estado_reserva = "pendiente"', [req.params.id]);
+        
+//         if (result.affectedRows === 0) {
+//             return res.status(400).json({ success: false, message: "La reserva ya fue cobrada o cancelada previamente." });
+//         }
+
+//         res.json({ success: true, message: "¡Cobro registrado con éxito!" });
+//     } catch (error) {
+//         console.error("❌ Error al cobrar:", error);
+//         res.status(500).json({ success: false, message: "Error interno del servidor." });
+//     }
+// });
+
 // ==========================================
 // RUTA PARA BORRAR USUARIO Y DESTRUIR SU FOTO FÍSICA
 // ==========================================
