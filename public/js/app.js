@@ -223,3 +223,14 @@
   });
   
 })();
+
+// Esperar a que el HTML y los recursos de la página carguen por completo
+window.addEventListener('load', () => {
+  const splashScreen = document.getElementById('splash-screen');
+  
+  // Agregamos un ligero retraso de 1.5 segundos (1500 ms)
+  // para garantizar que el usuario alcance a apreciar el logo y la animación
+  setTimeout(() => {
+    splashScreen.classList.add('oculto');
+  }, 1500); 
+});

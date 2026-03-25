@@ -1066,3 +1066,80 @@ body {
         justify-content: center;
     }
 }
+
+
+/* --- SPLASH SCREEN ANIMADO Y COLORIDO --- */
+#splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+
+    /* Gradiente de colores vivos (puedes cambiar los códigos hexadecimales por los de tu marca) */
+    background: linear-gradient(45deg, #ff6b6b, #ff922b, #fcc419, #51cf66, #339af0);
+    background-size: 300% 300%;
+    animation: moverGradiente 6s ease infinite;
+    /* Anima el fondo continuamente */
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+
+    /* Transición de salida más fluida y cinematográfica */
+    transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1),
+        visibility 0.8s,
+        transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Efecto cuando la pantalla desaparece: se desvanece y hace un ligero zoom hacia ti */
+#splash-screen.oculto {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(1.15);
+}
+
+#splash-logo {
+    width: 160px;
+    /* Sombra para que el logo resalte sin importar qué color pase por el fondo */
+    filter: drop-shadow(0px 10px 15px rgba(0, 0, 0, 0.3));
+    animation: flotarLogo 3s ease-in-out infinite;
+}
+
+/* --- KEYFRAMES (Las instrucciones de las animaciones) --- */
+
+/* 1. Animación para que los colores del fondo se muevan como olas */
+@keyframes moverGradiente {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* 2. Animación para que el logo flote suavemente y su sombra cambie */
+@keyframes flotarLogo {
+    0% {
+        transform: translateY(0px) scale(1);
+        filter: drop-shadow(0px 10px 10px rgba(0, 0, 0, 0.2));
+    }
+
+    50% {
+        transform: translateY(-20px) scale(1.08);
+        /* Sube un poco y crece */
+        filter: drop-shadow(0px 25px 20px rgba(0, 0, 0, 0.4));
+        /* Sombra más alejada */
+    }
+
+    100% {
+        transform: translateY(0px) scale(1);
+        filter: drop-shadow(0px 10px 10px rgba(0, 0, 0, 0.2));
+    }
+}
