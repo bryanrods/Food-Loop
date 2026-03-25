@@ -7,12 +7,11 @@
     <title>Panel del Local - Food Loop</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2E4235">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
-    
+
     <style>
-        /* ESTILOS ESPECÍFICOS DEL DASHBOARD LOCAL (BRUTALISMO) */
         .dash-layout {
             display: flex;
             gap: 30px;
@@ -22,7 +21,6 @@
             align-items: flex-start;
         }
 
-        /* Menú Lateral */
         .dash-sidebar {
             width: 250px;
             display: flex;
@@ -44,16 +42,18 @@
             box-shadow: 4px 4px 0px var(--color-primary);
         }
 
-        .dash-tab-btn:hover, .dash-tab-btn.active {
+        .dash-tab-btn:hover,
+        .dash-tab-btn.active {
             background: var(--color-primary);
             color: var(--color-accent);
             transform: translate(2px, 2px);
-            box-shadow: 2px 2px 0px var(--color-accent); /* Contraste invertido */
+            box-shadow: 2px 2px 0px var(--color-accent);
         }
 
-        .dash-tab-btn i { width: 25px; }
+        .dash-tab-btn i {
+            width: 25px;
+        }
 
-        /* Contenido Central */
         .dash-content {
             flex-grow: 1;
             background: var(--color-accent);
@@ -62,8 +62,13 @@
             padding: 40px;
         }
 
-        .dash-panel { display: none; }
-        .dash-panel.active { display: block; }
+        .dash-panel {
+            display: none;
+        }
+
+        .dash-panel.active {
+            display: block;
+        }
 
         .panel-title {
             color: var(--color-primary);
@@ -73,10 +78,20 @@
             text-transform: uppercase;
         }
 
-        /* Formularios internos */
-        .dash-form-group { margin-bottom: 20px; }
-        .dash-form-group label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--color-primary); }
-        .dash-form-group input, .dash-form-group textarea, .dash-form-group select {
+        .dash-form-group {
+            margin-bottom: 20px;
+        }
+
+        .dash-form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--color-primary);
+        }
+
+        .dash-form-group input,
+        .dash-form-group textarea,
+        .dash-form-group select {
             width: 100%;
             padding: 12px;
             border: 2px solid var(--color-primary);
@@ -84,13 +99,14 @@
             color: var(--color-primary);
             font-weight: bold;
         }
-        .dash-form-group input:focus, .dash-form-group textarea:focus {
+
+        .dash-form-group input:focus,
+        .dash-form-group textarea:focus {
             background: var(--color-primary);
             color: var(--color-accent);
             outline: none;
         }
 
-        /* Grilla de Packs y Reservas (Mockups) */
         .mock-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -104,13 +120,96 @@
             background: var(--color-accent);
         }
 
-        .precio-calculado { font-size: 1.5rem; font-weight: 900; color: #d32f2f; }
+        .precio-calculado {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #d32f2f;
+        }
+
+        .ganancias-resumen {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .ganancia-box {
+            border: 2px solid var(--color-primary);
+            box-shadow: 5px 5px 0px var(--color-primary);
+            padding: 20px;
+            background: #fffdf7;
+        }
+
+        .ganancia-box h4 {
+            margin: 0 0 10px 0;
+            color: var(--color-primary);
+            text-transform: uppercase;
+            font-size: 0.95rem;
+        }
+
+        .ganancia-box p {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #2D6A4F;
+        }
+
+        .tabla-ganancias-wrapper {
+            overflow-x: auto;
+            border: 2px solid var(--color-primary);
+            box-shadow: 6px 6px 0px var(--color-primary);
+            background: #fffdf7;
+        }
+
+        .tabla-ganancias {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 650px;
+        }
+
+        .tabla-ganancias thead {
+            background: var(--color-primary);
+            color: var(--color-accent);
+        }
+
+        .tabla-ganancias th,
+        .tabla-ganancias td {
+            padding: 14px 16px;
+            border-bottom: 2px solid var(--color-primary);
+            text-align: left;
+        }
+
+        .tabla-ganancias tbody tr:nth-child(even) {
+            background: #f3eedf;
+        }
+
+        .tabla-vacia {
+            text-align: center;
+            padding: 30px;
+            font-weight: bold;
+            color: #555;
+        }
 
         @media (max-width: 768px) {
-            .dash-layout { flex-direction: column; }
-            .dash-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
-            .dash-tab-btn { flex: 1 1 calc(50% - 15px); text-align: center; }
-            .dash-content { padding: 20px; width: 100%; }
+            .dash-layout {
+                flex-direction: column;
+            }
+
+            .dash-sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .dash-tab-btn {
+                flex: 1 1 calc(50% - 15px);
+                text-align: center;
+            }
+
+            .dash-content {
+                padding: 20px;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -138,6 +237,9 @@
                 <button class="dash-tab-btn" data-target="panel-folios">
                     <i class="fas fa-ticket-alt"></i> Validar Folios
                 </button>
+                <button class="dash-tab-btn" data-target="panel-ganancias">
+                    <i class="fas fa-dollar-sign"></i> Ganancias
+                </button>
                 <button class="dash-tab-btn" data-target="panel-crear">
                     <i class="fas fa-plus-circle"></i> Cargar Loop-Pack
                 </button>
@@ -150,16 +252,22 @@
             </aside>
 
             <div class="dash-content">
-                
+
                 <div id="panel-perfil" class="dash-panel active">
                     <h3 class="panel-title">Configuración del Perfil</h3>
-                    
+
                     <div class="form-group-checkout" style="text-align: center; margin-bottom: 30px;">
-                        <div class="profile-preview-wrapper" style="width: 120px; height: 120px; border-radius: 50%; background: var(--color-primary); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--color-primary);">
-                            <i class="fas fa-store" id="dashProfileIcon" style="font-size: 3rem; color: var(--color-accent);"></i>
-                            <img id="dashProfilePreview" src="#" alt="Logo del Local" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                        <div class="profile-preview-wrapper"
+                            style="width: 120px; height: 120px; border-radius: 50%; background: var(--color-primary); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--color-primary);">
+                            <i class="fas fa-store" id="dashProfileIcon"
+                                style="font-size: 3rem; color: var(--color-accent);"></i>
+                            <img id="dashProfilePreview" src="#" alt="Logo del Local"
+                                style="display: none; width: 100%; height: 100%; object-fit: cover;">
                         </div>
-                        <label for="dashProfilePicture" class="btn btn-upload" style="display: inline-block; cursor: pointer; background-color: var(--color-primary); color: var(--color-accent) !important; padding: 10px 20px; border-radius: 5px;">Actualizar Logo</label>
+                        <label for="dashProfilePicture" class="btn btn-upload"
+                            style="display: inline-block; cursor: pointer; background-color: var(--color-primary); color: var(--color-accent) !important; padding: 10px 20px; border-radius: 5px;">
+                            Actualizar Logo
+                        </label>
                         <input type="file" id="dashProfilePicture" name="foto_perfil" accept="image/*" style="display: none;">
                     </div>
 
@@ -187,26 +295,66 @@
                 <div id="panel-folios" class="dash-panel">
                     <h3 class="panel-title">Activación y Renovación de Usuarios</h3>
                     <p>Ingresa el folio que te muestra el cliente para registrar su pago mensual.</p>
-                    
+
                     <div class="dash-form-group" style="max-width: 400px; margin-top: 20px;">
                         <label>Ingresar Folio (Ej. FL-A8F9B2)</label>
                         <div style="display: flex; gap: 10px;">
-                            <input type="text" id="input-folio" placeholder="FL-XXXXXX" style="text-transform: uppercase; font-size: 1.2rem; text-align: center;">
-                            <button class="btn" id="btn-buscar-folio" style="flex-shrink: 0;"><i class="fas fa-search"></i> Buscar</button>
+                            <input type="text" id="input-folio" placeholder="FL-XXXXXX"
+                                style="text-transform: uppercase; font-size: 1.2rem; text-align: center;">
+                            <button class="btn" id="btn-buscar-folio" style="flex-shrink: 0;">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
                         </div>
+                    </div>
+                </div>
+
+                <div id="panel-ganancias" class="dash-panel">
+                    <h3 class="panel-title">Ganancias</h3>
+
+                    <div class="ganancias-resumen">
+                        <div class="ganancia-box">
+                            <h4>Total de ganancias</h4>
+                            <p id="total-ganancias">$0.00</p>
+                        </div>
+
+                        <div class="ganancia-box">
+                            <h4>0.5% del total</h4>
+                            <p id="porcentaje-ganancias">$0.00</p>
+                        </div>
+                    </div>
+
+                    <div class="tabla-ganancias-wrapper">
+                        <table class="tabla-ganancias">
+                            <thead>
+                                <tr>
+                                    <th>Día</th>
+                                    <th>Motivo de pago</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-ganancias-body">
+                                <tr>
+                                    <td colspan="3" class="tabla-vacia">Aún no hay movimientos registrados.</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div id="panel-crear" class="dash-panel">
                     <h3 class="panel-title">Publicar Nuevo Loop-Pack</h3>
-                    
+
                     <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
                         <div style="text-align: center; width: 150px; flex-shrink: 0;">
-                            <div class="profile-preview-wrapper" style="width: 100px; height: 100px; border-radius: 50%; background: var(--color-primary); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--color-primary);">
-                                <i class="fas fa-box-open" id="packIcon" style="font-size: 2rem; color: var(--color-accent);"></i>
-                                <img id="packPreview" src="#" alt="Vista previa" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                            <div class="profile-preview-wrapper"
+                                style="width: 100px; height: 100px; border-radius: 50%; background: var(--color-primary); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--color-primary);">
+                                <i class="fas fa-box-open" id="packIcon"
+                                    style="font-size: 2rem; color: var(--color-accent);"></i>
+                                <img id="packPreview" src="#" alt="Vista previa"
+                                    style="display: none; width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            <label for="packPicture" class="btn btn-upload" style="font-size: 0.8rem; padding: 8px 12px; width: 100%;">Subir Foto</label>
+                            <label for="packPicture" class="btn btn-upload"
+                                style="font-size: 0.8rem; padding: 8px 12px; width: 100%;">Subir Foto</label>
                             <input type="file" id="packPicture" accept="image/*" style="display: none;">
                         </div>
 
@@ -218,7 +366,8 @@
 
                             <div class="dash-form-group">
                                 <label>Descripción / Contenido</label>
-                                <textarea id="pack-descripcion" rows="3" placeholder="Ej. 3 piezas de pan dulce de ayer, 2 bolillos..."></textarea>
+                                <textarea id="pack-descripcion" rows="3"
+                                    placeholder="Ej. 3 piezas de pan dulce de ayer, 2 bolillos..."></textarea>
                             </div>
 
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;">
@@ -226,7 +375,7 @@
                                     <label>Precio Original ($)</label>
                                     <input type="number" id="pack-precio-original" placeholder="100" oninput="calcularDescuento()">
                                 </div>
-                                
+
                                 <div class="dash-form-group">
                                     <label>Descuento Aplicado</label>
                                     <select id="pack-descuento" onchange="calcularDescuento()" style="cursor: pointer;">
@@ -235,7 +384,7 @@
                                         <option value="75">75% (Liquidación)</option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="dash-form-group">
                                     <label>Precio Final</label>
                                     <span id="pack-precio-final" class="precio-calculado">$0.00</span>
@@ -246,7 +395,7 @@
                                 <label>Cantidad Disponible</label>
                                 <input type="number" id="pack-cantidad" placeholder="Ej. 5" min="1">
                             </div>
-                            
+
                             <button class="btn" id="btn-publicar-pack" style="width: 100%;">Publicar Pack Ahora</button>
                         </div>
                     </div>
@@ -264,7 +413,7 @@
                                 <button class="btn" style="padding: 5px 10px; font-size:0.8rem; background:#d32f2f; color:white; border-color:#d32f2f;">Borrar</button>
                             </div>
                         </div>
-                        </div>
+                    </div>
                 </div>
 
                 <div id="panel-reservas" class="dash-panel">
@@ -283,26 +432,24 @@
             </div>
         </div>
     </main>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+
     <script>
-        let misPacksGlobales = []; // Guardará los packs temporalmente
-        // LÓGICA DE PESTAÑAS (TABS)
+        let misPacksGlobales = [];
+        let historialGanancias = [];
+
         document.querySelectorAll('.dash-tab-btn').forEach(button => {
             button.addEventListener('click', () => {
-                // Quitar activo de todos los botones
                 document.querySelectorAll('.dash-tab-btn').forEach(btn => btn.classList.remove('active'));
-                // Ocultar todos los paneles
                 document.querySelectorAll('.dash-panel').forEach(panel => panel.classList.remove('active'));
-                
-                // Activar el botón clicado y su panel correspondiente
+
                 button.classList.add('active');
                 const targetId = button.getAttribute('data-target');
                 document.getElementById(targetId).classList.add('active');
             });
         });
 
-        // LÓGICA DE CÁLCULO DE DESCUENTO AUTOMÁTICO
         function calcularDescuento() {
             const original = parseFloat(document.getElementById('pack-precio-original').value) || 0;
             const descuento = parseFloat(document.getElementById('pack-descuento').value) || 0;
@@ -316,17 +463,80 @@
             }
         }
 
-        // SEGURIDAD FRONTEND BÁSICA
+        function formatearFecha(fecha = new Date()) {
+            return fecha.toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+
+        function obtenerTotalGanancias() {
+            return historialGanancias.reduce((acum, item) => acum + (parseFloat(item.monto) || 0), 0);
+        }
+
+        function actualizarResumenGanancias() {
+            const total = obtenerTotalGanancias();
+            const porcentaje = total * 0.005; // 0.5%
+
+            document.getElementById('total-ganancias').textContent = `$${total.toFixed(2)}`;
+            document.getElementById('porcentaje-ganancias').textContent = `$${porcentaje.toFixed(2)}`;
+        }
+
+        function renderizarTablaGanancias() {
+            const tbody = document.getElementById('tabla-ganancias-body');
+
+            if (!historialGanancias.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="tabla-vacia">Aún no hay movimientos registrados.</td>
+                    </tr>
+                `;
+                actualizarResumenGanancias();
+                return;
+            }
+
+            tbody.innerHTML = historialGanancias.map(item => `
+                <tr>
+                    <td>${item.fecha}</td>
+                    <td>${item.motivo}</td>
+                    <td>$${parseFloat(item.monto).toFixed(2)}</td>
+                </tr>
+            `).join('');
+
+            actualizarResumenGanancias();
+        }
+
+        function guardarHistorialGanancias() {
+            localStorage.setItem('historialGananciasFoodLoop', JSON.stringify(historialGanancias));
+        }
+
+        function cargarHistorialGanancias() {
+            const dataGuardada = localStorage.getItem('historialGananciasFoodLoop');
+            historialGanancias = dataGuardada ? JSON.parse(dataGuardada) : [];
+            renderizarTablaGanancias();
+        }
+
+        function registrarGanancia(fecha, motivo, monto) {
+            historialGanancias.unshift({
+                fecha: fecha,
+                motivo: motivo,
+                monto: parseFloat(monto)
+            });
+
+            guardarHistorialGanancias();
+            renderizarTablaGanancias();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
-            if (!usuarioGuardado) { 
-                window.location.href = 'login.html'; 
-                return; 
+            if (!usuarioGuardado) {
+                window.location.href = 'login.html';
+                return;
             }
 
             const usuario = JSON.parse(usuarioGuardado);
 
-            // Verificación estricta de rol
             if (usuario.rol !== 'local') {
                 alert('Acceso denegado. Este panel es exclusivo para comercios registrados.');
                 window.location.href = 'dashboard-usuario.html';
@@ -335,19 +545,18 @@
 
             document.getElementById('nombre-negocio').textContent = usuario.nombre;
 
-            // ==========================================
-            // 1. LÓGICA DE VISTA PREVIA (FOTO CIRCULAR)
-            // ==========================================
+            cargarHistorialGanancias();
+
             const dashProfileInput = document.getElementById('dashProfilePicture');
             const dashProfilePreview = document.getElementById('dashProfilePreview');
             const dashProfileIcon = document.getElementById('dashProfileIcon');
 
             if (dashProfileInput) {
-                dashProfileInput.addEventListener('change', function(e) {
+                dashProfileInput.addEventListener('change', function (e) {
                     const file = e.target.files[0];
                     if (file) {
                         const reader = new FileReader();
-                        reader.onload = function(event) {
+                        reader.onload = function (event) {
                             dashProfilePreview.src = event.target.result;
                             dashProfilePreview.style.display = 'block';
                             dashProfileIcon.style.display = 'none';
@@ -356,19 +565,17 @@
                     }
                 });
             }
-            // ==========================================
-            // VISTA PREVIA: FOTO DEL LOOP-PACK
-            // ==========================================
+
             const packInput = document.getElementById('packPicture');
             const packPreview = document.getElementById('packPreview');
             const packIcon = document.getElementById('packIcon');
 
             if (packInput) {
-                packInput.addEventListener('change', function(e) {
+                packInput.addEventListener('change', function (e) {
                     const file = e.target.files[0];
                     if (file) {
                         const reader = new FileReader();
-                        reader.onload = function(event) {
+                        reader.onload = function (event) {
                             packPreview.src = event.target.result;
                             packPreview.style.display = 'block';
                             packIcon.style.display = 'none';
@@ -377,24 +584,17 @@
                     }
                 });
             }
-            
-            // ==========================================
-            // 2. CARGAR DATOS EXISTENTES (Al entrar)
-            // ==========================================
-            // Aquí le preguntaremos al backend por los datos actuales del local
+
             async function cargarDatosPerfil() {
                 try {
-                    // Nota: Esta ruta /api/comercio/me la tendremos que crear en el backend
                     const response = await fetch(`http://localhost:3005/api/comercio/me?userId=${usuario.id}`);
                     const data = await response.json();
 
                     if (data.success && data.comercio) {
-                        // Prellenar dirección y horarios
-                        if(data.comercio.direccion_comercio) document.getElementById('dashDireccion').value = data.comercio.direccion_comercio;
-                        if(data.comercio.hora_apertura) document.getElementById('dashApertura').value = data.comercio.hora_apertura;
-                        if(data.comercio.hora_cierre) document.getElementById('dashCierre').value = data.comercio.hora_cierre;
+                        if (data.comercio.direccion_comercio) document.getElementById('dashDireccion').value = data.comercio.direccion_comercio;
+                        if (data.comercio.hora_apertura) document.getElementById('dashApertura').value = data.comercio.hora_apertura;
+                        if (data.comercio.hora_cierre) document.getElementById('dashCierre').value = data.comercio.hora_cierre;
 
-                        // Mostrar la foto si ya existe en la base de datos
                         if (data.comercio.foto_local) {
                             dashProfilePreview.src = `http://localhost:3005${data.comercio.foto_local}`;
                             dashProfilePreview.style.display = 'block';
@@ -405,12 +605,9 @@
                     console.error("No se pudieron cargar los datos del perfil", error);
                 }
             }
-            
-            cargarDatosPerfil(); // Ejecutamos la carga al iniciar
 
-            // ==========================================
-            // 3. GUARDAR CAMBIOS (Al hacer clic)
-            // ==========================================
+            cargarDatosPerfil();
+
             document.getElementById('btnGuardarPerfil').addEventListener('click', async () => {
                 const formData = new FormData();
                 formData.append('usuario_id', usuario.id);
@@ -418,22 +615,20 @@
                 formData.append('apertura', document.getElementById('dashApertura').value);
                 formData.append('cierre', document.getElementById('dashCierre').value);
 
-                // Si seleccionó una nueva foto, la adjuntamos
                 if (dashProfileInput.files.length > 0) {
                     formData.append('foto_perfil', dashProfileInput.files[0]);
                 }
 
                 try {
-                    // Nota: Esta ruta PUT también la tendremos que crear en el backend
                     const response = await fetch('http://localhost:3005/api/comercio/actualizar', {
                         method: 'PUT',
                         body: formData
                     });
 
                     const result = await response.json();
-                    
+
                     if (result.success) {
-                        alert('¡Perfil actualizado correctamente!'); // Cámbialo por SweetAlert si quieres
+                        alert('¡Perfil actualizado correctamente!');
                     } else {
                         alert('Error al actualizar: ' + result.message);
                     }
@@ -442,9 +637,7 @@
                     alert('Error de conexión.');
                 }
             });
-            // ==========================================
-            // 4. PUBLICAR NUEVO LOOP-PACK (FormData)
-            // ==========================================
+
             const btnPublicarPack = document.getElementById('btn-publicar-pack');
             if (btnPublicarPack) {
                 btnPublicarPack.addEventListener('click', async () => {
@@ -473,26 +666,22 @@
                     }
 
                     try {
-                        // 🛑 REVISAMOS EL BOTÓN: ¿Estamos creando o editando?
                         const packIdEditando = btnPublicarPack.dataset.editandoId;
-                        
-                        let urlFetch = 'http://localhost:3005/api/packs'; // URL por defecto (Crear)
-                        let metodoFetch = 'POST'; // Método por defecto (Crear)
+
+                        let urlFetch = 'http://localhost:3005/api/packs';
+                        let metodoFetch = 'POST';
 
                         if (packIdEditando) {
-                            // Si el botón tiene un ID oculto, cambiamos a modo Editar
                             urlFetch = `http://localhost:3005/api/packs/${packIdEditando}`;
                             metodoFetch = 'PUT';
                         }
 
-                        // Hacemos el disparo
                         const response = await fetch(urlFetch, { method: metodoFetch, body: formData });
                         const result = await response.json();
 
                         if (result.success) {
                             Swal.fire('¡Éxito!', result.message, 'success');
-                            
-                            // RESETEAMOS TODO EL FORMULARIO A SU ESTADO ORIGINAL (Modo Crear)
+
                             document.getElementById('pack-nombre').value = '';
                             document.getElementById('pack-descripcion').value = '';
                             document.getElementById('pack-precio-original').value = '';
@@ -500,13 +689,11 @@
                             document.getElementById('packPreview').style.display = 'none';
                             document.getElementById('packIcon').style.display = 'block';
                             document.getElementById('pack-precio-final').textContent = '$0.00';
-                            
-                            // Le quitamos la mutación al botón
+
                             document.querySelector('#panel-crear .panel-title').textContent = "Publicar Nuevo Loop-Pack";
                             btnPublicarPack.textContent = "Publicar Pack Ahora";
-                            delete btnPublicarPack.dataset.editandoId; 
-                            
-                            // Recargamos datos y devolvemos al usuario a su inventario
+                            delete btnPublicarPack.dataset.editandoId;
+
                             cargarMisPacks();
                             document.querySelector('[data-target="panel-mis-packs"]').click();
                         } else {
@@ -519,31 +706,25 @@
                 });
             }
 
-            // ==========================================
-            // 5. CARGAR INVENTARIO (MIS LOOP-PACKS)
-            // ==========================================
             async function cargarMisPacks() {
                 const gridPacks = document.querySelector('#panel-mis-packs .mock-grid');
                 if (!gridPacks) return;
 
                 try {
-                    // Le pedimos al servidor los packs de ESTE local
                     const response = await fetch(`http://localhost:3005/api/packs/comercio/${usuario.id}`);
                     const data = await response.json();
 
                     if (data.success) {
-                        misPacksGlobales = data.packs; // <--- 
-                        gridPacks.innerHTML = ''; // Destruimos el "Pan Dulce" falso del HTML
+                        misPacksGlobales = data.packs;
+                        gridPacks.innerHTML = '';
 
                         if (data.packs.length === 0) {
                             gridPacks.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--color-primary); font-weight: bold; font-size: 1.2rem;">No tienes packs publicados todavía.</p>';
                             return;
                         }
 
-                        // Dibujamos una tarjeta por cada pack real
                         data.packs.forEach(pack => {
-                            // Si el pack tiene foto la mostramos, si no, ponemos el ícono de la cajita
-                            const visualHTML = pack.foto_pack 
+                            const visualHTML = pack.foto_pack
                                 ? `<img src="http://localhost:3005${pack.foto_pack}" alt="Pack" style="width: 100%; height: 140px; object-fit: cover; border-bottom: 2px solid var(--color-primary);">`
                                 : `<div style="height: 140px; border-bottom: 2px solid var(--color-primary); display:flex; align-items:center; justify-content:center;"><i class="fas fa-box-open fa-3x" style="color:var(--color-primary);"></i></div>`;
 
@@ -553,10 +734,9 @@
                                     <div style="padding: 15px; display: flex; flex-direction: column; flex-grow: 1;">
                                         <h4 style="margin: 0 0 5px 0; color: var(--color-primary);">${pack.nombre_pack}</h4>
                                         <p style="margin: 0 0 15px 0; font-size: 0.9rem;">Disp: <strong>${pack.stock_disponible}</strong> | <strong style="color: #d32f2f; font-size: 1.1rem;">$${parseFloat(pack.precio_descuento).toFixed(2)}</strong></p>
-                                        
+
                                         <div style="margin-top: auto; display:flex; gap:10px; justify-content:center;">
                                             <button class="btn" style="padding: 8px 10px; font-size:0.8rem; flex: 1;" onclick="editarPack(${pack.id_pack})">Editar</button>
-                                            
                                             <button class="btn" style="padding: 8px 10px; font-size:0.8rem; flex: 1; background:#d32f2f; color:white; border-color:#d32f2f;" onclick="borrarPack(${pack.id_pack})">Borrar</button>
                                         </div>
                                     </div>
@@ -570,21 +750,17 @@
                 }
             }
 
-            // ==========================================
-            // 6. FUNCIÓN: BORRAR PACK (Con SweetAlert)
-            // ==========================================
-            window.borrarPack = function(packId) {
+            window.borrarPack = function (packId) {
                 Swal.fire({
                     title: '¿Estás seguro?',
                     text: "Esta acción borrará el Loop-Pack para siempre.",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d32f2f', // Rojo alerta
-                    cancelButtonColor: '#2D6A4F',  // Verde de tu marca
+                    confirmButtonColor: '#d32f2f',
+                    cancelButtonColor: '#2D6A4F',
                     confirmButtonText: '<i class="fas fa-trash"></i> Sí, borrar pack',
                     cancelButtonText: 'Cancelar'
                 }).then(async (result) => {
-                    // Si el usuario confirma, le disparamos al servidor
                     if (result.isConfirmed) {
                         try {
                             const response = await fetch(`http://localhost:3005/api/packs/${packId}`, { method: 'DELETE' });
@@ -597,7 +773,7 @@
                                     icon: 'success',
                                     confirmButtonColor: '#2D6A4F'
                                 });
-                                cargarMisPacks(); // Recargamos el inventario visualmente
+                                cargarMisPacks();
                             } else {
                                 Swal.fire('Error', data.message, 'error');
                             }
@@ -609,61 +785,50 @@
                 });
             }
 
-            window.editarPack = function(packId) {
-                // Buscamos los datos exactos del pack en nuestra variable global
+            window.editarPack = function (packId) {
                 const pack = misPacksGlobales.find(p => p.id_pack === packId);
                 if (!pack) return;
 
-                // Llenamos el formulario con los datos del pack
                 document.getElementById('pack-nombre').value = pack.nombre_pack;
                 document.getElementById('pack-descripcion').value = pack.descripcion;
                 document.getElementById('pack-precio-original').value = pack.precio_original;
                 document.getElementById('pack-cantidad').value = pack.stock_disponible;
-                
-                // Calculamos y seleccionamos el descuento correcto
+
                 const descuentoCalculado = Math.round(100 - ((pack.precio_descuento * 100) / pack.precio_original));
                 const selectDescuento = document.getElementById('pack-descuento');
                 selectDescuento.value = descuentoCalculado >= 75 ? "75" : (descuentoCalculado <= 35 ? "35" : "50");
-                
-                calcularDescuento(); // Actualiza el texto rojo del precio final
 
-                // Mostramos la foto si tiene
+                calcularDescuento();
+
                 if (pack.foto_pack) {
                     document.getElementById('packPreview').src = `http://localhost:3005${pack.foto_pack}`;
                     document.getElementById('packPreview').style.display = 'block';
                     document.getElementById('packIcon').style.display = 'none';
                 }
 
-                // MUTAMOS LA INTERFAZ: Cambiamos títulos y el comportamiento del botón
                 document.querySelector('#panel-crear .panel-title').textContent = "Editar Loop-Pack";
                 const btn = document.getElementById('btn-publicar-pack');
                 btn.textContent = "Guardar Cambios";
-                btn.dataset.editandoId = packId; // Le pegamos el ID de forma oculta al botón
+                btn.dataset.editandoId = packId;
 
-                // Viajamos a la pestaña de "Cargar Loop-Pack" automáticamente
                 document.querySelector('[data-target="panel-crear"]').click();
             }
 
-            // 🔥 IMPORTANTE: Ejecutamos la carga al iniciar la página
             cargarMisPacks();
 
-            // ==========================================
-            // 7. LÓGICA DE ACTIVACIÓN / RENOVACIÓN DE FOLIOS
-            // ==========================================
             const btnBuscarFolio = document.getElementById('btn-buscar-folio');
             const inputFolio = document.getElementById('input-folio');
 
             if (btnBuscarFolio && inputFolio) {
                 btnBuscarFolio.addEventListener('click', async () => {
                     const folio = inputFolio.value.trim().toUpperCase();
-                    
+
                     if (!folio) {
                         Swal.fire('Atención', 'Por favor ingresa un folio válido.', 'warning');
                         return;
                     }
 
                     try {
-                        // 1. Consultamos quién es el dueño del folio y cuánto debe pagar
                         const resConsulta = await fetch(`http://localhost:3005/api/suscripcion/consultar/${folio}`);
                         const dataConsulta = await resConsulta.json();
 
@@ -674,8 +839,7 @@
 
                         const user = dataConsulta.usuario;
                         const estadoActual = user.estado_suscripcion.toUpperCase();
-                        
-                        // 2. Le mostramos al local los datos para que cobre el dinero en físico
+
                         Swal.fire({
                             title: 'Usuario Encontrado',
                             html: `
@@ -684,7 +848,7 @@
                                     <p><strong>Plan:</strong> ${user.tipo_plan.toUpperCase()}</p>
                                     <p><strong>Estado Actual:</strong> <span style="color: ${estadoActual === 'ACTIVA' ? '#2D6A4F' : '#d32f2f'}; font-weight: bold;">${estadoActual}</span></p>
                                     <hr style="border-top: 1px solid var(--color-primary); margin: 10px 0;">
-                                    <h3 style="color: #d32f2f; text-align: center; margin: 0;">Monto a cobrar: $${dataConsulta.costo}.00</h3>
+                                    <h3 style="color: #d32f2f; text-align: center; margin: 0;">Monto a cobrar: $${parseFloat(dataConsulta.costo).toFixed(2)}</h3>
                                 </div>
                             `,
                             icon: 'info',
@@ -694,19 +858,29 @@
                             confirmButtonText: 'Confirmar Pago y Activar',
                             cancelButtonText: 'Cancelar'
                         }).then(async (result) => {
-                            // 3. Si el local confirma que ya recibió el dinero, activamos en DB
                             if (result.isConfirmed) {
                                 const resRenovar = await fetch('http://localhost:3005/api/suscripcion/renovar', {
                                     method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ usuario_id: user.id_usuario })
                                 });
-                                
+
                                 const dataRenovar = await resRenovar.json();
-                                
+
                                 if (dataRenovar.success) {
-                                    Swal.fire('¡Activado!', `La suscripción de ${user.nombre_usuario} ya está activa por 1 mes.`, 'success');
-                                    inputFolio.value = ''; // Limpiamos el input
+                                    const montoCobrado = parseFloat(dataConsulta.costo) || 0;
+                                    const fechaHoy = formatearFecha(new Date());
+                                    const motivoPago = `Pago de suscripción - ${user.tipo_plan.toUpperCase()} - ${user.nombre_usuario}`;
+
+                                    registrarGanancia(fechaHoy, motivoPago, montoCobrado);
+
+                                    Swal.fire(
+                                        '¡Activado!',
+                                        `La suscripción de ${user.nombre_usuario} ya está activa por 1 mes.`,
+                                        'success'
+                                    );
+
+                                    inputFolio.value = '';
                                 } else {
                                     Swal.fire('Error', dataRenovar.message, 'error');
                                 }
@@ -720,17 +894,15 @@
                 });
             }
 
-            // ==========================================
-            // CARGAR CATÁLOGO DE LOOP-PACKS (MOCKUP VISUAL PARA AVANCE)
-            // ==========================================
             async function cargarPacksDisponibles() {
                 const contenedor = document.getElementById('contenedor-packs');
-                
+                if (!contenedor) return;
+
                 try {
                     const response = await fetch('http://localhost:3005/api/packs');
                     const packs = await response.json();
 
-                    contenedor.innerHTML = ''; // Limpiamos el "Buscando..."
+                    contenedor.innerHTML = '';
 
                     if (packs.length === 0) {
                         contenedor.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; font-weight: bold; color: var(--color-primary);">No hay packs disponibles en este momento. Los locales están preparando sorpresas.</p>';
@@ -738,12 +910,10 @@
                     }
 
                     packs.forEach(pack => {
-                        // Si el pack tiene foto la mostramos, si no, un icono gigante
-                        const visualHTML = pack.foto_pack 
+                        const visualHTML = pack.foto_pack
                             ? `<img src="http://localhost:3005${pack.foto_pack}" alt="Pack" style="width: 100%; height: 180px; object-fit: cover; border-bottom: 2px solid var(--color-primary);">`
                             : `<div style="height: 180px; border-bottom: 2px solid var(--color-primary); background: var(--color-primary); display:flex; align-items:center; justify-content:center;"><i class="fas fa-box-open fa-4x" style="color:var(--color-accent);"></i></div>`;
 
-                        // Tarjeta brutalista. OJO: El onclick le manda el estado y el nombre del pack
                         const card = `
                             <div class="dashboard-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer;" onclick="interactuarConPack('${pack.nombre_pack}')">
                                 ${visualHTML}
@@ -754,7 +924,7 @@
                                     </div>
                                     <p style="font-size:0.85rem; margin-top:5px; color:#555;"><i class="fas fa-store"></i> ${pack.nombre_comercio || 'Negocio Local'}</p>
                                     <p style="font-size:0.9rem; margin-top:10px; flex-grow:1;">${pack.descripcion}</p>
-                                    
+
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; border-top: 2px dashed var(--color-primary); padding-top: 15px;">
                                         <p style="margin:0; font-size:1.5rem; font-weight:900; color:#d32f2f;">$${parseFloat(pack.precio_descuento).toFixed(2)}</p>
                                         <button class="btn" style="padding: 8px 15px;">Ver más</button>
@@ -769,33 +939,7 @@
                 }
             }
 
-            // Ejecutamos la función de inmediato para que pinte la pantalla
             cargarPacksDisponibles();
-
-        // ==========================================
-        // LÓGICA DE INTERACCIÓN (CONDICIONADA A LA SUSCRIPCIÓN)
-        // ==========================================
-        window.interactuarConPack = function(nombrePack) {
-            if (estadoSuscripcionActual !== 'activa') {
-                // ESTADO INACTIVO: Bloqueamos y pedimos dinero
-                Swal.fire({
-                    title: '¡Oferta Bloqueada!',
-                    text: 'Presenta tu folio en un local afiliado para activar tu membresía y acceder a las ofertas.',
-                    icon: 'lock',
-                    confirmButtonColor: '#d32f2f', // Rojo
-                    confirmButtonText: '<i class="fas fa-store"></i> Entendido'
-                });
-            } else {
-                // ESTADO ACTIVO: Agradecimiento (Finge que funciona para el avance de la escuela)
-                Swal.fire({
-                    title: '¡Gracias por tu suscripción!',
-                    html: `Tienes tu cuenta activa y lista para rescatar comida.<br><br><b>${nombrePack}</b> estará disponible para apartar en la siguiente actualización del sistema.`,
-                    icon: 'success',
-                    confirmButtonColor: '#2D6A4F', // Verde
-                    confirmButtonText: '¡Genial!'
-                });
-            }
-        }
         });
 
         function cerrarSesionLocal() {
@@ -804,4 +948,5 @@
         }
     </script>
 </body>
+
 </html>

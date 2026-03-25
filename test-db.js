@@ -273,3 +273,60 @@
 // }
 
 // verColumnasPack();
+
+// import mysql from 'mysql2/promise';
+// import dotenv from 'dotenv';
+// dotenv.config();
+
+// async function crearTablaGananciasLocal() {
+//     console.log('⏳ Conectando a la base de datos de Food Loop...');
+
+//     let connection;
+
+//     try {
+//         // ==========================================
+//         // 1. CONEXIÓN A LA BASE DE DATOS
+//         // ==========================================
+//         connection = await mysql.createConnection({
+//             host: process.env.DB_HOST,
+//             port: process.env.DB_PORT,
+//             user: process.env.DB_USER,
+//             password: process.env.DB_PASS,
+//             database: process.env.DB_NAME,
+//             ssl: { rejectUnauthorized: false }
+//         });
+
+//         console.log('✅ Conexión establecida correctamente.');
+
+//         // ==========================================
+//         // 2. CREAR TABLA ganancias_local
+//         // ==========================================
+//         console.log('🛠️ Verificando / creando la tabla "ganancias_local"...');
+
+//         await connection.execute(`
+//             CREATE TABLE IF NOT EXISTS ganancias_local (
+//                 id_ganancia INT AUTO_INCREMENT PRIMARY KEY,
+//                 fecha_pago DATE NOT NULL,
+//                 motivo_pago VARCHAR(255) NOT NULL,
+//                 monto_pagado DECIMAL(10,2) NOT NULL,
+//                 id_local INT NOT NULL
+//             );
+//         `);
+
+//         console.log('✅ ¡Operación exitosa! La tabla "ganancias_local" ya está lista.');
+
+//     } catch (error) {
+//         console.error('❌ Error crítico al crear la tabla "ganancias_local":', error.message);
+//         console.error('📌 Detalle completo del error:', error);
+//     } finally {
+//         // ==========================================
+//         // 3. CERRAR CONEXIÓN
+//         // ==========================================
+//         if (connection) {
+//             await connection.end();
+//             console.log('🔌 Conexión cerrada correctamente.');
+//         }
+//     }
+// }
+
+// crearTablaGananciasLocal();
