@@ -63,10 +63,10 @@
 
 //         // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
 //         // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
-//         const [rows] = await connection.execute('SELECT * FROM usuario;');
+//         const [rows] = await connection.execute('SELECT * FROM ganancias_local;');
 
 //         if (rows.length === 0) {
-//             console.log('⚠️ La tabla "reservacion" está vacía.');
+//             console.log('⚠️ La tabla "ganancias_local" está vacía.');
 //         } else {
 //             console.log(`✅ Se encontraron ${rows.length} registros en "reservacion":`);
 //             // console.table es genial para visualizar datos de bases de datos en la terminal
@@ -84,86 +84,6 @@
 
 // getComercioData();
 
-
-                            /*Borrado TOTAL de datos  */
-// import mysql from 'mysql2/promise';
-// import dotenv from 'dotenv';
-// import fs from 'fs';
-// import path from 'path';
-
-// dotenv.config();
-
-// async function resetNuclear() {
-//     console.log('⚠️ INICIANDO PROTOCOLO NUCLEAR: DESTRUCCIÓN DE DATOS Y FOTOS...');
-    
-//     // ==========================================
-//     // FASE 1: BARRIDO FÍSICO (FOTOS)
-//     // ==========================================
-//     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    
-//     try {
-//         if (fs.existsSync(uploadsDir)) {
-//             const archivos = fs.readdirSync(uploadsDir);
-//             let borrados = 0;
-            
-//             for (const archivo of archivos) {
-//                 // Evitamos borrar carpetas ocultas o archivos del sistema si los hubiera
-//                 if (archivo !== '.gitkeep') { 
-//                     fs.unlinkSync(path.join(uploadsDir, archivo));
-//                     borrados++;
-//                 }
-//             }
-//             console.log(`🧹 FASE 1 COMPLETADA: ${borrados} foto(s) eliminada(s) físicamente del servidor.`);
-//         } else {
-//             console.log('⚠️ La carpeta public/uploads no existe, saltando barrido físico.');
-//         }
-//     } catch (err) {
-//         console.error('❌ Error al intentar borrar las fotos físicas:', err.message);
-//     }
-
-//     // ==========================================
-//     // FASE 2: BARRIDO LÓGICO (BASE DE DATOS)
-//     // ==========================================
-//     try {
-//         const connection = await mysql.createConnection({
-//             host: process.env.DB_HOST,
-//             port: process.env.DB_PORT,
-//             user: process.env.DB_USER,
-//             password: process.env.DB_PASS,
-//             database: process.env.DB_NAME,
-//             ssl: { rejectUnauthorized: false }
-//         });
-
-//         // Apagamos llaves foráneas para evitar bloqueos
-//         await connection.execute('SET FOREIGN_KEY_CHECKS = 0;');
-        
-//         const tablas = [
-//             'comercio', 
-//             'datos_usuario', 
-//             'suscripcion_info', 
-//             'reservacion', 
-//             'pack',      
-//             'usuario'
-//         ];
-
-//         for (const tabla of tablas) {
-//             await connection.execute(`TRUNCATE TABLE ${tabla};`);
-//         }
-
-//         // Encendemos seguridad de nuevo
-//         await connection.execute('SET FOREIGN_KEY_CHECKS = 1;');
-
-//         console.log(`🧹 FASE 2 COMPLETADA: ${tablas.length} tablas vaciadas y IDs reiniciados a 1.`);
-//         console.log('\n✅ PROTOCOLO EXITOSO: Tu sistema está como recién instalado.');
-
-//         await connection.end();
-
-//     } catch (error) {
-//         console.error('❌ Error en la base de datos durante la demolición:', error.message);
-//     }
-// }
-
-// resetNuclear();
 
                                         /*Borrar columnas en TABLAS */
 
@@ -330,3 +250,52 @@
 // }
 
 // crearTablaGananciasLocal();
+
+
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+dotenv.config();
+
+async function actualizarTablaGanancias() {
+    try {
+        console.log("⏳ Conectando a la base de datos en Azure...");
+        const connection = await mysql.createConnection({
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT || 3306,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+            ssl: { rejectUnauthorized: false } // Requerido para Azure
+        });
+
+        console.log("⚠️ Destruyendo la tabla ganancias_local anterior...");
+        await connection.query(`DROP TABLE IF EXISTS ganancias_local;`);
+        console.log("🗑️ Tabla vieja eliminada.");
+
+        console.log("🏗️ Construyendo la nueva estructura blindada...");
+        const queryCreacion = `
+            CREATE TABLE ganancias_local (
+                id_ganancia INT AUTO_INCREMENT PRIMARY KEY,
+                comercio_id INT NOT NULL,
+                reservacion_id INT NULL,
+                monto DECIMAL(10,2) NOT NULL,
+                motivo_pago VARCHAR(255) NOT NULL,
+                fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (comercio_id) REFERENCES comercio(id_comercio),
+                FOREIGN KEY (reservacion_id) REFERENCES reservacion(id_reservacion)
+            );
+        `;
+        
+        await connection.query(queryCreacion);
+        console.log("✅ ¡Éxito! La tabla ganancias_local está lista para producción.");
+
+        await connection.end();
+        process.exit(0);
+
+    } catch (error) {
+        console.error("❌ Error crítico al modificar la base de datos:", error.message);
+        process.exit(1);
+    }
+}
+
+actualizarTablaGanancias();

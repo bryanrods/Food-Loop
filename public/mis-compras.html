@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Compras - Food Loop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .compras-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 15px;
+        }
+        .compra-card {
+            border: 3px solid var(--color-primary); background: var(--color-accent); padding: 20px;
+            box-shadow: 6px 6px 0px var(--color-primary); display: flex; flex-direction: column;
+        }
+        .badge {
+            padding: 5px 10px; font-weight: bold; font-size: 0.8rem; border-radius: 3px; display: inline-block; margin-bottom: 10px; border: 2px solid var(--color-primary);
+        }
+        .b-pendiente { background: #fbc02d; color: #000; }
+        .b-comprado { background: #2D6A4F; color: #fff; border-color: #2D6A4F;}
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-container">
+            <a href="dashboard-usuario.html" class="logo-brand" style="text-decoration: none;">
+                <span><i class="fas fa-arrow-left"></i> Volver</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="dashboard-section" style="min-height: 70vh;">
+        <div class="dashboard-header">
+            <h2>Mis Compras</h2>
+            <p>Tu historial de rescates.</p>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <h3 style="border-bottom: 3px solid var(--color-primary); padding-bottom: 5px; color: var(--color-primary);">
+                <i class="fas fa-clock"></i> Apartados (Pendientes de recoger)
+            </h3>
+            <div id="grid-apartados" class="compras-grid"></div>
+        </div>
+
+        <div style="margin-top: 50px;">
+            <h3 style="border-bottom: 3px solid var(--color-primary); padding-bottom: 5px; color: var(--color-primary);">
+                <i class="fas fa-check-double"></i> Comprados (Finalizados)
+            </h3>
+            <div id="grid-comprados" class="compras-grid"></div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const usuarioGlobal = JSON.parse(localStorage.getItem('usuarioFoodLoop'));
+            if (!usuarioGlobal) return window.location.href = 'login.html';
+
+            const divApartados = document.getElementById('grid-apartados');
+            const divComprados = document.getElementById('grid-comprados');
+
+            try {
+                const response = await fetch(`http://localhost:3005/api/reservaciones/usuario/${usuarioGlobal.id}`);
+                const data = await response.json();
+
+                if (!data.reservaciones || data.reservaciones.length === 0) {
+                    divApartados.innerHTML = '<p>No tienes apartados activos.</p>';
+                    divComprados.innerHTML = '<p>Aún no has finalizado ninguna compra.</p>';
+                    return;
+                }
+
+                // Limpiamos los contenedores
+                divApartados.innerHTML = '';
+                divComprados.innerHTML = '';
+
+                data.reservaciones.forEach(reserva => {
+                    const esPendiente = reserva.estado_reserva === 'pendiente';
+                    const total = (reserva.cantidad * reserva.precio_descuento).toFixed(2);
+                    
+                    const card = `
+                        <div class="compra-card">
+                            <div>
+                                <span class="badge ${esPendiente ? 'b-pendiente' : 'b-comprado'}">
+                                    ${esPendiente ? 'Pendiente en local' : '¡Compra Finalizada!'}
+                                </span>
+                                <h3 style="margin: 0; color: var(--color-primary);">${reserva.cantidad}x ${reserva.nombre_pack}</h3>
+                                <p style="margin: 5px 0 15px 0; font-size: 0.9rem;"><i class="fas fa-store"></i> ${reserva.nombre_comercio}</p>
+                            </div>
+                            <div style="border-top: 2px dashed var(--color-primary); padding-top: 10px; margin-top: auto;">
+                                <p style="margin: 0; font-size: 1.5rem; font-weight: 900; color: #d32f2f;">$${total}</p>
+                            </div>
+                        </div>
+                    `;
+
+                    if (esPendiente) {
+                        divApartados.innerHTML += card;
+                    } else if (reserva.estado_reserva === 'completada') {
+                        divComprados.innerHTML += card;
+                    }
+                });
+                
+                if (divApartados.innerHTML === '') divApartados.innerHTML = '<p>No tienes apartados pendientes.</p>';
+                if (divComprados.innerHTML === '') divComprados.innerHTML = '<p>No tienes compras finalizadas.</p>';
+
+            } catch (error) {
+                console.error("Error cargando compras:", error);
+            }
+        });
+    </script>
+</body>
+</html>
