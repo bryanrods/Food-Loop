@@ -41,48 +41,48 @@
 
 
                                                     /*CONSULTA DE TABLA INDIVIDUAL */
-// import mysql from 'mysql2/promise';
-// import dotenv from 'dotenv';
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-// dotenv.config();
+dotenv.config();
 
-// async function getComercioData() {
-//     console.log('⏳ Conectando para consultar la tabla "pack"...');
+async function getComercioData() {
+    console.log('⏳ Conectando para consultar la tabla "pack"...');
     
-//     try {
-//         const connection = await mysql.createConnection({
-//             host: process.env.DB_HOST,
-//             port: process.env.DB_PORT,
-//             user: process.env.DB_USER,
-//             password: process.env.DB_PASS,
-//             database: process.env.DB_NAME,
-//             ssl: {
-//                 rejectUnauthorized: false 
-//             }
-//         });
+    try {
+        const connection = await mysql.createConnection({
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+            ssl: {
+                rejectUnauthorized: false 
+            }
+        });
 
-//         // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
-//         // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
-//         const [rows] = await connection.execute('SELECT * FROM ganancias_local;');
+        // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
+        // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
+        const [rows] = await connection.execute('SELECT * FROM usuario;');
 
-//         if (rows.length === 0) {
-//             console.log('⚠️ La tabla "ganancias_local" está vacía.');
-//         } else {
-//             console.log(`✅ Se encontraron ${rows.length} registros en "reservacion":`);
-//             // console.table es genial para visualizar datos de bases de datos en la terminal
-//             console.table(rows);
-//         }
+        if (rows.length === 0) {
+            console.log('⚠️ La tabla "usuario" está vacía.');
+        } else {
+            console.log(`✅ Se encontraron ${rows.length} registros en "reservacion":`);
+            // console.table es genial para visualizar datos de bases de datos en la terminal
+            console.table(rows);
+        }
 
-//         await connection.end();
-//         console.log('🔌 Conexión cerrada.');
+        await connection.end();
+        console.log('🔌 Conexión cerrada.');
 
-//     } catch (error) {
-//         console.error('❌ Error al consultar la tabla:');
-//         console.error(error.message);
-//     }
-// }
+    } catch (error) {
+        console.error('❌ Error al consultar la tabla:');
+        console.error(error.message);
+    }
+}
 
-// getComercioData();
+getComercioData();
 
 
                                         /*Borrar columnas en TABLAS */
@@ -252,50 +252,50 @@
 // crearTablaGananciasLocal();
 
 
-import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
-dotenv.config();
+// import mysql from 'mysql2/promise';
+// import dotenv from 'dotenv';
+// dotenv.config();
 
-async function actualizarTablaGanancias() {
-    try {
-        console.log("⏳ Conectando a la base de datos en Azure...");
-        const connection = await mysql.createConnection({
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT || 3306,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASS,
-            database: process.env.DB_NAME,
-            ssl: { rejectUnauthorized: false } // Requerido para Azure
-        });
+// async function actualizarTablaGanancias() {
+//     try {
+//         console.log("⏳ Conectando a la base de datos en Azure...");
+//         const connection = await mysql.createConnection({
+//             host: process.env.DB_HOST,
+//             port: process.env.DB_PORT || 3306,
+//             user: process.env.DB_USER,
+//             password: process.env.DB_PASS,
+//             database: process.env.DB_NAME,
+//             ssl: { rejectUnauthorized: false } // Requerido para Azure
+//         });
 
-        console.log("⚠️ Destruyendo la tabla ganancias_local anterior...");
-        await connection.query(`DROP TABLE IF EXISTS ganancias_local;`);
-        console.log("🗑️ Tabla vieja eliminada.");
+//         console.log("⚠️ Destruyendo la tabla ganancias_local anterior...");
+//         await connection.query(`DROP TABLE IF EXISTS ganancias_local;`);
+//         console.log("🗑️ Tabla vieja eliminada.");
 
-        console.log("🏗️ Construyendo la nueva estructura blindada...");
-        const queryCreacion = `
-            CREATE TABLE ganancias_local (
-                id_ganancia INT AUTO_INCREMENT PRIMARY KEY,
-                comercio_id INT NOT NULL,
-                reservacion_id INT NULL,
-                monto DECIMAL(10,2) NOT NULL,
-                motivo_pago VARCHAR(255) NOT NULL,
-                fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (comercio_id) REFERENCES comercio(id_comercio),
-                FOREIGN KEY (reservacion_id) REFERENCES reservacion(id_reservacion)
-            );
-        `;
+//         console.log("🏗️ Construyendo la nueva estructura blindada...");
+//         const queryCreacion = `
+//             CREATE TABLE ganancias_local (
+//                 id_ganancia INT AUTO_INCREMENT PRIMARY KEY,
+//                 comercio_id INT NOT NULL,
+//                 reservacion_id INT NULL,
+//                 monto DECIMAL(10,2) NOT NULL,
+//                 motivo_pago VARCHAR(255) NOT NULL,
+//                 fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+//                 FOREIGN KEY (comercio_id) REFERENCES comercio(id_comercio),
+//                 FOREIGN KEY (reservacion_id) REFERENCES reservacion(id_reservacion)
+//             );
+//         `;
         
-        await connection.query(queryCreacion);
-        console.log("✅ ¡Éxito! La tabla ganancias_local está lista para producción.");
+//         await connection.query(queryCreacion);
+//         console.log("✅ ¡Éxito! La tabla ganancias_local está lista para producción.");
 
-        await connection.end();
-        process.exit(0);
+//         await connection.end();
+//         process.exit(0);
 
-    } catch (error) {
-        console.error("❌ Error crítico al modificar la base de datos:", error.message);
-        process.exit(1);
-    }
-}
+//     } catch (error) {
+//         console.error("❌ Error crítico al modificar la base de datos:", error.message);
+//         process.exit(1);
+//     }
+// }
 
-actualizarTablaGanancias();
+// actualizarTablaGanancias();
