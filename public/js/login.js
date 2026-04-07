@@ -21,8 +21,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 1. Guardamos los datos completos (incluyendo el ID y el ROL)
                     localStorage.setItem('usuarioFoodLoop', JSON.stringify(resultado.user));
                     
-                    // 2. LA GRAN DECISIÓN: ¿A dónde lo mandamos?
-                    if (resultado.user.rol === 'local') {
+                    if (resultado.user.rol === 'admin') {
+                        Swal.fire({
+                            title: 'Centro de Mando',
+                            text: 'Bienvenido, Administrador Supremo.',
+                            icon: 'success',
+                            confirmButtonColor: '#1a1a1a', // Un color más oscuro para diferenciarlo
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() =>{
+                            window.location.href = 'dashboard-admin.html'; 
+                        });
+                    }   else if (resultado.user.rol === 'local') {
                         Swal.fire({
                         title: 'Bienvenido, Socio Comercial. Entrando al Panel de Negocios.',
                         text: resultado.message,

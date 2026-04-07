@@ -815,6 +815,93 @@ setInterval(async () => {
     }
 }, 60000); // Se ejecuta cada 60,000 milisegundos (1 minuto)
 
+// ==========================================
+// RUTAS DE ADMINISTRADOR
+// ==========================================
+// A. Ver las finanzas y deudas de cada local (DATOS REALES Y COMBINADOS)
+app.get('/api/admin/finanzas', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                c.id_comercio,
+                c.nombre_comercio,
+                COALESCE(ventas.comision, 0) AS comision_packs,
+                COALESCE(subs.total_subs, 0) AS total_membresias,
+                COALESCE(ventas.comision, 0) + COALESCE(subs.total_subs, 0) AS deuda_foodloop
+            FROM comercio c
+            -- Subconsulta 1: Sumamos el 5% de la comida
+            LEFT JOIN (
+                SELECT p.comercio_id, SUM(r.cantidad * p.precio_descuento * 0.05) as comision
+                FROM reservacion r
+                JOIN pack p ON r.pack_id = p.id_pack
+                WHERE r.estado_reserva = 'completada'
+                GROUP BY p.comercio_id
+            ) ventas ON c.id_comercio = ventas.comercio_id
+            -- Subconsulta 2: Sumamos el 100% de las membresías cobradas en ese local
+            LEFT JOIN (
+                SELECT comercio_id, SUM(monto_pago) as total_subs
+                FROM suscripcion_pago
+                WHERE estado_pago = 'completado'
+                GROUP BY comercio_id
+            ) subs ON c.id_comercio = subs.comercio_id
+            ORDER BY deuda_foodloop DESC
+        `;
+        const [rows] = await pool.query(query);
+        res.json({ success: true, finanzas: rows });
+    } catch (error) {
+        console.error("Error en finanzas admin:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
+    }
+});
+
+// C. Ver desglose detallado (Usando UNION para unificar ventas y membresías)
+app.get('/api/admin/finanzas/:comercioId', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                r.fecha_reserva AS fecha,
+                CONCAT('Venta Pack: ', p.nombre_pack, ' (x', r.cantidad, ')') AS motivo, 
+                (r.cantidad * p.precio_descuento) AS monto_original,
+                (r.cantidad * p.precio_descuento * 0.05) AS ganancia_foodloop
+            FROM reservacion r
+            JOIN pack p ON r.pack_id = p.id_pack
+            WHERE p.comercio_id = ? AND r.estado_reserva = 'completada'
+            
+            UNION ALL
+            
+            SELECT 
+                dia_cobro AS fecha,
+                'Suscripción de Usuario' AS motivo,
+                monto_pago AS monto_original,
+                monto_pago AS ganancia_foodloop
+            FROM suscripcion_pago
+            WHERE comercio_id = ? AND estado_pago = 'completado'
+            
+            ORDER BY fecha DESC
+        `;
+        const [rows] = await pool.query(query, [req.params.comercioId, req.params.comercioId]);
+        res.json({ success: true, detalles: rows });
+    } catch (error) {
+        console.error("Error obteniendo detalles financieros:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
+    }
+});
+
+app.get('/api/admin/usuarios', async (req, res) => {
+    try {
+        const query = `
+            SELECT id_usuario, nombre_usuario, email_usuario, rol_usuario, DATE_FORMAT(fecha_creacion, '%d/%m/%Y') AS fecha
+            FROM usuario
+            WHERE rol_usuario != 'admin'
+            ORDER BY id_usuario DESC
+        `;
+        const [usuarios] = await pool.query(query);
+        res.json({ success: true, usuarios });
+    } catch (error) {
+        console.error("Error obteniendo usuarios:", error);
+        res.status(500).json({ success: false, message: "Error interno." });
+    }
+});
 
 // ==========================================
 // INICIO DEL SERVIDOR

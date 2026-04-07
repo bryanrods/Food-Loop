@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel de Administrador - Food Loop</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2E4235">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .dash-layout { display: flex; gap: 30px; max-width: 1200px; margin: 40px auto; padding: 0 2rem; align-items: flex-start; }
+        .dash-sidebar { width: 250px; display: flex; flex-direction: column; gap: 15px; flex-shrink: 0; }
+        .dash-tab-btn { background: var(--color-accent); border: 2px solid var(--color-primary); color: var(--color-primary); padding: 15px; text-align: left; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 4px 4px 0px var(--color-primary); }
+        .dash-tab-btn:hover, .dash-tab-btn.active { background: var(--color-primary); color: var(--color-accent); transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--color-accent); }
+        .dash-tab-btn i { width: 25px; }
+        .dash-content { flex-grow: 1; background: var(--color-accent); border: 2px solid var(--color-primary); box-shadow: 8px 8px 0px var(--color-primary); padding: 40px; }
+        .dash-panel { display: none; }
+        .dash-panel.active { display: block; }
+        .panel-title { color: var(--color-primary); border-bottom: 2px solid var(--color-primary); padding-bottom: 10px; margin-bottom: 30px; text-transform: uppercase; }
+        
+        .admin-table-wrapper { overflow-x: auto; border: 2px solid var(--color-primary); box-shadow: 6px 6px 0px var(--color-primary); background: #fffdf7; }
+        .admin-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        .admin-table thead { background: var(--color-primary); color: var(--color-accent); }
+        .admin-table th, .admin-table td { padding: 14px 16px; border-bottom: 2px solid var(--color-primary); text-align: left; }
+        .admin-table tbody tr:nth-child(even) { background: #f3eedf; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .badge-local { background: #2D6A4F; color: white; }
+        .badge-usuario { background: #d32f2f; color: white; }
+    </style>
+</head>
+
+<body>
+    <header class="navbar">
+        <div class="navbar-container">
+            <a href="index.html" class="logo-brand"><span>Food Loop | ADMIN</span></a>
+            <nav class="nav-menu">
+                <button class="cta-btn" onclick="cerrarSesionAdmin()">Cerrar Sesión</button>
+            </nav>
+        </div>
+    </header>
+
+    <main style="padding-top: 80px;">
+        <div style="text-align: center; margin-top: 20px;">
+            <h2 class="section-title">Centro de Mando</h2>
+        </div>
+
+        <div class="dash-layout">
+            <aside class="dash-sidebar">
+                <button class="dash-tab-btn active" data-target="panel-finanzas">
+                    <i class="fas fa-chart-line"></i> Finanzas
+                </button>
+                <button class="dash-tab-btn" data-target="panel-usuarios">
+                    <i class="fas fa-users-cog"></i> Control de Usuarios
+                </button>
+            </aside>
+
+            <div class="dash-content">
+                
+                <div id="panel-finanzas" class="dash-panel active">
+                    <h3 class="panel-title">Cobros a Locales (Fin de Mes)</h3>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Local</th>
+                                    <th>Comisión Packs (5%)</th>
+                                    <th>Membresías (100%)</th>
+                                    <th>Deuda a Food Loop</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-finanzas-body">
+                                <tr><td colspan="5" style="text-align: center;">Cargando datos financieros...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="panel-usuarios" class="dash-panel">
+                    <h3 class="panel-title">Gestión de Cuentas</h3>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Registro</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-usuarios-body">
+                                <tr><td colspan="6" style="text-align: center;">Cargando usuarios...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        let adminUser = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // 🛑 EL CADENERO: Solo administradores pasan
+            const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
+            if (!usuarioGuardado) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            adminUser = JSON.parse(usuarioGuardado);
+            if (adminUser.rol !== 'admin') {
+                alert('ACCESO RESTRINGIDO. Su cuenta no tiene privilegios de administrador.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Manejo de pestañas
+            document.querySelectorAll('.dash-tab-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.dash-tab-btn').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.dash-panel').forEach(panel => panel.classList.remove('active'));
+                    
+                    button.classList.add('active');
+                    document.getElementById(button.getAttribute('data-target')).classList.add('active');
+                });
+            });
+
+            // Cargar datos
+            cargarFinanzas();
+            cargarUsuarios();
+        });
+
+        async function cargarFinanzas() {
+            const tbody = document.getElementById('tabla-finanzas-body');
+            try {
+                const res = await fetch('http://localhost:3005/api/admin/finanzas');
+                const data = await res.json();
+
+                if (data.success && data.finanzas.length > 0) {
+                    // Agregamos una columna extra en el thead dinámicamente o asume que la agregaste en el HTML
+                    tbody.innerHTML = data.finanzas.map(f => `
+                        <tr>
+                            <td>#${f.id_comercio}</td>
+                            <td><strong>${f.nombre_comercio}</strong></td>
+                            <td>$${parseFloat(f.comision_packs).toFixed(2)}</td>
+                            <td>$${parseFloat(f.total_membresias).toFixed(2)}</td>
+                            <td style="color: #d32f2f; font-weight: 900; font-size: 1.1rem;">$${parseFloat(f.deuda_foodloop).toFixed(2)}</td>
+                            <td>
+                                <button class="btn" style="padding: 5px 10px; font-size: 0.8rem; background: #2E4235;" 
+                                        onclick="verDetalleFinanzas(${f.id_comercio}, '${f.nombre_comercio}')">
+                                    <i class="fas fa-search-dollar"></i> Desglose
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay movimientos financieros registrados.</td></tr>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error al conectar con el servidor.</td></tr>';
+            }
+        }
+
+        async function cargarUsuarios() {
+            const tbody = document.getElementById('tabla-usuarios-body');
+            try {
+                const res = await fetch('http://localhost:3005/api/admin/usuarios');
+                const data = await res.json();
+
+                if (data.success && data.usuarios.length > 0) {
+                    tbody.innerHTML = data.usuarios.map(u => {
+                        const badgeClass = u.rol_usuario === 'local' ? 'badge-local' : 'badge-usuario';
+                        return `
+                            <tr>
+                                <td>#${u.id_usuario}</td>
+                                <td>${u.nombre_usuario}</td>
+                                <td>${u.email_usuario}</td>
+                                <td><span class="badge ${badgeClass}">${u.rol_usuario.toUpperCase()}</span></td>
+                                <td>${u.fecha}</td>
+                                <td>
+                                    <button class="btn" style="background:#d32f2f; color:white; border-color:#d32f2f; padding: 5px 10px; font-size: 0.8rem;" onclick="eliminarUsuario(${u.id_usuario})">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay usuarios registrados.</td></tr>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Error al conectar con el servidor.</td></tr>';
+            }
+        }
+
+        window.eliminarUsuario = function(idUsuario) {
+            Swal.fire({
+                title: '¿Extinción total?',
+                text: "Esto borrará al usuario, su comercio (si tiene), sus compras, su stock y hasta su foto. No hay vuelta atrás.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d32f2f',
+                cancelButtonColor: '#2D6A4F',
+                confirmButtonText: 'Sí, aniquilar cuenta'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch(`http://localhost:3005/api/usuarios/${idUsuario}`, { method: 'DELETE' });
+                        const data = await res.json();
+
+                        if (data.success) {
+                            Swal.fire('¡Eliminado!', 'El usuario ha sido borrado del sistema.', 'success');
+                            cargarUsuarios(); // Refrescamos la lista
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error de red', 'No se pudo conectar al servidor', 'error');
+                    }
+                }
+            });
+        }
+
+        function cerrarSesionAdmin() {
+            localStorage.removeItem('usuarioFoodLoop');
+            window.location.href = 'login.html';
+        }
+
+    window.verDetalleFinanzas = async function(idComercio, nombreComercio) {
+            try {
+                // Hacemos la petición a la nueva ruta que acabamos de crear
+                const res = await fetch(`http://localhost:3005/api/admin/finanzas/${idComercio}`);
+                const data = await res.json();
+
+                if (!data.success) throw new Error();
+
+                if (data.detalles.length === 0) {
+                    Swal.fire('Sin movimientos', `El local ${nombreComercio} no tiene ventas registradas.`, 'info');
+                    return;
+                }
+
+                // Armamos una mini-tabla para el pop-up
+                let tablaHTML = `
+                    <div style="max-height: 400px; overflow-y: auto; text-align: left;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <tr style="background: var(--color-primary); color: white;">
+                                <th style="padding: 10px;">Fecha</th>
+                                <th style="padding: 10px;">Concepto</th>
+                                <th style="padding: 10px;">Cobro Total</th>
+                                <th style="padding: 10px;">Para Food Loop</th>
+                            </tr>
+                `;
+
+                data.detalles.forEach(d => {
+                    // Le damos un formato bonito a la fecha (asumiendo que viene de SQL)
+                    const fechaFormato = new Date(d.fecha).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
+                    
+                    tablaHTML += `
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <td style="padding: 10px;">${fechaFormato}</td>
+                            <td style="padding: 10px;">${d.motivo}</td>
+                            <td style="padding: 10px;">$${parseFloat(d.monto_original).toFixed(2)}</td>
+                            <td style="padding: 10px; font-weight: bold; color: #d32f2f;">
+                                $${parseFloat(d.ganancia_foodloop).toFixed(2)}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tablaHTML += `</table></div>`;
+
+                // Disparamos la alerta gigante
+                Swal.fire({
+                    title: `Auditoría: ${nombreComercio}`,
+                    html: tablaHTML,
+                    width: '800px', // Hacemos el pop-up más ancho para que quepa la tabla
+                    confirmButtonColor: '#2D6A4F',
+                    confirmButtonText: 'Cerrar Desglose'
+                });
+
+            } catch (error) {
+                Swal.fire('Error', 'No se pudo cargar el historial del local.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
