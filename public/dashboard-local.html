@@ -441,13 +441,38 @@
 
         let historialGanancias = [];
 
+        // ==========================================
+        // CONTROL DE PESTAÑAS (Con validación de horario)
+        // ==========================================
         document.querySelectorAll('.dash-tab-btn').forEach(button => {
             button.addEventListener('click', () => {
+                const targetId = button.getAttribute('data-target');
+
+                // 🛑 EL CADENERO: Bloqueamos si quieren ir a publicar sin horario
+                if (targetId === 'panel-crear') {
+                    const apertura = document.getElementById('dashApertura').value;
+                    const cierre = document.getElementById('dashCierre').value;
+
+                    if (!apertura || !cierre) {
+                        Swal.fire({
+                            title: '¡Falta tu horario!',
+                            text: 'Antes de publicar comida, tienes que poner tu hora de apertura y cierre en tu "Perfil del Local" y darle a "Guardar Cambios".',
+                            icon: 'warning',
+                            confirmButtonColor: '#d32f2f',
+                            confirmButtonText: 'Entendido'
+                        }).then(() => {
+                            // Lo rebotamos automáticamente a la pestaña de perfil
+                            document.querySelector('[data-target="panel-perfil"]').click();
+                        });
+                        return; // Rompemos la ejecución para que no entre a la pestaña
+                    }
+                }
+
+                // Flujo normal si pasan el filtro (o si van a otra pestaña)
                 document.querySelectorAll('.dash-tab-btn').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.dash-panel').forEach(panel => panel.classList.remove('active'));
 
                 button.classList.add('active');
-                const targetId = button.getAttribute('data-target');
                 document.getElementById(targetId).classList.add('active');
             });
         });
@@ -644,15 +669,28 @@
             const btnPublicarPack = document.getElementById('btn-publicar-pack');
             if (btnPublicarPack) {
                 btnPublicarPack.addEventListener('click', async () => {
-                    const nombre = document.getElementById('pack-nombre').value;
-                    const descripcion = document.getElementById('pack-descripcion').value;
+                    // Le agregamos .trim() para evitar que nos engañen con puros espacios en blanco
+                    const nombre = document.getElementById('pack-nombre').value.trim();
+                    const descripcion = document.getElementById('pack-descripcion').value.trim();
                     const precioOriginal = document.getElementById('pack-precio-original').value;
                     const descuento = document.getElementById('pack-descuento').value;
                     const cantidad = document.getElementById('pack-cantidad').value;
                     const fotoInput = document.getElementById('packPicture');
 
-                    if (!nombre || !precioOriginal || !cantidad) {
-                        Swal.fire('Atención', 'Nombre, precio y cantidad son obligatorios.', 'warning');
+                    // 🛑 EL FILTRO ESTRICTO: Ningún texto puede estar vacío
+                    if (!nombre || !descripcion || !precioOriginal || !cantidad) {
+                        Swal.fire({
+                            title: 'Campos incompletos',
+                            text: 'No puedes dejar campos vacíos. Llena el nombre, la descripción detallada, el precio y la cantidad.',
+                            icon: 'warning',
+                            confirmButtonColor: '#d32f2f'
+                        });
+                        return;
+                    }
+
+                    // 🛑 VALIDACIÓN MATEMÁTICA: Nada de precios o cantidades negativas o en cero
+                    if (precioOriginal <= 0 || cantidad <= 0) {
+                        Swal.fire('Valores inválidos', 'El precio original y la cantidad disponible deben ser mayores a cero.', 'error');
                         return;
                     }
 
@@ -945,6 +983,7 @@
 
             // cargarPacksDisponibles();
         });
+
         // ==========================================
         // CARGAR APARTADOS EN LA PESTAÑA DEL LOCAL
         // ==========================================
@@ -953,13 +992,13 @@
             if (!gridReservas) return;
 
             try {
-                // Buscamos los clientes de este local en la base de datos
                 const response = await fetch(`http://localhost:3005/api/reservaciones/comercio/${usuario.id}`);
                 const data = await response.json();
                 gridReservas.innerHTML = '';
 
-                // Filtramos para mostrar SOLO las que están pendientes en la pantalla del local
-                const pendientes = data.apartados ? data.apartados.filter(r => r.estado_reserva === 'pendiente') : [];
+                // 🛑 EL FIX: Ahora leemos 'data.reservaciones' para que coincida con el backend
+                const arrayReservas = data.reservaciones || data.apartados || [];
+                const pendientes = arrayReservas.filter(r => r.estado_reserva === 'pendiente');
 
                 if (pendientes.length === 0) {
                     gridReservas.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; font-weight: bold; padding: 20px;">No tienes pedidos pendientes de cobro.</p>';
@@ -969,25 +1008,67 @@
                 pendientes.forEach(reserva => {
                     const totalPagar = (reserva.cantidad * reserva.precio_descuento).toFixed(2);
                     
-                    // Inyectamos el HTML usando tu mismo diseño de clase "mock-card"
+                    // Calculamos los segundos si existen, sino 0
+                    const seg = reserva.segundos_restantes > 0 ? reserva.segundos_restantes : 0;
+                    
                     gridReservas.innerHTML += `
                         <div class="mock-card" style="border-style: dashed; display: flex; flex-direction: column;">
                             <i class="fas fa-user-clock fa-2x" style="margin-bottom:10px; color: var(--color-primary);"></i>
-                            <h4 style="color: var(--color-primary); font-size: 1.2rem; margin: 0 0 5px 0;">${reserva.nombre_usuario}</h4>
+                            <h4 style="color: var(--color-primary); font-size: 1.2rem; margin: 0 0 5px 0;">${reserva.nombre_usuario || 'Cliente'}</h4>
                             <p style="margin: 0;">Pack: <b>${reserva.nombre_pack} (x${reserva.cantidad})</b></p>
-                            <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: #555;">Hora de apartado: ${reserva.hora}</p>
-                            <p style="color: #d32f2f; font-weight:bold; font-size: 1.2rem; margin: 15px 0;">A cobrar: $${totalPagar}</p>
+                            
+                            <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; padding: 10px; margin: 15px 0;">
+                                <p style="margin: 0; font-size: 0.8rem; color: #856404; font-weight: bold;">Tiempo para que llegue:</p>
+                                <p style="margin: 5px 0 0 0; font-size: 1.2rem; font-weight: 900; color: #d32f2f;" class="reloj-cuenta-regresiva" data-segundos="${seg}">
+                                    <i class="fas fa-hourglass-half"></i> Calculando...
+                                </p>
+                            </div>
+
+                            <p style="color: #d32f2f; font-weight:bold; font-size: 1.2rem; margin-bottom: 15px;">A cobrar: $${totalPagar}</p>
                             <button class="btn" style="margin-top: auto; width:100%; background: #2D6A4F; border-color: #2D6A4F;" 
-                                onclick="cobrarReserva(${reserva.id_reserva}, '${reserva.nombre_usuario}', ${totalPagar}, '${reserva.nombre_pack}')">
+                                onclick="cobrarReserva(${reserva.id_reserva || reserva.id_reservacion}, '${reserva.nombre_usuario || 'Cliente'}', ${totalPagar}, '${reserva.nombre_pack}')">
                                 <i class="fas fa-check"></i> Marcar Entregado
                             </button>
                         </div>
                     `;
                 });
+
+                // Arrancamos el motor de los relojes en el panel del local
+                iniciarRelojesLocal();
+
             } catch (error) {
                 console.error("Error al cargar reservas del local:", error);
                 gridReservas.innerHTML = '<p style="color: red; grid-column: 1 / -1; text-align: center;">Error al conectar con el servidor.</p>';
             }
+        }
+
+        // ==========================================
+        // MOTOR DE CUENTA REGRESIVA PARA EL LOCAL
+        // ==========================================
+        function iniciarRelojesLocal() {
+            // Limpiamos intervalos anteriores para que no se vuelvan locos si cambias de pestaña
+            if(window.intervaloRelojLocal) clearInterval(window.intervaloRelojLocal);
+            
+            const relojes = document.querySelectorAll('.reloj-cuenta-regresiva');
+            
+            window.intervaloRelojLocal = setInterval(() => {
+                relojes.forEach(reloj => {
+                    let segundosRestantes = parseInt(reloj.getAttribute('data-segundos'));
+                    
+                    if (segundosRestantes > 0) {
+                        segundosRestantes--;
+                        reloj.setAttribute('data-segundos', segundosRestantes);
+                        
+                        const minutos = Math.floor(segundosRestantes / 60);
+                        const segundos = segundosRestantes % 60;
+                        reloj.innerHTML = `<i class="fas fa-stopwatch"></i> ${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+                    } else {
+                        reloj.innerHTML = `<i class="fas fa-times-circle"></i> ¡Tiempo agotado!`;
+                        reloj.style.color = "#777";
+                        // Podrías forzar una recarga aquí si quieres que desaparezca automático
+                    }
+                });
+            }, 1000);
         }
 
         // ==========================================

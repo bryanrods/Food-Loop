@@ -7,18 +7,108 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .compras-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 15px;
+        /* Contenedor centralizado para que no se deforme en pantallas gigantes */
+        .compras-container {
+            max-width: 900px;
+            margin: 0 auto;
         }
-        .compra-card {
-            border: 3px solid var(--color-primary); background: var(--color-accent); padding: 20px;
-            box-shadow: 6px 6px 0px var(--color-primary); display: flex; flex-direction: column;
+
+        .compras-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
         }
-        .badge {
-            padding: 5px 10px; font-weight: bold; font-size: 0.8rem; border-radius: 3px; display: inline-block; margin-bottom: 10px; border: 2px solid var(--color-primary);
+
+        /* Diseño de Tarjeta Ancha y Coqueta */
+        .compra-card-wide {
+            display: flex;
+            flex-direction: column;
+            background: var(--color-accent);
+            border: 2px solid var(--color-primary);
+            border-radius: 12px; /* Bordes redondeados para verse más moderno */
+            box-shadow: 4px 4px 0px rgba(45, 106, 79, 0.2);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .b-pendiente { background: #fbc02d; color: #000; }
-        .b-comprado { background: #2D6A4F; color: #fff; border-color: #2D6A4F;}
+
+        .compra-card-wide:hover {
+            transform: translateY(-3px);
+            box-shadow: 6px 6px 0px rgba(45, 106, 79, 0.4);
+        }
+
+        .card-header {
+            padding: 10px 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-pendiente { background: #fbc02d; color: #000; border-bottom: 2px solid #e2a91f; }
+        .header-comprado { background: var(--color-primary); color: #fff; }
+
+        .card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .info-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .info-item i {
+            color: var(--color-primary);
+            margin-top: 3px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .info-text p { margin: 0; }
+        .info-label { font-size: 0.75rem; color: #666; text-transform: uppercase; font-weight: bold;}
+        .info-value { font-size: 1rem; color: #333; font-weight: 600; }
+        .pack-title { font-size: 1.3rem; color: var(--color-primary); margin: 0 0 10px 0; font-weight: 900;}
+
+        .card-precio {
+            text-align: right;
+            border-top: 2px dashed #ccc;
+            padding-top: 15px;
+            margin-top: 5px;
+        }
+
+        /* Magia Responsiva: En computadora se pone horizontal */
+        @media (min-width: 768px) {
+            .card-body {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .info-grid {
+                grid-template-columns: 1fr 1fr; /* Dos columnas de datos */
+                flex-grow: 1;
+                gap: 20px;
+            }
+            .card-precio {
+                border-top: none;
+                border-left: 2px dashed #ccc;
+                padding-top: 0;
+                padding-left: 20px;
+                margin-top: 0;
+                min-width: 180px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -31,26 +121,29 @@
     </header>
 
     <main class="dashboard-section" style="min-height: 70vh;">
-        <div class="dashboard-header">
-            <h2>Mis Compras</h2>
-            <p>Tu historial de rescates.</p>
-        </div>
+        <div class="compras-container">
+            <div class="dashboard-header">
+                <h2>Mis Compras</h2>
+                <p>Tu historial detallado de rescates alimentarios.</p>
+            </div>
 
-        <div style="margin-top: 30px;">
-            <h3 style="border-bottom: 3px solid var(--color-primary); padding-bottom: 5px; color: var(--color-primary);">
-                <i class="fas fa-clock"></i> Apartados (Pendientes de recoger)
-            </h3>
-            <div id="grid-apartados" class="compras-grid"></div>
-        </div>
+            <div style="margin-top: 30px;">
+                <h3 style="border-bottom: 3px solid var(--color-primary); padding-bottom: 5px; color: var(--color-primary);">
+                    <i class="fas fa-clock"></i> Pendientes de recoger
+                </h3>
+                <div id="grid-apartados" class="compras-lista"></div>
+            </div>
 
-        <div style="margin-top: 50px;">
-            <h3 style="border-bottom: 3px solid var(--color-primary); padding-bottom: 5px; color: var(--color-primary);">
-                <i class="fas fa-check-double"></i> Comprados (Finalizados)
-            </h3>
-            <div id="grid-comprados" class="compras-grid"></div>
+            <div style="margin-top: 50px;">
+                <h3 style="border-bottom: 3px solid var(--color-primary); padding-bottom: 5px; color: var(--color-primary);">
+                    <i class="fas fa-check-double"></i> Historial de Compras
+                </h3>
+                <div id="grid-comprados" class="compras-lista"></div>
+            </div>
         </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const usuarioGlobal = JSON.parse(localStorage.getItem('usuarioFoodLoop'));
@@ -64,34 +157,96 @@
                 const data = await response.json();
 
                 if (!data.reservaciones || data.reservaciones.length === 0) {
-                    divApartados.innerHTML = '<p>No tienes apartados activos.</p>';
-                    divComprados.innerHTML = '<p>Aún no has finalizado ninguna compra.</p>';
+                    divApartados.innerHTML = '<p style="font-weight:bold; color:#666; text-align:center; padding: 20px;">No tienes apartados activos.</p>';
+                    divComprados.innerHTML = '<p style="font-weight:bold; color:#666; text-align:center; padding: 20px;">Aún no has finalizado ninguna compra.</p>';
                     return;
                 }
 
-                // Limpiamos los contenedores
                 divApartados.innerHTML = '';
                 divComprados.innerHTML = '';
 
                 data.reservaciones.forEach(reserva => {
                     const esPendiente = reserva.estado_reserva === 'pendiente';
                     const total = (reserva.cantidad * reserva.precio_descuento).toFixed(2);
+                    const direccion = reserva.direccion_comercio || 'Dirección no registrada';
                     
-                    const card = `
-                        <div class="compra-card">
-                            <div>
-                                <span class="badge ${esPendiente ? 'b-pendiente' : 'b-comprado'}">
-                                    ${esPendiente ? 'Pendiente en local' : '¡Compra Finalizada!'}
-                                </span>
-                                <h3 style="margin: 0; color: var(--color-primary);">${reserva.cantidad}x ${reserva.nombre_pack}</h3>
-                                <p style="margin: 5px 0 15px 0; font-size: 0.9rem;"><i class="fas fa-store"></i> ${reserva.nombre_comercio}</p>
+                    // Formatear la fecha
+                    const fechaFormateada = new Date(reserva.fecha_reserva).toLocaleDateString('es-MX', { 
+                        year: 'numeric', month: 'long', day: 'numeric' 
+                    });
+
+                    // Elemento exclusivo de "Comprados"
+                    const divFecha = !esPendiente ? `
+                        <div class="info-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <div class="info-text">
+                                <p class="info-label">Fecha de Compra</p>
+                                <p class="info-value">${fechaFormateada}</p>
                             </div>
-                            <div style="border-top: 2px dashed var(--color-primary); padding-top: 10px; margin-top: auto;">
-                                <p style="margin: 0; font-size: 1.5rem; font-weight: 900; color: #d32f2f;">$${total}</p>
+                        </div>
+                    ` : '';
+
+                    let infoPendiente = '';
+                    if (esPendiente) {
+                        // Si ya pasaron los segundos (o están a punto), mostramos 0
+                        const seg = reserva.segundos_restantes > 0 ? reserva.segundos_restantes : 0;
+                        
+                        infoPendiente = `
+                            <div style="background: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; padding: 10px; text-align: center; margin-top: 15px;">
+                                <p style="margin: 0; font-size: 0.85rem; color: #856404; font-weight: bold;">Tiempo límite para recoger:</p>
+                                <p style="margin: 5px 0 0 0; font-size: 1.5rem; font-weight: 900; color: #d32f2f;" class="reloj-cuenta-regresiva" data-segundos="${seg}" data-id="${reserva.id_reserva}">
+                                    <i class="fas fa-hourglass-half"></i> Calculando...
+                                </p>
+                            </div>
+                            <button class="btn" style="background-color: #d32f2f; color: white; border-color: #d32f2f; width: 100%; margin-top: 10px; font-size: 0.85rem;" onclick="cancelarReserva(${reserva.id_reserva}, '${reserva.nombre_pack}')">
+                                <i class="fas fa-times-circle"></i> Cancelar Apartado
+                            </button>
+                        `;
+                    }
+
+                    const headerClass = esPendiente ? 'header-pendiente' : 'header-comprado';
+                    const headerText = esPendiente ? '<i class="fas fa-exclamation-circle"></i> Tienes que ir a recogerlo hoy' : '<i class="fas fa-check-circle"></i> Rescate finalizado con éxito';
+
+                    // Construcción de la Tarjeta
+                    const card = `
+                        <div class="compra-card-wide">
+                            <div class="card-header ${headerClass}">
+                                ${headerText}
+                            </div>
+                            <div class="card-body">
+                                <div class="info-grid">
+                                    <div style="grid-column: 1 / -1;">
+                                        <h4 class="pack-title">${reserva.cantidad}x ${reserva.nombre_pack}</h4>
+                                    </div>
+                                    
+                                    <div class="info-item">
+                                        <i class="fas fa-store"></i>
+                                        <div class="info-text">
+                                            <p class="info-label">Local</p>
+                                            <p class="info-value">${reserva.nombre_comercio}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="info-item">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <div class="info-text">
+                                            <p class="info-label">Dirección</p>
+                                            <p class="info-value">${direccion}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    ${divFecha}
+                                </div>
+
+                                <div class="card-precio">
+                                    <p class="info-label" style="text-align: right; margin:0;">Total a pagar</p>
+                                    <p style="margin: 0; font-size: 1.8rem; font-weight: 900; color: #d32f2f;">$${total}</p>
+                                    ${infoPendiente} </div>
                             </div>
                         </div>
                     `;
 
+                    // Clasificamos dónde va la tarjeta
                     if (esPendiente) {
                         divApartados.innerHTML += card;
                     } else if (reserva.estado_reserva === 'completada') {
@@ -99,13 +254,74 @@
                     }
                 });
                 
-                if (divApartados.innerHTML === '') divApartados.innerHTML = '<p>No tienes apartados pendientes.</p>';
-                if (divComprados.innerHTML === '') divComprados.innerHTML = '<p>No tienes compras finalizadas.</p>';
-
+                if (divApartados.innerHTML === '') divApartados.innerHTML = '<p style="text-align:center; color:#666;">No tienes apartados pendientes.</p>';
+                if (divComprados.innerHTML === '') divComprados.innerHTML = '<p style="text-align:center; color:#666;">No tienes compras finalizadas.</p>';
+                iniciarRelojes();
             } catch (error) {
                 console.error("Error cargando compras:", error);
+                divApartados.innerHTML = '<p style="color:red;">Error de conexión. Intenta recargar la página.</p>';
             }
         });
+
+        // ==========================================
+        // FUNCIÓN PARA CANCELAR APARTADO
+        // ==========================================
+        window.cancelarReserva = function(idReserva, nombrePack) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                html: `Vas a cancelar tu rescate de <b>${nombrePack}</b>. <br><br>Esta acción le devolverá la comida al local y no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d32f2f',
+                cancelButtonColor: '#2D6A4F',
+                confirmButtonText: 'Sí, cancelar apartado',
+                cancelButtonText: 'No, lo recogeré'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`http://localhost:3005/api/reservaciones/cancelar/${idReserva}`, { method: 'PUT' });
+                        const data = await response.json();
+
+                        if (data.success) {
+                            Swal.fire('¡Cancelado!', 'Tu apartado ha sido cancelado exitosamente.', 'success').then(() => {
+                                window.location.reload(); 
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error de conexión', 'No pudimos contactar al servidor.', 'error');
+                    }
+                }
+            });
+        };
+
+    // ==========================================
+        // MOTOR DE CUENTA REGRESIVA
+        // ==========================================
+        function iniciarRelojes() {
+            const relojes = document.querySelectorAll('.reloj-cuenta-regresiva');
+            
+            setInterval(() => {
+                relojes.forEach(reloj => {
+                    let segundosRestantes = parseInt(reloj.getAttribute('data-segundos'));
+                    
+                    if (segundosRestantes > 0) {
+                        segundosRestantes--;
+                        reloj.setAttribute('data-segundos', segundosRestantes);
+                        
+                        const minutos = Math.floor(segundosRestantes / 60);
+                        const segundos = segundosRestantes % 60;
+                        reloj.innerHTML = `<i class="fas fa-stopwatch"></i> ${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+                    } else {
+                        reloj.innerHTML = `<i class="fas fa-times-circle"></i> ¡Tiempo agotado!`;
+                        reloj.style.color = "#777";
+                    }
+                });
+            }, 1000);
+        }
+
+        // 🛑 Llama a iniciarRelojes() dentro de tu DOMContentLoaded, justo después de inyectar las tarjetas en divApartados.innerHTML.
     </script>
 </body>
 </html>

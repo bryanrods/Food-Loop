@@ -204,14 +204,15 @@ app.post('/auth/login', async (req, res) => {
 // 1. Obtener los Packs (Regla: Solo si ya es la hora de activación)
 app.get('/api/packs', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM pack WHERE estado = "disponible" AND CURTIME() >= hora_activacion');
+        // 🛑 EL FILTRO: Solo disponible, en hora, y con stock > 0
+        const query = 'SELECT * FROM pack WHERE estado = "disponible" AND CURTIME() >= hora_activacion AND stock_disponible > 0';
+        const [rows] = await pool.query(query);
         res.json(rows);
     } catch (error) {
         console.error("❌ Error al obtener los packs:", error.message);
         res.status(500).json({ error: "Error al obtener los packs" });
     }
 });
-
 // 2. Validar sesión y rol (GET /me requerido)
 app.get('/api/me', async (req, res) => {
     const userId = req.headers['user-id'];
@@ -368,14 +369,13 @@ app.put('/api/comercio/actualizar', upload.single('foto_perfil'), async (req, re
 app.get('/api/packs/comercio/:userId', async (req, res) => {
     const userId = req.params.userId;
     try {
-        // 1. Traducimos el usuario_id al id_comercio
         const [comercio] = await pool.query('SELECT id_comercio FROM comercio WHERE usuario_id = ?', [userId]);
         if (comercio.length === 0) {
             return res.status(404).json({ success: false, message: "Comercio no encontrado." });
         }
 
-        // 2. Traemos todos los packs de este comercio ordenados del más nuevo al más viejo
-        const [packs] = await pool.query('SELECT * FROM pack WHERE comercio_id = ? ORDER BY id_pack DESC', [comercio[0].id_comercio]);
+        const query = 'SELECT * FROM pack WHERE comercio_id = ? AND stock_disponible > 0 ORDER BY id_pack DESC';
+        const [packs] = await pool.query(query, [comercio[0].id_comercio]);
         
         res.json({ success: true, packs });
     } catch (error) {
@@ -583,7 +583,9 @@ app.get('/api/reservaciones/usuario/:id', async (req, res) => {
     try {
         const query = `
             SELECT r.id_reservacion AS id_reserva, r.cantidad, r.estado_reserva, r.fecha_reserva,
-                   p.nombre_pack, p.precio_descuento, p.foto_pack, c.nombre_comercio
+                   TIMESTAMPDIFF(SECOND, NOW(), r.fecha_reserva + INTERVAL 1 HOUR) AS segundos_restantes,
+                   p.nombre_pack, p.precio_descuento, p.foto_pack, 
+                   c.nombre_comercio, c.direccion_comercio
             FROM reservacion r
             JOIN pack p ON r.pack_id = p.id_pack
             JOIN comercio c ON p.comercio_id = c.id_comercio
@@ -593,8 +595,8 @@ app.get('/api/reservaciones/usuario/:id', async (req, res) => {
         const [rows] = await pool.query(query, [req.params.id]);
         res.json({ success: true, reservaciones: rows });
     } catch (error) {
-        console.error("❌ Error al obtener compras:", error);
-        res.status(500).json({ success: false, message: "Error al cargar historial." });
+        console.error("Error obteniendo compras:", error);
+        res.status(500).json({ success: false, message: "Error interno." });
     }
 });
 
@@ -641,16 +643,22 @@ app.get('/api/reservaciones/comercio/:userId', async (req, res) => {
         if (comercio.length === 0) return res.status(404).json({ success: false, message: "Comercio no encontrado" });
 
         const query = `
-            SELECT r.id_reservacion AS id_reserva, r.cantidad, r.estado_reserva, DATE_FORMAT(r.fecha_reserva, '%H:%i') as hora,
-                   u.nombre_usuario, p.nombre_pack, p.precio_descuento
+            SELECT r.id_reservacion AS id_reserva, r.cantidad, r.estado_reserva, DATE_FORMAT(r.fecha_reserva, '%h:%i %p') AS hora,
+                   TIMESTAMPDIFF(SECOND, NOW(), r.fecha_reserva + INTERVAL 1 HOUR) AS segundos_restantes,
+                   p.nombre_pack, p.precio_descuento, p.foto_pack, 
+                   u.nombre_usuario, -- Traemos el nombre real del cliente
+                   c.nombre_comercio, c.direccion_comercio
             FROM reservacion r
             JOIN pack p ON r.pack_id = p.id_pack
-            JOIN usuario u ON r.usuario_id = u.id_usuario
-            WHERE p.comercio_id = ? AND DATE(r.fecha_reserva) = CURDATE()
-            ORDER BY r.estado_reserva = 'pendiente' DESC, r.id_reservacion DESC
+            JOIN comercio c ON p.comercio_id = c.id_comercio
+            JOIN usuario u ON r.usuario_id = u.id_usuario -- Conectamos con el cliente
+            WHERE p.comercio_id = ? -- CORRECCIÓN: Filtramos por el ID de la tienda, no del usuario
+            ORDER BY r.id_reservacion DESC
         `;
         const [rows] = await pool.query(query, [comercio[0].id_comercio]);
-        res.json({ success: true, apartados: rows });
+        
+        // Ahora sí devolvemos 'reservaciones' para que haga match perfecto con tu frontend
+        res.json({ success: true, reservaciones: rows });
     } catch (error) {
         console.error("❌ Error al obtener apartados:", error);
         res.status(500).json({ success: false, message: "Error interno." });
@@ -723,6 +731,90 @@ app.get('/api/ganancias/comercio/:userId', async (req, res) => {
         res.status(500).json({ success: false });
     }
 });
+
+// ==========================================
+// F. CANCELAR APARTADO (Y devolver stock al local)
+// ==========================================
+app.put('/api/reservaciones/cancelar/:id', async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Buscamos la reserva para saber cuánto stock debemos devolver
+        const [reserva] = await connection.query(
+            'SELECT pack_id, cantidad, estado_reserva FROM reservacion WHERE id_reservacion = ?', 
+            [req.params.id]
+        );
+
+        // Validaciones de seguridad
+        if (reserva.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ success: false, message: "La reserva no existe." });
+        }
+        if (reserva[0].estado_reserva !== 'pendiente') {
+            await connection.rollback();
+            return res.status(400).json({ success: false, message: "Solo puedes cancelar pedidos pendientes." });
+        }
+
+        // 2. Cambiamos el estado de la reserva
+        await connection.query(
+            'UPDATE reservacion SET estado_reserva = "cancelada" WHERE id_reservacion = ?', 
+            [req.params.id]
+        );
+
+        // 3. ¡LA MAGIA! Le devolvemos el stock al local
+        await connection.query(
+            'UPDATE pack SET stock_disponible = stock_disponible + ? WHERE id_pack = ?', 
+            [reserva[0].cantidad, reserva[0].pack_id]
+        );
+
+        await connection.commit();
+        res.json({ success: true, message: "Apartado cancelado y stock devuelto." });
+    } catch (error) {
+        await connection.rollback();
+        console.error("❌ Error al cancelar reserva:", error);
+        res.status(500).json({ success: false, message: "Error interno del servidor." });
+    } finally {
+        connection.release();
+    }
+});
+
+// ==========================================
+// TAREA AUTOMÁTICA (CRON): CANCELAR APARTADOS VENCIDOS (1 HORA)
+// ==========================================
+setInterval(async () => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // Buscamos todas las reservas pendientes que se hicieron hace más de 1 hora
+        const query = `
+            SELECT id_reservacion, pack_id, cantidad 
+            FROM reservacion 
+            WHERE estado_reserva = 'pendiente' 
+            AND fecha_reserva <= NOW() - INTERVAL 1 HOUR
+        `;
+        const [expiradas] = await connection.query(query);
+
+        if (expiradas.length > 0) {
+            for (let reserva of expiradas) {
+                // 1. Cancelamos la reserva
+                await connection.query('UPDATE reservacion SET estado_reserva = "cancelada" WHERE id_reservacion = ?', [reserva.id_reservacion]);
+                // 2. Le devolvemos el stock al local
+                await connection.query('UPDATE pack SET stock_disponible = stock_disponible + ? WHERE id_pack = ?', [reserva.cantidad, reserva.pack_id]);
+            }
+            console.log(`🧹 Barredor automático: Se cancelaron ${expiradas.length} reservas vencidas y se devolvió el stock.`);
+        }
+
+        await connection.commit();
+    } catch (error) {
+        await connection.rollback();
+        console.error("❌ Error en el barredor automático de reservas:", error);
+    } finally {
+        connection.release();
+    }
+}, 60000); // Se ejecuta cada 60,000 milisegundos (1 minuto)
+
 
 // ==========================================
 // INICIO DEL SERVIDOR
