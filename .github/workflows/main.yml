@@ -24,6 +24,7 @@ jobs:
 
       - name: 4. Configuración de Entorno y Pruebas (DATABASE_ENV)
         run: |
+          cat << 'EOF' > .env
           echo "${{ secrets.DATABASE_ENV }}" > .env
           npm test
 
