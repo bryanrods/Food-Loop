@@ -201,7 +201,7 @@
                     // Llenar datos de perfil en el modal y tarjeta principal
                     if (estadoData.telefono) document.getElementById('userTelefono').value = estadoData.telefono;
                     if (estadoData.foto_usuario) {
-                        const rutaFoto = `http://localhost:3005${estadoData.foto_usuario}`;
+                        const rutaFoto = estadoData.foto_usuario;
                         
                         // En el modal
                         document.getElementById('userProfilePreview').src = rutaFoto;

@@ -6,20 +6,44 @@ import dotenv from 'dotenv';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/uploads/'); 
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, 'perfil-' + uniqueSuffix + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
+import { BlobServiceClient } from '@azure/storage-blob';
+
 dotenv.config();
+console.log("DEBUG: ¿Conexión encontrada?", process.env.AZURE_STORAGE_CONNECTION_STRING ? "SÍ" : "NO");
 const app = express();
+
+// 1. Cambiamos Multer a Memoria (Ya no escribimos en disco)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+    
+// 2. Configurar Azure
+const AZURE_CONNECTION = process.env.AZURE_STORAGE_CONNECTION_STRING;
+const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_CONNECTION);
+const containerClient = blobServiceClient.getContainerClient('fotos-foodloop'); // El nombre que pusiste en Azure
+
+// 3. Función Maestra para subir fotos
+async function subirFotoAzure(file) {
+    if (!file) return null;
+    const blobName = `img-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    
+    await blockBlobClient.uploadData(file.buffer, {
+        blobHTTPHeaders: { blobContentType: file.mimetype }
+    });
+    
+    return blockBlobClient.url; // Esta es la URL completa: https://...
+}
+
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, 'public/uploads/'); 
+//     },
+//     filename: function (req, file, cb) {
+//         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+//         cb(null, 'perfil-' + uniqueSuffix + path.extname(file.originalname));
+//     }
+// });
 
 // Middlewares
 app.use(cors());
@@ -68,10 +92,8 @@ app.post('/auth/register', upload.single('foto_perfil'), async (req, res) => {
         return res.status(400).json({ success: false, message: "El nombre es obligatorio." });
     }
 
-    const fotoUrl= req.file ? `/uploads/${req.file.filename}` : null;
-
+        const fotoUrl = req.file ? await subirFotoAzure(req.file) : null;
     try {
-        // --- 🛑 NUEVO: FILTRO ANTI-DUPLICADOS PROACTIVO 🛑 ---
         // 1. Buscamos si el correo o el nombre del usuario/dueño ya existen
         const [existeUsuario] = await pool.query(
             'SELECT email_usuario, nombre_usuario FROM usuario WHERE email_usuario = ? OR nombre_usuario = ?',
@@ -267,8 +289,7 @@ app.post('/api/packs', upload.single('foto_pack'), async (req, res) => {
 
     // Calculamos el precio final en el backend por seguridad (no confiamos en el frontend)
     const precioFinal = precio_original - (precio_original * (descuento / 100));
-    const fotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
+    const fotoUrl = req.file ? await subirFotoAzure(req.file) : null;
     const connection = await pool.getConnection();
     try {
         // 1. Traducimos el usuario_id al id_comercio real
@@ -328,13 +349,10 @@ app.get('/api/comercio/me', async (req, res) => {
 // 6. ACTUALIZAR EL PERFIL DEL LOCAL (Dirección, horarios y reemplazar foto)
 app.put('/api/comercio/actualizar', upload.single('foto_perfil'), async (req, res) => {
     const { usuario_id, direccion, apertura, cierre, telefono } = req.body;
-
     const connection = await pool.getConnection();
     try {
-        let nuevaFotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
-
+        const nuevaFotoUrl = req.file ? await subirFotoAzure(req.file) : null;
         if (nuevaFotoUrl) {
-            // ... (Lógica de borrado de foto vieja que ya tienes)
             await connection.query(
                 'UPDATE comercio SET direccion_comercio = ?, telefono_comercio = ?, hora_apertura = ?, hora_cierre = ?, foto_local = ? WHERE usuario_id = ?',
                 [direccion, telefono, apertura || null, cierre || null, nuevaFotoUrl, usuario_id]
@@ -430,8 +448,6 @@ app.get('/api/packs/comercio/:userId', async (req, res) => {
 app.delete('/api/packs/:packId', async (req, res) => {
     const packId = req.params.packId;
     try {
-        // En lugar de DELETE, usamos UPDATE
-        // Esto mantiene la relación con las reservaciones existentes
         const query = 'UPDATE pack SET estado = "eliminado", stock_disponible = 0 WHERE id_pack = ?';
         await pool.query(query, [packId]);
         
@@ -448,42 +464,25 @@ app.delete('/api/packs/:packId', async (req, res) => {
 app.put('/api/packs/:packId', upload.single('foto_pack'), async (req, res) => {
     const packId = req.params.packId;
     const { nombre_pack, descripcion, precio_original, descuento, stock } = req.body;
-    
-    // Calculamos el nuevo precio final por seguridad
     const precioFinal = precio_original - (precio_original * (descuento / 100));
 
-    const connection = await pool.getConnection();
     try {
-        let nuevaFotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+        const nuevaFotoUrl = req.file ? await subirFotoAzure(req.file) : null;
 
         if (nuevaFotoUrl) {
-            // 🛑 Si mandaron foto nueva, buscamos la vieja para destruirla
-            const [packViejo] = await connection.query('SELECT foto_pack FROM pack WHERE id_pack = ?', [packId]);
-            
-            if (packViejo.length > 0 && packViejo[0].foto_pack) {
-                const rutaFisica = path.join(process.cwd(), 'public', packViejo[0].foto_pack);
-                fs.unlink(rutaFisica, (err) => { if(err) console.error("Error borrando foto vieja del pack"); });
-            }
-
-            // Actualizamos todo, incluyendo la nueva ruta de la foto
-            await connection.query(
+            await pool.query(
                 'UPDATE pack SET nombre_pack = ?, descripcion = ?, precio_original = ?, precio_descuento = ?, stock_disponible = ?, foto_pack = ? WHERE id_pack = ?',
                 [nombre_pack, descripcion, precio_original, precioFinal, stock, nuevaFotoUrl, packId]
             );
         } else {
-            // Actualizamos solo los textos, dejando la foto que ya tenía
-            await connection.query(
+            await pool.query(
                 'UPDATE pack SET nombre_pack = ?, descripcion = ?, precio_original = ?, precio_descuento = ?, stock_disponible = ? WHERE id_pack = ?',
                 [nombre_pack, descripcion, precio_original, precioFinal, stock, packId]
             );
         }
-
-        res.json({ success: true, message: "¡Loop-Pack actualizado exitosamente!" });
+        res.json({ success: true, message: "¡Loop-Pack actualizado!" });
     } catch (error) {
-        console.error("❌ Error al editar pack:", error);
-        res.status(500).json({ success: false, message: "Error interno del servidor." });
-    } finally {
-        connection.release();
+        res.status(500).json({ success: false });
     }
 });
 
@@ -586,32 +585,17 @@ app.put('/api/suscripcion/renovar', async (req, res) => {
 // ==========================================
 app.put('/api/usuarios/actualizar', upload.single('foto_perfil'), async (req, res) => {
     const { usuario_id, telefono } = req.body;
-    if (!usuario_id) return res.status(400).json({ success: false, message: "ID requerido" });
-
-    const connection = await pool.getConnection();
     try {
-        let nuevaFotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+        const nuevaFotoUrl = req.file ? await subirFotoAzure(req.file) : null;
 
         if (nuevaFotoUrl) {
-            // Buscamos y destruimos la foto vieja
-            const [viejo] = await connection.query('SELECT foto_usuario FROM datos_usuario WHERE usuario_id = ?', [usuario_id]);
-            if (viejo.length > 0 && viejo[0].foto_usuario) {
-                const rutaFisica = path.join(process.cwd(), 'public', viejo[0].foto_usuario);
-                fs.unlink(rutaFisica, () => {});
-            }
-            // Actualizamos teléfono y foto
-            await connection.query('UPDATE datos_usuario SET telefono = ?, foto_usuario = ? WHERE usuario_id = ?', [telefono, nuevaFotoUrl, usuario_id]);
+            await pool.query('UPDATE datos_usuario SET telefono = ?, foto_usuario = ? WHERE usuario_id = ?', [telefono, nuevaFotoUrl, usuario_id]);
         } else {
-            // Actualizamos solo el teléfono
-            await connection.query('UPDATE datos_usuario SET telefono = ? WHERE usuario_id = ?', [telefono, usuario_id]);
+            await pool.query('UPDATE datos_usuario SET telefono = ? WHERE usuario_id = ?', [telefono, usuario_id]);
         }
-
-        res.json({ success: true, message: "Perfil actualizado con éxito." });
+        res.json({ success: true, message: "Perfil de usuario actualizado." });
     } catch (error) {
-        console.error("❌ Error al actualizar usuario:", error);
-        res.status(500).json({ success: false, message: "Error interno" });
-    } finally {
-        connection.release();
+        res.status(500).json({ success: false });
     }
 });
 

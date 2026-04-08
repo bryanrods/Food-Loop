@@ -707,7 +707,7 @@
                         if (c.foto_local) {
                             const dashProfilePreview = document.getElementById('dashProfilePreview');
                             const dashProfileIcon = document.getElementById('dashProfileIcon');
-                            dashProfilePreview.src = `http://localhost:3005${c.foto_local}`;
+                            dashProfilePreview.src = c.foto_local;                            
                             dashProfilePreview.style.display = 'block';
                             dashProfileIcon.style.display = 'none';
                         }
