@@ -63,7 +63,7 @@ async function getComercioData() {
 
         // 1. Ejecutamos la consulta para traer todos los registros de la tabla comercio
         // Nota: Asegúrate de que el nombre exacto de la tabla sea 'comercio'
-        const [rows] = await connection.execute('SELECT * FROM usuario;');
+        const [rows] = await connection.execute('SELECT * FROM comercio;');
 
         if (rows.length === 0) {
             console.log('⚠️ La tabla "usuario" está vacía.');
@@ -104,9 +104,9 @@ getComercioData();
 //         });
 
 //         // DESCRIBE nos devuelve el nombre de las columnas, sus tipos de datos y si aceptan nulos
-//         const [rows] = await connection.execute('DESCRIBE reservacion;');
+//         const [rows] = await connection.execute('DESCRIBE suscripcion_info;');
 
-//         console.log('\n📋 Estructura exacta de la tabla "suscripcion_pago":');
+//         console.log('\n📋 Estructura exacta de la tabla "suscripcion_info":');
 //         console.table(rows);
 
 //         await connection.end();
@@ -117,3 +117,4 @@ getComercioData();
 // }
 
 // verColumnasPack();
+

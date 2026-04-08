@@ -486,25 +486,66 @@ app.get('/api/suscripcion/consultar/:folio', async (req, res) => {
 });
 
 // ==========================================
-// 11. ACTIVAR O RENOVAR SUSCRIPCIÓN (El folio NO cambia)
+// 11. ACTIVAR O RENOVAR SUSCRIPCIÓN (Registrando el pago real)
 // ==========================================
 app.put('/api/suscripcion/renovar', async (req, res) => {
-    const { usuario_id } = req.body;
-    if (!usuario_id) return res.status(400).json({ success: false, message: "ID de usuario requerido." });
+    
+    // 🛑 AHORA: Recibimos el ID del cliente, el ID del dueño del local, y el dinero
+    const { usuario_id, local_usuario_id, monto } = req.body; 
+    
+    if (!usuario_id || !local_usuario_id || !monto) {
+        return res.status(400).json({ success: false, message: "Faltan datos financieros para procesar la activación." });
+    }
 
+    const connection = await pool.getConnection();
     try {
-        // Actualizamos el estado a activo y le sumamos 1 mes a la fecha actual
-        const query = `
+        await connection.beginTransaction();
+
+        // 🛑 LA TRADUCCIÓN OBLIGATORIA: Buscamos el ID real del comercio
+        const [comercio] = await connection.query(
+            'SELECT id_comercio FROM comercio WHERE usuario_id = ?', 
+            [local_usuario_id]
+        );
+
+        if (comercio.length === 0) {
+            throw new Error("Local no autorizado. No se encontró su comercio en la base de datos.");
+        }
+        const comercio_id_real = comercio[0].id_comercio;
+
+        // 1. Buscamos el id_suscripcion que le pertenece a este usuario (el cliente)
+        const [subInfo] = await connection.query(
+            'SELECT id_suscripcion FROM suscripcion_info WHERE usuario_id = ?', 
+            [usuario_id]
+        );
+
+        if (subInfo.length === 0) {
+            throw new Error("No se encontró la membresía de este usuario.");
+        }
+        const idSuscripcion = subInfo[0].id_suscripcion;
+
+        // 2. Actualizamos el estado a activa
+        await connection.query(`
             UPDATE suscripcion_info 
             SET estado_suscripcion = 'activa', fecha_corte = DATE_ADD(CURDATE(), INTERVAL 1 MONTH) 
             WHERE usuario_id = ?
-        `;
-        await pool.query(query, [usuario_id]);
+        `, [usuario_id]);
         
-        res.json({ success: true, message: "¡Suscripción actualizada y activa por 1 mes!" });
+        // 3. 💰 REGISTRAMOS EL DINERO USANDO EL COMERCIO_ID TRADUCIDO
+        const refPago = 'PAGO-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        await connection.query(`
+            INSERT INTO suscripcion_pago (suscripcion_id, monto_pago, dia_cobro, estado_pago, referencia_pago, comercio_id) 
+            VALUES (?, ?, CURDATE(), 'completado', ?, ?)
+        `, [idSuscripcion, monto, refPago, comercio_id_real]); // Usamos la variable segura
+
+        await connection.commit();
+        res.json({ success: true, message: "¡Suscripción activada y pago registrado en caja!" });
     } catch (error) {
+        await connection.rollback();
         console.error("❌ Error al renovar suscripción:", error);
-        res.status(500).json({ success: false, message: "Error interno del servidor." });
+        res.status(500).json({ success: false, message: error.message || "Error interno al guardar el pago." });
+    } finally {
+        connection.release();
     }
 });
 

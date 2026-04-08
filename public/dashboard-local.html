@@ -316,11 +316,6 @@
                             <h4>Total de ganancias</h4>
                             <p id="total-ganancias">$0.00</p>
                         </div>
-
-                        <div class="ganancia-box">
-                            <h4>0.5% del total</h4>
-                            <p id="porcentaje-ganancias">$0.00</p>
-                        </div>
                     </div>
 
                     <div class="tabla-ganancias-wrapper">
@@ -456,7 +451,7 @@
                     if (!apertura || !cierre) {
                         Swal.fire({
                             title: '¡Falta tu horario!',
-                            text: 'Antes de publicar comida, tienes que poner tu hora de apertura y cierre en tu "Perfil del Local" y darle a "Guardar Cambios".',
+                            text: 'Ingresa tu horario de trabajo en tu Perfil y guarda los cambios para continuar',
                             icon: 'warning',
                             confirmButtonColor: '#d32f2f',
                             confirmButtonText: 'Entendido'
@@ -489,14 +484,6 @@
                 precioFinalElement.textContent = '$0.00';
             }
         }
-
-        // function formatearFecha(fecha = new Date()) {
-        //     return fecha.toLocaleDateString('es-MX', {
-        //         year: 'numeric',
-        //         month: '2-digit',
-        //         day: '2-digit'
-        //     });
-        // }
 
         function obtenerTotalGanancias() {
             return historialGanancias.reduce((acum, item) => acum + (parseFloat(item.monto) || 0), 0);
@@ -656,13 +643,18 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        alert('¡Perfil actualizado correctamente!');
+                        Swal.fire({
+                                    title: '¡Listo!',
+                                    text: '¡Perfil actualizado correctamente!',
+                                    icon: 'success',
+                                    confirmButtonColor: '#2D6A4F'
+                                });
                     } else {
-                        alert('Error al actualizar: ' + result.message);
+                        Swal.fire('Error', dataRenovar.message, 'error');
                     }
                 } catch (error) {
                     console.error('Error al guardar:', error);
-                    alert('Error de conexión.');
+                    Swal.fire('Error', 'Fallo al procesar el pago en el servidor.', 'error');
                 }
             });
 
@@ -858,6 +850,7 @@
 
             cargarMisPacks();
 
+            //Validacion de folios
             const btnBuscarFolio = document.getElementById('btn-buscar-folio');
             const inputFolio = document.getElementById('input-folio');
 
@@ -901,30 +894,40 @@
                             cancelButtonText: 'Cancelar'
                         }).then(async (result) => {
                             if (result.isConfirmed) {
-                                const resRenovar = await fetch('http://localhost:3005/api/suscripcion/renovar', {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ usuario_id: user.id_usuario })
-                                });
+                                // 1. Preparamos los datos ANTES de llamar al servidor
+                                const montoCobrado = parseFloat(dataConsulta.costo) || 0;
+                                const motivoPago = `Pago de suscripción - ${user.tipo_plan.toUpperCase()} - ${user.nombre_usuario}`;
 
-                                const dataRenovar = await resRenovar.json();
+                                try {
+                                    const resRenovar = await fetch('http://localhost:3005/api/suscripcion/renovar', {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ 
+                                            usuario_id: user.id_usuario,
+                                            monto: montoCobrado,
+                                            motivo: motivoPago,
+                                            local_usuario_id: usuario.id // Mandamos quién está cobrando
+                                        })
+                                    });
 
-                                if (dataRenovar.success) {
-                                    const montoCobrado = parseFloat(dataConsulta.costo) || 0;
-                                    const fechaHoy = formatearFecha(new Date());
-                                    const motivoPago = `Pago de suscripción - ${user.tipo_plan.toUpperCase()} - ${user.nombre_usuario}`;
+                                    const dataRenovar = await resRenovar.json();
 
-                                    registrarGanancia(fechaHoy, motivoPago, montoCobrado);
-
-                                    Swal.fire(
-                                        '¡Activado!',
-                                        `La suscripción de ${user.nombre_usuario} ya está activa por 1 mes.`,
-                                        'success'
-                                    );
-
-                                    inputFolio.value = '';
-                                } else {
-                                    Swal.fire('Error', dataRenovar.message, 'error');
+                                    if (dataRenovar.success) {
+                                        Swal.fire(
+                                            '¡Activado!',
+                                            `La suscripción de ${user.nombre_usuario} ya está activa por 1 mes.`,
+                                            'success'
+                                        );
+                                        
+                                        inputFolio.value = '';
+                                        
+                                        // 2. ¡La magia! Refrescamos la tabla de ganancias en tiempo real
+                                        cargarHistorialGanancias(); 
+                                    } else {
+                                        Swal.fire('Error', dataRenovar.message, 'error');
+                                    }
+                                } catch (error) {
+                                    Swal.fire('Error', 'Fallo al procesar el pago en el servidor.', 'error');
                                 }
                             }
                         });
@@ -1072,7 +1075,7 @@
         }
 
         // ==========================================
-        // FUNCIÓN PARA COBRAR Y REGISTRAR GANANCIA
+        // FUNCIÓN PARA COBRAR Y REGISTRAR GANANCIA (COMIDA)
         // ==========================================
         window.cobrarReserva = async function(idReserva, nombreCliente, total, nombrePack) {
             Swal.fire({
@@ -1086,12 +1089,13 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
+                        // AQUÍ ES DONDE ESTABA EL ERROR: Devolvemos el fetch correcto para cobrar comida
                         const res = await fetch(`http://localhost:3005/api/reservaciones/cobrar/${idReserva}`, { method: 'PUT' });
                         const data = await res.json();
                         
                         if (data.success) {
                             Swal.fire('¡Venta cerrada!', 'El dinero ha sido registrado en tu sistema.', 'success');
-                            // Refrescamos ambas pantallas
+                            // Refrescamos ambas pantallas para ver el 5% reflejado
                             cargarApartadosLocal(); 
                             cargarHistorialGanancias();
                         } else {
