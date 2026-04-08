@@ -256,6 +256,14 @@
                 <div id="panel-perfil" class="dash-panel active">
                     <h3 class="panel-title">Configuración del Perfil</h3>
 
+                    <div class="dash-form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+                        <label>Estado de la Tienda</label>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span id="txt-estado-tienda" style="font-weight: bold; color: #2D6A4F;">ABIERTO</span>
+                            <button id="btn-toggle-tienda" class="btn" style="padding: 5px 15px; font-size: 0.8rem;">Cerrar Local</button>
+                        </div>
+                        <p style="font-size: 0.75rem; color: #666; margin-top: 5px;">*No podrás cerrar si tienes pedidos pendientes.</p>
+                    </div>
                     <div class="form-group-checkout" style="text-align: center; margin-bottom: 30px;">
                         <div class="profile-preview-wrapper"
                             style="width: 120px; height: 120px; border-radius: 50%; background: var(--color-primary); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--color-primary);">
@@ -277,7 +285,12 @@
                                 <label>Dirección del Local</label>
                                 <input type="text" id="dashDireccion" placeholder="Ej. Av. de las Américas 123">
                             </div>
+                            <div class="dash-form-group">
+                                <label>Teléfono de Atención al Cliente</label>
+                                <input type="text" id="dashTelefono" placeholder="Ej. 656 123 4567">
+                            </div>
                         </div>
+                        
                         <div style="flex: 1; min-width: 250px;">
                             <div class="dash-form-group">
                                 <label>Horario de Apertura</label>
@@ -313,8 +326,16 @@
 
                     <div class="ganancias-resumen">
                         <div class="ganancia-box">
-                            <h4>Total de ganancias</h4>
+                            <h4>Efectivo en Caja (Total)</h4>
                             <p id="total-ganancias">$0.00</p>
+                        </div>
+                        <div class="ganancia-box" style="border-color: #d32f2f;">
+                            <h4>A pagar a Food Loop</h4>
+                            <p id="deuda-foodloop" style="color: #d32f2f;">$0.00</p>
+                        </div>
+                        <div class="ganancia-box" style="border-color: #2D6A4F;">
+                            <h4>Mi Ganancia Neta</h4>
+                            <p id="ganancia-neta" style="color: #2D6A4F;">$0.00</p>
                         </div>
                     </div>
 
@@ -322,9 +343,11 @@
                         <table class="tabla-ganancias">
                             <thead>
                                 <tr>
-                                    <th>Día</th>
-                                    <th>Motivo de pago</th>
-                                    <th>Monto</th>
+                                    <th>Fecha</th>
+                                    <th>Concepto</th>
+                                    <th>Monto Recaudado</th>
+                                    <th>Comisión (Deuda)</th>
+                                    <th>Mi Ganancia</th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-ganancias-body">
@@ -433,40 +456,89 @@
     <script>
         let misPacksGlobales = [];
         let usuario = null;
-
         let historialGanancias = [];
+        let estadoActualTienda = 'abierto';
 
-        // ==========================================
-        // CONTROL DE PESTAÑAS (Con validación de horario)
-        // ==========================================
+
+        async function toggleEstadoTienda() {
+            const nuevoEstado = estadoActualTienda === 'abierto' ? 'cerrado' : 'abierto';
+            
+            try {
+                const response = await fetch('http://localhost:3005/api/comercio/estado', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario_id: usuario.id, nuevo_estado: nuevoEstado })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    estadoActualTienda = nuevoEstado;
+                    actualizarInterfazEstado();
+                    Swal.fire('Estado Actualizado', data.message, 'success');
+                } else {
+                    Swal.fire('Atención', data.message, 'warning');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'No se pudo conectar al servidor.', 'error');
+            }
+        }
+
+        function actualizarInterfazEstado() {
+            const txt = document.getElementById('txt-estado-tienda');
+            const btn = document.getElementById('btn-toggle-tienda');
+            
+            if (estadoActualTienda === 'abierto') {
+                txt.textContent = 'ABIERTO';
+                txt.style.color = '#2D6A4F';
+                btn.textContent = 'Cerrar Local';
+                btn.style.backgroundColor = '#d32f2f';
+            } else {
+                txt.textContent = 'CERRADO';
+                txt.style.color = '#d32f2f';
+                btn.textContent = 'Abrir Local';
+                btn.style.backgroundColor = '#2D6A4F';
+            }
+        }
+                // CONTROL DE PESTAÑAS (Bloqueo Operativo Total)
         document.querySelectorAll('.dash-tab-btn').forEach(button => {
             button.addEventListener('click', () => {
                 const targetId = button.getAttribute('data-target');
+                
+                // Pestañas que requieren que el local esté ABIERTO
+                const pestañasOperativas = ['panel-folios', 'panel-crear', 'panel-reservas'];
 
-                // 🛑 EL CADENERO: Bloqueamos si quieren ir a publicar sin horario
-                if (targetId === 'panel-crear') {
+                if (pestañasOperativas.includes(targetId)) {
+                    // 🛑 VALIDACIÓN 1: Horario configurado
                     const apertura = document.getElementById('dashApertura').value;
                     const cierre = document.getElementById('dashCierre').value;
 
                     if (!apertura || !cierre) {
                         Swal.fire({
-                            title: '¡Falta tu horario!',
-                            text: 'Ingresa tu horario de trabajo en tu Perfil y guarda los cambios para continuar',
+                            title: '¡Configuración pendiente!',
+                            text: 'Debes establecer tu horario en el Perfil antes de operar.',
                             icon: 'warning',
-                            confirmButtonColor: '#d32f2f',
-                            confirmButtonText: 'Entendido'
-                        }).then(() => {
-                            // Lo rebotamos automáticamente a la pestaña de perfil
-                            document.querySelector('[data-target="panel-perfil"]').click();
+                            confirmButtonColor: '#d32f2f'
                         });
-                        return; // Rompemos la ejecución para que no entre a la pestaña
+                        document.querySelector('[data-target="panel-perfil"]').click();
+                        return;
+                    }
+
+                    // 🛑 VALIDACIÓN 2: Estado de la tienda (CERRADO)
+                    if (estadoActualTienda === 'cerrado') {
+                        Swal.fire({
+                            title: 'Operación Bloqueada',
+                            text: 'Tu local está CERRADO. No puedes validar folios, gestionar packs ni entregar pedidos hasta que abras el local en tu perfil.',
+                            icon: 'error',
+                            confirmButtonColor: '#d32f2f'
+                        });
+                        document.querySelector('[data-target="panel-perfil"]').click();
+                        return;
                     }
                 }
 
-                // Flujo normal si pasan el filtro (o si van a otra pestaña)
+                // Si pasa los filtros o es una pestaña permitida (Perfil/Ganancias)
                 document.querySelectorAll('.dash-tab-btn').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.dash-panel').forEach(panel => panel.classList.remove('active'));
-
                 button.classList.add('active');
                 document.getElementById(targetId).classList.add('active');
             });
@@ -520,24 +592,31 @@
             const tbody = document.getElementById('tabla-ganancias-body');
 
             if (!gananciasBd || gananciasBd.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="tabla-vacia">Aún no hay movimientos registrados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="tabla-vacia">No hay movimientos registrados.</td></tr>`;
                 document.getElementById('total-ganancias').textContent = `$0.00`;
-                document.getElementById('porcentaje-ganancias').textContent = `$0.00`;
+                document.getElementById('deuda-foodloop').textContent = `$0.00`;
+                document.getElementById('ganancia-neta').textContent = `$0.00`;
                 return;
             }
 
-            // Calculamos el total usando los datos que mandó el servidor
-            const total = gananciasBd.reduce((acum, item) => acum + parseFloat(item.monto), 0);
-            const porcentaje = total * 0.005;
+            // Cálculos globales
+            const totalRecaudado = gananciasBd.reduce((acum, item) => acum + parseFloat(item.monto_total), 0);
+            const totalDeuda = gananciasBd.reduce((acum, item) => acum + parseFloat(item.comision_foodloop), 0);
+            const totalNeto = totalRecaudado - totalDeuda;
 
-            document.getElementById('total-ganancias').textContent = `$${total.toFixed(2)}`;
-            document.getElementById('porcentaje-ganancias').textContent = `$${porcentaje.toFixed(2)}`;
+            // Actualizar cuadros
+            document.getElementById('total-ganancias').textContent = `$${totalRecaudado.toFixed(2)}`;
+            document.getElementById('deuda-foodloop').textContent = `$${totalDeuda.toFixed(2)}`;
+            document.getElementById('ganancia-neta').textContent = `$${totalNeto.toFixed(2)}`;
 
+            // Dibujar filas
             tbody.innerHTML = gananciasBd.map(item => `
                 <tr>
-                    <td>${item.fecha}</td>
+                    <td>${new Date(item.fecha).toLocaleDateString()}</td>
                     <td>${item.motivo}</td>
-                    <td><strong style="color: #2D6A4F;">+$${parseFloat(item.monto).toFixed(2)}</strong></td>
+                    <td>$${parseFloat(item.monto_total).toFixed(2)}</td>
+                    <td style="color: #d32f2f;">-$${parseFloat(item.comision_foodloop).toFixed(2)}</td>
+                    <td style="font-weight: bold; color: #2D6A4F;">$${parseFloat(item.mi_ganancia).toFixed(2)}</td>
                 </tr>
             `).join('');
         }
@@ -584,6 +663,10 @@
             const packPreview = document.getElementById('packPreview');
             const packIcon = document.getElementById('packIcon');
 
+            const btnToggle = document.getElementById('btn-toggle-tienda');
+            if (btnToggle) {
+                btnToggle.addEventListener('click', toggleEstadoTienda);
+            }
             if (packInput) {
                 packInput.addEventListener('change', function (e) {
                     const file = e.target.files[0];
@@ -605,18 +688,37 @@
                     const data = await response.json();
 
                     if (data.success && data.comercio) {
-                        if (data.comercio.direccion_comercio) document.getElementById('dashDireccion').value = data.comercio.direccion_comercio;
-                        if (data.comercio.hora_apertura) document.getElementById('dashApertura').value = data.comercio.hora_apertura;
-                        if (data.comercio.hora_cierre) document.getElementById('dashCierre').value = data.comercio.hora_cierre;
+                     const c = data.comercio;
 
-                        if (data.comercio.foto_local) {
-                            dashProfilePreview.src = `http://localhost:3005${data.comercio.foto_local}`;
+                        // 📍 Cargamos la Dirección
+                        if (c.direccion_comercio) {
+                            document.getElementById('dashDireccion').value = c.direccion_comercio;
+                        }
+
+                        if (c.telefono_comercio) {
+                            document.getElementById('dashTelefono').value = c.telefono_comercio;
+                        }
+                        if (c.hora_apertura) {
+                            document.getElementById('dashApertura').value = c.hora_apertura.slice(0, 5);
+                        }
+                        if (c.hora_cierre) {
+                            document.getElementById('dashCierre').value = c.hora_cierre.slice(0, 5);
+                        }
+                        if (c.foto_local) {
+                            const dashProfilePreview = document.getElementById('dashProfilePreview');
+                            const dashProfileIcon = document.getElementById('dashProfileIcon');
+                            dashProfilePreview.src = `http://localhost:3005${c.foto_local}`;
                             dashProfilePreview.style.display = 'block';
                             dashProfileIcon.style.display = 'none';
                         }
+
+                        if (c.estado_operativo) {
+                            estadoActualTienda = c.estado_operativo;
+                            actualizarInterfazEstado(); // Esta función cambia el texto y color del botón
+                        }
                     }
                 } catch (error) {
-                    console.error("No se pudieron cargar los datos del perfil", error);
+                    console.error("Error al cargar perfil:", error);
                 }
             }
 
@@ -627,6 +729,7 @@
                 const formData = new FormData();
                 formData.append('usuario_id', usuario.id);
                 formData.append('direccion', document.getElementById('dashDireccion').value);
+                formData.append('telefono', document.getElementById('dashTelefono').value);
                 formData.append('apertura', document.getElementById('dashApertura').value);
                 formData.append('cierre', document.getElementById('dashCierre').value);
 
@@ -938,53 +1041,6 @@
                     }
                 });
             }
-
-            // async function cargarPacksDisponibles() {
-            //     const contenedor = document.getElementById('contenedor-packs');
-            //     if (!contenedor) return;
-
-            //     try {
-            //         const response = await fetch('http://localhost:3005/api/packs');
-            //         const packs = await response.json();
-
-            //         contenedor.innerHTML = '';
-
-            //         if (packs.length === 0) {
-            //             contenedor.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; font-weight: bold; color: var(--color-primary);">No hay packs disponibles en este momento. Los locales están preparando sorpresas.</p>';
-            //             return;
-            //         }
-
-            //         packs.forEach(pack => {
-            //             const visualHTML = pack.foto_pack
-            //                 ? `<img src="http://localhost:3005${pack.foto_pack}" alt="Pack" style="width: 100%; height: 180px; object-fit: cover; border-bottom: 2px solid var(--color-primary);">`
-            //                 : `<div style="height: 180px; border-bottom: 2px solid var(--color-primary); background: var(--color-primary); display:flex; align-items:center; justify-content:center;"><i class="fas fa-box-open fa-4x" style="color:var(--color-accent);"></i></div>`;
-
-            //             const card = `
-            //                 <div class="dashboard-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column; cursor: pointer;" onclick="interactuarConPack('${pack.nombre_pack}')">
-            //                     ${visualHTML}
-            //                     <div style="padding: 20px; display: flex; flex-direction: column; flex-grow: 1;">
-            //                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            //                             <h3 style="margin:0; font-size:1.2rem; color:var(--color-primary);">${pack.nombre_pack}</h3>
-            //                             <span style="background:var(--color-primary); color:var(--color-accent); font-weight:bold; padding:3px 8px; border-radius:3px; font-size:0.8rem;">Stock: ${pack.stock_disponible}</span>
-            //                         </div>
-            //                         <p style="font-size:0.85rem; margin-top:5px; color:#555;"><i class="fas fa-store"></i> ${pack.nombre_comercio || 'Negocio Local'}</p>
-            //                         <p style="font-size:0.9rem; margin-top:10px; flex-grow:1;">${pack.descripcion}</p>
-
-            //                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; border-top: 2px dashed var(--color-primary); padding-top: 15px;">
-            //                             <p style="margin:0; font-size:1.5rem; font-weight:900; color:#d32f2f;">$${parseFloat(pack.precio_descuento).toFixed(2)}</p>
-            //                             <button class="btn" style="padding: 8px 15px;">Ver más</button>
-            //                         </div>
-            //                     </div>
-            //                 </div>
-            //             `;
-            //             contenedor.innerHTML += card;
-            //         });
-            //     } catch (error) {
-            //         contenedor.innerHTML = '<p style="color: red; grid-column: 1 / -1; text-align: center;">Error de conexión. No pudimos cargar el catálogo.</p>';
-            //     }
-            // }
-
-            // cargarPacksDisponibles();
         });
 
         // ==========================================

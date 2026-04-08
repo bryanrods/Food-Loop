@@ -169,26 +169,30 @@
                     const esPendiente = reserva.estado_reserva === 'pendiente';
                     const total = (reserva.cantidad * reserva.precio_descuento).toFixed(2);
                     const direccion = reserva.direccion_comercio || 'Dirección no registrada';
+                    const telefono = reserva.telefono_comercio || 'No disponible'; // 📞 Nueva variable
                     
-                    // Formatear la fecha
-                    const fechaFormateada = new Date(reserva.fecha_reserva).toLocaleDateString('es-MX', { 
+                    // Formatear la fecha para incluir la hora (HH:mm)
+                    const fechaObj = new Date(reserva.fecha_reserva);
+                    const fechaFormateada = fechaObj.toLocaleDateString('es-MX', { 
                         year: 'numeric', month: 'long', day: 'numeric' 
                     });
+                    const horaFormateada = fechaObj.toLocaleTimeString('es-MX', {
+                        hour: '2-digit', minute: '2-digit'
+                    });
 
-                    // Elemento exclusivo de "Comprados"
+                    // Elemento exclusivo de "Comprados" (Ahora con HORA ⏰)
                     const divFecha = !esPendiente ? `
                         <div class="info-item">
                             <i class="fas fa-calendar-check"></i>
                             <div class="info-text">
-                                <p class="info-label">Fecha de Compra</p>
-                                <p class="info-value">${fechaFormateada}</p>
+                                <p class="info-label">Fecha y Hora de Compra</p>
+                                <p class="info-value">${fechaFormateada} - ${horaFormateada} hrs</p>
                             </div>
                         </div>
                     ` : '';
 
                     let infoPendiente = '';
                     if (esPendiente) {
-                        // Si ya pasaron los segundos (o están a punto), mostramos 0
                         const seg = reserva.segundos_restantes > 0 ? reserva.segundos_restantes : 0;
                         
                         infoPendiente = `
@@ -207,7 +211,7 @@
                     const headerClass = esPendiente ? 'header-pendiente' : 'header-comprado';
                     const headerText = esPendiente ? '<i class="fas fa-exclamation-circle"></i> Tienes que ir a recogerlo hoy' : '<i class="fas fa-check-circle"></i> Rescate finalizado con éxito';
 
-                    // Construcción de la Tarjeta
+                    // Construcción de la Tarjeta (Agregando el teléfono 📞)
                     const card = `
                         <div class="compra-card-wide">
                             <div class="card-header ${headerClass}">
@@ -234,6 +238,16 @@
                                             <p class="info-value">${direccion}</p>
                                         </div>
                                     </div>
+
+                                    ${esPendiente ? `
+                                    <div class="info-item">
+                                        <i class="fas fa-phone-alt"></i>
+                                        <div class="info-text">
+                                            <p class="info-label">Teléfono del Local</p>
+                                            <p class="info-value">${telefono}</p>
+                                        </div>
+                                    </div>
+                                    ` : ''}
                                     
                                     ${divFecha}
                                 </div>
@@ -241,12 +255,12 @@
                                 <div class="card-precio">
                                     <p class="info-label" style="text-align: right; margin:0;">Total a pagar</p>
                                     <p style="margin: 0; font-size: 1.8rem; font-weight: 900; color: #d32f2f;">$${total}</p>
-                                    ${infoPendiente} </div>
+                                    ${infoPendiente} 
+                                </div>
                             </div>
                         </div>
                     `;
 
-                    // Clasificamos dónde va la tarjeta
                     if (esPendiente) {
                         divApartados.innerHTML += card;
                     } else if (reserva.estado_reserva === 'completada') {

@@ -3,7 +3,7 @@ import cors from 'cors';
 import mysql from 'mysql2/promise';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
-import crypto from 'crypto'; // <-- NUEVO: Para generar el folio seguro
+import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -205,8 +205,15 @@ app.post('/auth/login', async (req, res) => {
 app.get('/api/packs', async (req, res) => {
     try {
         // 🛑 EL FILTRO: Solo disponible, en hora, y con stock > 0
-        const query = 'SELECT * FROM pack WHERE estado = "disponible" AND CURTIME() >= hora_activacion AND stock_disponible > 0';
-        const [rows] = await pool.query(query);
+            const query = `
+                SELECT p.*, c.nombre_comercio 
+                FROM pack p
+                JOIN comercio c ON p.comercio_id = c.id_comercio
+                WHERE p.estado = "disponible" 
+                AND c.estado_operativo = "abierto"
+                AND p.stock_disponible > 0
+            `;        
+            const [rows] = await pool.query(query);
         res.json(rows);
     } catch (error) {
         console.error("❌ Error al obtener los packs:", error.message);
@@ -300,7 +307,8 @@ app.get('/api/comercio/me', async (req, res) => {
     try {
         // Buscamos los datos actuales del local
         const [rows] = await pool.query(
-            'SELECT direccion_comercio, hora_apertura, hora_cierre, foto_local FROM comercio WHERE usuario_id = ?', 
+            // 🛑 IMPORTANTE: Asegúrate de que esta columna esté en el SELECT
+            'SELECT direccion_comercio, telefono_comercio, hora_apertura, hora_cierre, foto_local, estado_operativo FROM comercio WHERE usuario_id = ?', 
             [userId]
         );
         
@@ -318,46 +326,77 @@ app.get('/api/comercio/me', async (req, res) => {
 
 // 6. ACTUALIZAR EL PERFIL DEL LOCAL (Dirección, horarios y reemplazar foto)
 app.put('/api/comercio/actualizar', upload.single('foto_perfil'), async (req, res) => {
-    const { usuario_id, direccion, apertura, cierre } = req.body;
-
-    if (!usuario_id) {
-        return res.status(400).json({ success: false, message: "ID de usuario requerido" });
-    }
+    const { usuario_id, direccion, apertura, cierre, telefono } = req.body;
 
     const connection = await pool.getConnection();
     try {
-        // Revisamos si el frontend nos mandó un archivo nuevo
         let nuevaFotoUrl = req.file ? `/uploads/${req.file.filename}` : null;
 
         if (nuevaFotoUrl) {
-            // 🛑 LÓGICA PRO: Si hay foto nueva, buscamos la vieja y la destruimos físicamente
-            const [comercioActual] = await connection.query('SELECT foto_local FROM comercio WHERE usuario_id = ?', [usuario_id]);
-            
-            if (comercioActual.length > 0 && comercioActual[0].foto_local) {
-                const rutaFisicaVieja = path.join(process.cwd(), 'public', comercioActual[0].foto_local);
-                fs.unlink(rutaFisicaVieja, (err) => {
-                    if (err) console.error('⚠️ No se pudo borrar la foto vieja del servidor:', err);
-                    else console.log('🗑️ Foto vieja reemplazada y destruida.');
-                });
-            }
-
-            // Actualizamos la base de datos incluyendo la ruta de la nueva foto
+            // ... (Lógica de borrado de foto vieja que ya tienes)
             await connection.query(
-                'UPDATE comercio SET direccion_comercio = ?, hora_apertura = ?, hora_cierre = ?, foto_local = ? WHERE usuario_id = ?',
-                [direccion, apertura || null, cierre || null, nuevaFotoUrl, usuario_id]
+                'UPDATE comercio SET direccion_comercio = ?, telefono_comercio = ?, hora_apertura = ?, hora_cierre = ?, foto_local = ? WHERE usuario_id = ?',
+                [direccion, telefono, apertura || null, cierre || null, nuevaFotoUrl, usuario_id]
             );
         } else {
-            // Si NO subieron foto nueva, solo actualizamos los puros textos
             await connection.query(
-                'UPDATE comercio SET direccion_comercio = ?, hora_apertura = ?, hora_cierre = ? WHERE usuario_id = ?',
-                [direccion, apertura || null, cierre || null, usuario_id]
+                'UPDATE comercio SET direccion_comercio = ?, telefono_comercio = ?, hora_apertura = ?, hora_cierre = ? WHERE usuario_id = ?',
+                [direccion, telefono, apertura || null, cierre || null, usuario_id]
             );
         }
-
         res.json({ success: true, message: "Perfil actualizado correctamente." });
     } catch (error) {
         console.error("❌ Error al actualizar perfil:", error.message);
         res.status(500).json({ success: false, message: "Error interno del servidor." });
+    } finally {
+        connection.release();
+    }
+});
+
+app.put('/api/comercio/estado', async (req, res) => {
+    const { usuario_id, nuevo_estado } = req.body; // nuevo_estado: 'abierto' o 'cerrado'
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Obtener id_comercio
+        const [comercio] = await connection.query('SELECT id_comercio FROM comercio WHERE usuario_id = ?', [usuario_id]);
+        if (comercio.length === 0) return res.status(404).json({ success: false, message: "Local no encontrado." });
+        
+        const idComercio = comercio[0].id_comercio;
+
+        // 2. Si quiere CERRAR, verificamos pendientes
+        if (nuevo_estado === 'cerrado') {
+            const [pendientes] = await connection.query(`
+                SELECT COUNT(*) AS total 
+                FROM reservacion r
+                JOIN pack p ON r.pack_id = p.id_pack
+                WHERE p.comercio_id = ? AND r.estado_reserva = 'pendiente'
+            `, [idComercio]);
+
+            if (pendientes[0].total > 0) {
+                await connection.rollback();
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `No puedes cerrar. Tienes ${pendientes[0].total} entregas pendientes.` 
+                });
+            }
+        }
+
+        // 3. Cambiar estado y ocultar packs automáticamente si cierra
+        await connection.query('UPDATE comercio SET estado_operativo = ? WHERE id_comercio = ?', [nuevo_estado, idComercio]);
+        
+        if (nuevo_estado === 'cerrado') {
+            await connection.query('UPDATE pack SET estado = "oculto" WHERE comercio_id = ?', [idComercio]);
+        }
+
+        await connection.commit();
+        res.json({ success: true, message: `El local ahora está ${nuevo_estado.toUpperCase()}.` });
+
+    } catch (error) {
+        await connection.rollback();
+        res.status(500).json({ success: false, message: "Error al cambiar estado." });
     } finally {
         connection.release();
     }
@@ -385,28 +424,20 @@ app.get('/api/packs/comercio/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 8. BORRAR UN LOOP-PACK (Y su foto física)
+// 8. "BORRAR" UN LOOP-PACK (Baja Lógica)
 // ==========================================
 app.delete('/api/packs/:packId', async (req, res) => {
     const packId = req.params.packId;
     try {
-        // 1. Buscamos si el pack tiene foto para destruirla del disco duro
-        const [pack] = await pool.query('SELECT foto_pack FROM pack WHERE id_pack = ?', [packId]);
+        // En lugar de DELETE, usamos UPDATE
+        // Esto mantiene la relación con las reservaciones existentes
+        const query = 'UPDATE pack SET estado = "eliminado", stock_disponible = 0 WHERE id_pack = ?';
+        await pool.query(query, [packId]);
         
-        if (pack.length > 0 && pack[0].foto_pack) {
-            const rutaFisica = path.join(process.cwd(), 'public', pack[0].foto_pack);
-            fs.unlink(rutaFisica, (err) => {
-                if (err) console.error('⚠️ No se pudo borrar la foto del pack físicamente:', err);
-                else console.log(`🗑️ Foto del pack eliminada del servidor: ${pack[0].foto_pack}`);
-            });
-        }
-
-        // 2. Lo borramos de la base de datos SQL
-        await pool.query('DELETE FROM pack WHERE id_pack = ?', [packId]);
-        res.json({ success: true, message: "Pack eliminado exitosamente." });
+        res.json({ success: true, message: "El pack ha sido retirado de la venta." });
     } catch (error) {
-        console.error("❌ Error al borrar el pack:", error);
-        res.status(500).json({ success: false, message: "Error interno del servidor." });
+        console.error("❌ Error al retirar el pack:", error);
+        res.status(500).json({ success: false, message: "Error al procesar la solicitud." });
     }
 });
 
@@ -582,38 +613,40 @@ app.put('/api/usuarios/actualizar', upload.single('foto_perfil'), async (req, re
         connection.release();
     }
 });
+
+// ==========================================
+// BORRADO LÓGICO DE LOCAL (No destruye, solo oculta)
+// ==========================================
 app.delete('/api/usuarios/:id', async (req, res) => {
     const usuarioId = req.params.id;
     const connection = await pool.getConnection();
 
     try {
-        // 1. Antes de borrar nada, averiguamos si el usuario tenía una foto guardada
-        // Buscamos en ambas tablas por si acaso
-        const [fotoComercio] = await connection.query('SELECT foto_local FROM comercio WHERE usuario_id = ?', [usuarioId]);
-        const [fotoUsuario] = await connection.query('SELECT foto_usuario FROM datos_usuario WHERE usuario_id = ?', [usuarioId]);
+        await connection.beginTransaction();
+
+        // 1. Verificamos si es un local
+        const [user] = await connection.query('SELECT rol_usuario FROM usuario WHERE id_usuario = ?', [usuarioId]);
         
-        let rutaFoto = null;
-        if (fotoComercio.length > 0 && fotoComercio[0].foto_local) rutaFoto = fotoComercio[0].foto_local;
-        if (fotoUsuario.length > 0 && fotoUsuario[0].foto_usuario) rutaFoto = fotoUsuario[0].foto_usuario;
-
-        // 2. Borramos al usuario de la base de datos (ON DELETE CASCADE se encarga del resto en SQL)
-        await connection.query('DELETE FROM usuario WHERE id_usuario = ?', [usuarioId]);
-
-        // 3. SI SQL tuvo éxito y había foto, DESTRUIMOS el archivo físico
-        if (rutaFoto) {
-            // Convertimos la ruta '/uploads/perfil-123.jpg' a la ruta física en el servidor 'public/uploads/perfil-123.jpg'
-            const rutaFisica = path.join(process.cwd(), 'public', rutaFoto);
+        if (user.length > 0 && user[0].rol_usuario === 'local') {
+            // 🛑 EN LUGAR DE DELETE: Marcamos como inactivo
+            // Y de paso, "apagamos" todos sus packs para que desaparezcan de la app
+            await connection.query('UPDATE usuario SET activo = FALSE WHERE id_usuario = ?', [usuarioId]);
             
-            fs.unlink(rutaFisica, (err) => {
-                if (err) console.error(`⚠️ No se pudo borrar el archivo físico: ${rutaFisica}`, err);
-                else console.log(`🗑️ Archivo físico destruido: ${rutaFoto}`);
-            });
+            const [comercio] = await connection.query('SELECT id_comercio FROM comercio WHERE usuario_id = ?', [usuarioId]);
+            if (comercio.length > 0) {
+                await connection.query('UPDATE pack SET estado = "oculto", stock_disponible = 0 WHERE comercio_id = ?', [comercio[0].id_comercio]);
+            }
+        } else {
+            // Si es un usuario normal sin compras, aquí sí podrías decidir si borrar o no
+            await connection.query('DELETE FROM usuario WHERE id_usuario = ?', [usuarioId]);
         }
 
-        res.json({ success: true, message: "Usuario y archivos eliminados del sistema." });
+        await connection.commit();
+        res.json({ success: true, message: "Cuenta desactivada y packs retirados." });
     } catch (error) {
-        console.error("Error al borrar usuario:", error);
-        res.status(500).json({ success: false, message: "Error interno al intentar eliminar." });
+        await connection.rollback();
+        console.error("Error al dar de baja:", error);
+        res.status(500).json({ success: false, message: "No se puede borrar por integridad de datos." });
     } finally {
         connection.release();
     }
@@ -623,10 +656,19 @@ app.delete('/api/usuarios/:id', async (req, res) => {
 app.get('/api/reservaciones/usuario/:id', async (req, res) => {
     try {
         const query = `
-            SELECT r.id_reservacion AS id_reserva, r.cantidad, r.estado_reserva, r.fecha_reserva,
-                   TIMESTAMPDIFF(SECOND, NOW(), r.fecha_reserva + INTERVAL 1 HOUR) AS segundos_restantes,
-                   p.nombre_pack, p.precio_descuento, p.foto_pack, 
-                   c.nombre_comercio, c.direccion_comercio
+            SELECT 
+                r.id_reservacion AS id_reserva, 
+                r.cantidad, 
+                r.estado_reserva, 
+                DATE_FORMAT(r.fecha_reserva, '%d/%m/%Y %H:%i') AS fecha_formateada,
+                r.fecha_reserva,
+                TIMESTAMPDIFF(SECOND, NOW(), r.fecha_reserva + INTERVAL 1 HOUR) AS segundos_restantes,
+                p.nombre_pack, 
+                p.precio_descuento, 
+                p.foto_pack, 
+                c.nombre_comercio, 
+                c.direccion_comercio,
+                c.telefono_comercio
             FROM reservacion r
             JOIN pack p ON r.pack_id = p.id_pack
             JOIN comercio c ON p.comercio_id = c.id_comercio
@@ -752,23 +794,52 @@ app.put('/api/reservaciones/cobrar/:id', async (req, res) => {
 });
 
 // ==========================================
-// E. OBTENER GANANCIAS REALES DEL LOCAL
+// E. OBTENER GANANCIAS DETALLADAS DEL LOCAL (Packs + Suscripciones)
 // ==========================================
 app.get('/api/ganancias/comercio/:userId', async (req, res) => {
     try {
         const [comercio] = await pool.query('SELECT id_comercio FROM comercio WHERE usuario_id = ?', [req.params.userId]);
         if (comercio.length === 0) return res.status(404).json({ success: false });
 
-        const [ganancias] = await pool.query(`
-            SELECT monto, motivo_pago AS motivo, DATE_FORMAT(fecha, '%d/%m/%Y %H:%i') AS fecha 
-            FROM ganancias_local 
-            WHERE comercio_id = ? 
-            ORDER BY id_ganancia DESC
-        `, [comercio[0].id_comercio]);
+        const comercioId = comercio[0].id_comercio;
+
+        // Unificamos ventas de packs y cobros de folios
+        const query = `
+            SELECT 
+                fecha, 
+                motivo, 
+                monto_total, 
+                comision_foodloop,
+                (monto_total - comision_foodloop) AS mi_ganancia
+            FROM (
+                -- 1. Ventas de Packs (5% de comisión)
+                SELECT 
+                    fecha, 
+                    motivo_pago AS motivo, 
+                    monto AS monto_total, 
+                    (monto * 0.05) AS comision_foodloop
+                FROM ganancias_local 
+                WHERE comercio_id = ?
+
+                UNION ALL
+
+                -- 2. Cobros de Suscripciones (100% de comisión/deuda)
+                SELECT 
+                    dia_cobro AS fecha, 
+                    'Recaudación de Membresía' AS motivo, 
+                    monto_pago AS monto_total, 
+                    monto_pago AS comision_foodloop
+                FROM suscripcion_pago
+                WHERE comercio_id = ? AND estado_pago = 'completado'
+            ) AS transacciones
+            ORDER BY fecha DESC
+        `;
+
+        const [ganancias] = await pool.query(query, [comercioId, comercioId]);
 
         res.json({ success: true, ganancias });
     } catch (error) {
-        console.error("Error al obtener ganancias:", error);
+        console.error("Error al obtener historial unificado:", error);
         res.status(500).json({ success: false });
     }
 });
