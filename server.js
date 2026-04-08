@@ -165,12 +165,13 @@ app.post('/auth/login', async (req, res) => {
             SELECT u.*, s.folio_suscripcion 
             FROM usuario u 
             LEFT JOIN suscripcion_info s ON u.id_usuario = s.usuario_id 
-            WHERE u.email_usuario = ?
+            WHERE u.email_usuario = ? AND u.activo = TRUE
         `;
         const [rows] = await pool.query(query, [email]);
         
         if (rows.length === 0) {
-            return res.status(401).json({ success: false, message: "No encontramos ninguna cuenta con este correo." });
+            // Si el usuario existe pero activo = 0, caerá aquí.
+            return res.status(401).json({ success: false, message: "Cuenta inexistente o desactivada." });
         }
 
         const user = rows[0];
@@ -936,12 +937,13 @@ app.get('/api/admin/finanzas', async (req, res) => {
         const query = `
             SELECT 
                 c.id_comercio,
-                c.nombre_comercio,
+                -- 🛑 SI EL USUARIO ESTÁ INACTIVO, AÑADIMOS LA ETIQUETA AL NOMBRE
+                IF(u.activo, c.nombre_comercio, CONCAT(c.nombre_comercio, ' (BAJA)')) AS nombre_comercio,
                 COALESCE(ventas.comision, 0) AS comision_packs,
                 COALESCE(subs.total_subs, 0) AS total_membresias,
                 COALESCE(ventas.comision, 0) + COALESCE(subs.total_subs, 0) AS deuda_foodloop
             FROM comercio c
-            -- Subconsulta 1: Sumamos el 5% de la comida
+            JOIN usuario u ON c.usuario_id = u.id_usuario -- Unimos con usuario para ver su estado
             LEFT JOIN (
                 SELECT p.comercio_id, SUM(r.cantidad * p.precio_descuento * 0.05) as comision
                 FROM reservacion r
@@ -949,7 +951,6 @@ app.get('/api/admin/finanzas', async (req, res) => {
                 WHERE r.estado_reserva = 'completada'
                 GROUP BY p.comercio_id
             ) ventas ON c.id_comercio = ventas.comercio_id
-            -- Subconsulta 2: Sumamos el 100% de las membresías cobradas en ese local
             LEFT JOIN (
                 SELECT comercio_id, SUM(monto_pago) as total_subs
                 FROM suscripcion_pago
@@ -1004,7 +1005,7 @@ app.get('/api/admin/usuarios', async (req, res) => {
         const query = `
             SELECT id_usuario, nombre_usuario, email_usuario, rol_usuario, DATE_FORMAT(fecha_creacion, '%d/%m/%Y') AS fecha
             FROM usuario
-            WHERE rol_usuario != 'admin'
+            WHERE rol_usuario != 'admin' AND activo = TRUE -- 🛑 SOLO LOS QUE SIGUEN ACTIVOS
             ORDER BY id_usuario DESC
         `;
         const [usuarios] = await pool.query(query);
@@ -1012,6 +1013,41 @@ app.get('/api/admin/usuarios', async (req, res) => {
     } catch (error) {
         console.error("Error obteniendo usuarios:", error);
         res.status(500).json({ success: false, message: "Error interno." });
+    }
+});
+
+// ==========================================
+// RUTAS DE REACTIVACIÓN (ADMIN)
+// ==========================================
+
+// A. Obtener solo usuarios inactivos
+app.get('/api/admin/usuarios/inactivos', async (req, res) => {
+    try {
+        const query = `
+            SELECT id_usuario, nombre_usuario, email_usuario, rol_usuario, DATE_FORMAT(fecha_creacion, '%d/%m/%Y') AS fecha
+            FROM usuario
+            WHERE activo = FALSE AND rol_usuario != 'admin'
+            ORDER BY id_usuario DESC
+        `;
+        const [usuarios] = await pool.query(query);
+        res.json({ success: true, usuarios });
+    } catch (error) {
+        console.error("Error obteniendo inactivos:", error);
+        res.status(500).json({ success: false, message: "Error al obtener la lista de bajas." });
+    }
+});
+
+// B. Reactivar una cuenta
+app.put('/api/admin/usuarios/reactivar/:id', async (req, res) => {
+    const usuarioId = req.params.id;
+    try {
+        // Simplemente encendemos el interruptor de nuevo
+        await pool.query('UPDATE usuario SET activo = TRUE WHERE id_usuario = ?', [usuarioId]);
+        
+        res.json({ success: true, message: "La cuenta ha sido reactivada. El usuario ya puede iniciar sesión." });
+    } catch (error) {
+        console.error("Error al reactivar usuario:", error);
+        res.status(500).json({ success: false, message: "No se pudo reactivar la cuenta." });
     }
 });
 

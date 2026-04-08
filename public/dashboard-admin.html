@@ -55,6 +55,9 @@
                 <button class="dash-tab-btn" data-target="panel-usuarios">
                     <i class="fas fa-users-cog"></i> Control de Usuarios
                 </button>
+                <button class="dash-tab-btn" data-target="panel-inhabilitados">
+                    <i class="fas fa-user-slash"></i> Cuentas Inhabilitadas
+                </button>
             </aside>
 
             <div class="dash-content">
@@ -99,8 +102,27 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
 
+                </div>
+                <div id="panel-inhabilitados" class="dash-panel">
+                    <h3 class="panel-title">Archivo de Cuentas (Bajas)</h3>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr style="background: #d32f2f;">
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-inactivos-body">
+                                <tr><td colspan="5" style="text-align: center;">Cargando archivo de bajas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -108,7 +130,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         let adminUser = null;
-
         document.addEventListener('DOMContentLoaded', () => {
             // 🛑 EL CADENERO: Solo administradores pasan
             const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
@@ -130,14 +151,21 @@
                     document.querySelectorAll('.dash-tab-btn').forEach(btn => btn.classList.remove('active'));
                     document.querySelectorAll('.dash-panel').forEach(panel => panel.classList.remove('active'));
                     
+                    const target = button.getAttribute('data-target');
                     button.classList.add('active');
-                    document.getElementById(button.getAttribute('data-target')).classList.add('active');
+                    document.getElementById(target).classList.add('active');
+
+                    // 🛑 NUEVO: Si entra a inhabilitados, cargamos la lista
+                    if (target === 'panel-inhabilitados') {
+                        cargarInhabilitados();
+                    }
                 });
             });
 
             // Cargar datos
             cargarFinanzas();
             cargarUsuarios();
+
         });
 
         async function cargarFinanzas() {
@@ -236,7 +264,7 @@
             window.location.href = 'login.html';
         }
 
-    window.verDetalleFinanzas = async function(idComercio, nombreComercio) {
+        window.verDetalleFinanzas = async function(idComercio, nombreComercio) {
             try {
                 // Hacemos la petición a la nueva ruta que acabamos de crear
                 const res = await fetch(`http://localhost:3005/api/admin/finanzas/${idComercio}`);
@@ -291,6 +319,62 @@
             } catch (error) {
                 Swal.fire('Error', 'No se pudo cargar el historial del local.', 'error');
             }
+        }
+
+            // Cargar las cuentas que están con activo = FALSE
+        async function cargarInhabilitados() {
+            const tbody = document.getElementById('tabla-inactivos-body');
+            try {
+                const res = await fetch('http://localhost:3005/api/admin/usuarios/inactivos');
+                const data = await res.json();
+
+                if (data.success && data.usuarios.length > 0) {
+                    tbody.innerHTML = data.usuarios.map(u => `
+                        <tr>
+                            <td>#${u.id_usuario}</td>
+                            <td>${u.nombre_usuario}</td>
+                            <td>${u.email_usuario}</td>
+                            <td><span class="badge ${u.rol_usuario === 'local' ? 'badge-local' : 'badge-usuario'}">${u.rol_usuario.toUpperCase()}</span></td>
+                            <td>
+                                <button class="btn" style="background:#2D6A4F; color:white; border-color:#2D6A4F; padding: 5px 10px; font-size: 0.8rem;" 
+                                        onclick="reactivarUsuario(${u.id_usuario}, '${u.nombre_usuario}')">
+                                    <i class="fas fa-check-circle"></i> Activar Cuenta
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay cuentas inhabilitadas.</td></tr>';
+                }
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error al conectar con el servidor.</td></tr>';
+            }
+        }
+
+        // Función para Reactivar
+        window.reactivarUsuario = function(idUsuario, nombre) {
+            Swal.fire({
+                title: `¿Reactivar a ${nombre}?`,
+                text: "El usuario podrá volver a iniciar sesión y sus packs (si es local) volverán a ser editables.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2D6A4F',
+                confirmButtonText: 'Sí, reactivar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch(`http://localhost:3005/api/admin/usuarios/reactivar/${idUsuario}`, { method: 'PUT' });
+                        const data = await res.json();
+                        if (data.success) {
+                            Swal.fire('¡Activado!', 'La cuenta está operativa de nuevo.', 'success');
+                            cargarInhabilitados(); // Refrescamos la lista de bajas
+                            cargarUsuarios();      // Refrescamos la lista de activos por si acaso
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error');
+                    }
+                }
+            });
         }
     </script>
 </body>
