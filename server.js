@@ -10,13 +10,12 @@ import path from 'path';
 import { BlobServiceClient } from '@azure/storage-blob';
 
 dotenv.config();
-console.log("DEBUG: ¿Conexión encontrada?", process.env.AZURE_STORAGE_CONNECTION_STRING ? "SÍ" : "NO");
 const app = express();
 
 // 1. Cambiamos Multer a Memoria (Ya no escribimos en disco)
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-    
+
 // 2. Configurar Azure
 const AZURE_CONNECTION = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_CONNECTION);
