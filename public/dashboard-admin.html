@@ -233,13 +233,13 @@
 
         window.eliminarUsuario = function(idUsuario) {
             Swal.fire({
-                title: '¿Extinción total?',
-                text: "Esto borrará al usuario, su comercio (si tiene), sus compras, su stock y hasta su foto. No hay vuelta atrás.",
+                title: 'Dar de baja la cuenta?',
+                text: " Esto desactivará la cuenta y su interaccion con la aplicación.",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d32f2f',
                 cancelButtonColor: '#2D6A4F',
-                confirmButtonText: 'Sí, aniquilar cuenta'
+                confirmButtonText: 'Confirmar'
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
@@ -247,7 +247,7 @@
                         const data = await res.json();
 
                         if (data.success) {
-                            Swal.fire('¡Eliminado!', 'El usuario ha sido borrado del sistema.', 'success');
+                            Swal.fire('¡Accion completada!', 'El usuario ha sido desactivado.', 'success');
                             cargarUsuarios(); // Refrescamos la lista
                         } else {
                             Swal.fire('Error', data.message, 'error');
@@ -355,7 +355,7 @@
         window.reactivarUsuario = function(idUsuario, nombre) {
             Swal.fire({
                 title: `¿Reactivar a ${nombre}?`,
-                text: "El usuario podrá volver a iniciar sesión y sus packs (si es local) volverán a ser editables.",
+                text: "El usuario podrá volver a iniciar sesión e interactuar con la aplicación.",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#2D6A4F',

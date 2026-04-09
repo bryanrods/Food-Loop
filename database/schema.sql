@@ -1,25 +1,25 @@
 -- Eliminar tablas si existen para poder correr el script desde cero sin errores
-DROP TABLE IF EXISTS reservacion;
-DROP TABLE IF EXISTS pack;
 DROP TABLE IF EXISTS suscripcion_pago;
 DROP TABLE IF EXISTS suscripcion_info;
-DROP TABLE IF EXISTS comercio;
 DROP TABLE IF EXISTS ganancias_local;
+DROP TABLE IF EXISTS reservacion;
+DROP TABLE IF EXISTS pack;
+DROP TABLE IF EXISTS comercio;
 DROP TABLE IF EXISTS datos_usuario;
 DROP TABLE IF EXISTS usuario;
 
 -- 1. Tabla de Usuarios
     CREATE TABLE `usuario` (
-    `id_usuario` int NOT NULL AUTO_INCREMENT,
-    `nombre_usuario` varchar(50) NOT NULL,
-    `pswrd_usuario` varchar(255) NOT NULL,
-    `email_usuario` varchar(50) NOT NULL,
-    `fecha_creacion` date NOT NULL,
-    `rol_usuario` varchar(20) NOT NULL,
-    PRIMARY KEY (`id_usuario`),
-    UNIQUE KEY `email_usuario` (`email_usuario`)
-    )
-    ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+  `id_usuario` int NOT NULL AUTO_INCREMENT,
+  `nombre_usuario` varchar(50) NOT NULL,
+  `pswrd_usuario` varchar(255) NOT NULL,
+  `email_usuario` varchar(50) NOT NULL,
+  `fecha_creacion` date NOT NULL,
+  `rol_usuario` varchar(20) NOT NULL,
+  `activo` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `email_usuario` (`email_usuario`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
 
 -- 2. Tabla de Comercios
     CREATE TABLE `comercio` (
@@ -31,6 +31,7 @@ DROP TABLE IF EXISTS usuario;
   `foto_local` varchar(255) DEFAULT NULL,
   `hora_apertura` time DEFAULT NULL,
   `hora_cierre` time DEFAULT NULL,
+  `estado_operativo` enum('abierto','cerrado') DEFAULT 'abierto',
   PRIMARY KEY (`id_comercio`),
   KEY `usuario_id` (`usuario_id`),
   CONSTRAINT `comercio_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuario` (`id_usuario`) ON DELETE CASCADE

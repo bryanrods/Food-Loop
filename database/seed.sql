@@ -1,130 +1,22 @@
--- Insertar Usuarios de prueba (1 Admin, 1 Dueño de Local, 1 Usuario Normal)
--- Insertar Usuarios con contraseñas encriptadas con Bcrypt (El password original es: 123456)
-INSERT INTO
-    usuario (
-        nombre_usuario,
-        pswrd_usuario,
-        email_usuario,
-        fecha_creacion,
-        rol_usuario
-    )
-VALUES (
-        'Yusa Admin',
-        '$2a$10$9vZVj0JWMe3crEb5PcLb2.qgpkKfraqVZq2t3St2f16mSmNuOG2me',
-        'admin@foodloop.com',
-        CURDATE(),
-        'admin',
-        1
-    ),
-    (
-        'María Panadería',
-        '$2a$10$ejLw1uj4txwWu7Kmz0rxgOb9oyz5KFQyZ3H7ZTcfo/IwwXrYdsc8q',
-        'local@gmail.com',
-        CURDATE(),
-        'local',
-        1
-    ),
-    (
-        'Sebastián Loya',
-        '$2a$10$ejLw1uj4txwWu7Kmz0rxgOb9oyz5KFQyZ3H7ZTcfo/IwwXrYdsc8q',
-        'usuario@gmail.com',
-        CURDATE(),
-        'usuario',
-        1
-    );
+-- 1. Insertar Usuarios base (1 Admin, 1 Dueño de Local, 1 Usuario Normal)
+-- El password original para todos es: 123456
+INSERT INTO usuario (nombre_usuario, pswrd_usuario, email_usuario, fecha_creacion, rol_usuario, activo)
+VALUES 
+    ('Yusa Admin', '$2a$10$9vZVj0JWMe3crEb5PcLb2.qgpkKfraqVZq2t3St2f16mSmNuOG2me', 'admin@foodloop.com', CURDATE(), 'admin', 1),
+    ('María Panadería', '$2a$10$ejLw1uj4txwWu7Kmz0rxgOb9oyz5KFQyZ3H7ZTcfo/IwwXrYdsc8q', 'local@gmail.com', CURDATE(), 'local', 1),
+    ('Sebastián Loya', '$2a$10$ejLw1uj4txwWu7Kmz0rxgOb9oyz5KFQyZ3H7ZTcfo/IwwXrYdsc8q', 'usuario@gmail.com', CURDATE(), 'usuario', 1);
 
--- Insertar Comercios (Asignado al usuario con rol 'local', que es el ID 2)
-INSERT INTO
-    comercio (
-        nombre_comercio,
-        direccion_comercio,
-        telefono_comercio,
-        usuario_id,
-        foto_local,
-        hora_apertura,
-        hora_cierre
-    )
-VALUES (
-        'Panadería El Trigo',
-        'Av. de las Torres 123',
-        '6561234567',
-        2,
-        NULL,
-        '08:00:00',
-        '20:00:00'
-    );
+-- 2. Insertar en Comercio (SOLO asignado al usuario con rol 'local', ID 2)
+INSERT INTO comercio (nombre_comercio, direccion_comercio, telefono_comercio, usuario_id, foto_local, hora_apertura, hora_cierre, estado_operativo)
+VALUES 
+    ('Panadería El Trigo', 'Av. de las Torres 123', '6561234567', 2, NULL, '08:00:00', '20:00:00', 'abierto');
 
--- -- Insertar Suscripciones (Sebastián Cliente compra la Premium)
--- INSERT INTO
---     suscripcion_info (
---         usuario_id,
---         tipo_plan,
---         estado_suscripcion,
---         fecha_corte
---     )
--- VALUES (
---         3,
---         'premium',
---         'activa',
---         DATE_ADD(CURDATE(), INTERVAL 1 MONTH)
---     );
+-- 3. Insertar en Datos de Usuario (SOLO asignado al usuario con rol 'usuario', ID 3)
+INSERT INTO datos_usuario (usuario_id, edad, telefono, foto_usuario)
+VALUES 
+    (3, 25, '6569876543', NULL);
 
--- -- Registrar el pago de esa suscripción
--- INSERT INTO
---     suscripcion_pago (
---         suscripcion_id,
---         monto_pago,
---         dia_cobro,
---         estado_pago,
---         referencia_pago
---     )
--- VALUES (
---         1,
---         75.00,
---         CURDATE(),
---         'pagado',
---         'REF-FL-987654'
---     );
-
--- -- Insertar Packs (Panadería publica 2 paquetes de excedentes)
--- INSERT INTO
---     pack (
---         comercio_id,
---         nombre_pack,
---         descripcion,
---         precio_original,
---         precio_descuento,
---         stock_disponible,
---         hora_activacion,
---         estado
---     )
--- VALUES (
---         1,
---         'Bolsa Sorpresa de Pan Dulce',
---         'Incluye 5 piezas surtidas del día.',
---         100.00,
---         35.00,
---         10,
---         '19:00:00',
---         'disponible'
---     ),
---     (
---         1,
---         'Pastel de Chocolate (Rebanadas)',
---         '3 rebanadas que sobraron en vitrina.',
---         120.00,
---         50.00,
---         2,
---         '20:00:00',
---         'disponible'
---     );
-
--- -- Insertar Reservación (Sebastián aparta 1 bolsa de pan dulce)
--- INSERT INTO
---     reservacion (
---         usuario_id,
---         pack_id,
---         cantidad,
---         estado_reserva
---     )
--- VALUES (3, 1, 1, 'pendiente');
+-- 4. Insertar Información de Suscripción al usuario
+INSERT INTO suscripcion_info (usuario_id, tipo_plan, estado_suscripcion, fecha_corte, folio_suscripcion)
+VALUES 
+    (3, 'basico', 'inactiva', NULL, 'FL-USR123');

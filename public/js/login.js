@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (resultado.user.rol === 'admin') {
                         Swal.fire({
                             title: 'Centro de Mando',
-                            text: 'Bienvenido, Administrador Supremo.',
+                            text: 'Bienvenido, Administrador.',
                             icon: 'success',
                             confirmButtonColor: '#1a1a1a', // Un color más oscuro para diferenciarlo
                             timer: 2000,

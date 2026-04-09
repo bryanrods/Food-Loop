@@ -10,29 +10,49 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* ESTILOS PARA EL CARRUSEL */
-        .swiper-ofertas {
-            width: 100%;
-            padding-bottom: 40px; /* Espacio para los puntitos (paginación) */
+        /* EL GRID INTELIGENTE */
+        .packs-grid-smart {
+            display: grid;
+            /* auto-fill crea tantas columnas de 300px como quepan en la pantalla */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            max-width: 1200px; /* Evita que en monitores gigantes se desparrame */
+            margin: 0 auto; /* Centra el bloque entero, no las tarjetas sueltas */
+            padding: 20px 0;
         }
-        .swiper-slide {
-            width: 280px; /* Fija el ancho de cada tarjeta */
-            height: auto;
-            display: flex;
-            justify-content: center;
-        }
-        /* Igualamos las alturas de las tarjetas */
-        .swiper-wrapper {
-            align-items: stretch;
-        }
+
+        /* LA TARJETA MEJORADA */
         .dashboard-card {
             width: 100%;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            padding: 0;
             border: 2px solid var(--color-primary);
+            background: var(--color-accent);
+            border-radius: 8px; /* Un pequeño borde redondeado lo hace ver más premium */
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+
+        .dashboard-card:hover {
+            transform: translateY(-5px); /* Efecto de que flota un poco al pasar el mouse */
+            box-shadow: 4px 8px 0px rgba(45, 106, 79, 0.2);
+        }
+
+        /* LA SOLUCIÓN AL ESTIRAMIENTO DE IMAGEN */
+        .card-image-wrapper {
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Proporción perfecta siempre */
+            overflow: hidden;
+            border-bottom: 2px solid var(--color-primary);
+        }
+
+        .card-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Recorta la foto como fondo de pantalla, NUNCA la estira */
+            object-position: center; /* Enfoca el centro de la comida */
+        }
+
         .card-content {
             padding: 20px;
             display: flex;
@@ -76,10 +96,11 @@
                 <p>Rescata estos deliciosos packs antes de que cierre el local.</p>
             </div>
 
-            <div id="contenedor-packs" class="packs-grid">
-                <p style="text-align: center; width: 100%; color: var(--color-primary); font-weight: bold;">
-                    <i class="fas fa-spinner fa-spin"></i> Buscando las mejores ofertas para ti...
-                </p>
+                <div id="contenedor-packs" class="packs-grid-smart">
+                    <p style="text-align: center; grid-column: 1 / -1; color: var(--color-primary); font-weight: bold;">
+                        <i class="fas fa-spinner fa-spin"></i> Buscando las mejores ofertas para ti...
+                    </p>
+                </div>
             </div>
         </section>
 
@@ -158,14 +179,15 @@
                 }
 
                 packs.forEach(pack => {
+                    // 🚩 AQUÍ ESTÁ LA MAGIA PARA LA IMAGEN
                     const visualHTML = pack.foto_pack 
-                        ? `<img src="${pack.foto_pack}" style="width: 100%; height: 180px; object-fit: cover; border-bottom: 2px solid var(--color-primary);">`
-                        : `<div style="height: 180px; border-bottom: 2px solid var(--color-primary); background: var(--color-primary); display:flex; align-items:center; justify-content:center;"><i class="fas fa-box-open fa-4x" style="color:var(--color-accent);"></i></div>`;
+                        ? `<div class="card-image-wrapper"><img src="${pack.foto_pack}" alt="Foto de ${pack.nombre_pack}"></div>`
+                        : `<div class="card-image-wrapper" style="background: var(--color-primary); display:flex; align-items:center; justify-content:center;"><i class="fas fa-box-open fa-4x" style="color:var(--color-accent);"></i></div>`;
 
                     const card = `
-                        <div class="dashboard-card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                        <div class="dashboard-card">
                             ${visualHTML}
-                            <div style="padding: 20px; display: flex; flex-direction: column; flex-grow: 1;">
+                            <div class="card-content">
                                 <h3 style="margin:0; font-size:1.2rem; color:var(--color-primary);">${pack.nombre_pack}</h3>
                                 <p style="font-size:0.85rem; margin-top:5px; color:#555;"><i class="fas fa-store"></i> ${pack.nombre_comercio || 'Negocio Local'}</p>
                                 <p style="font-size:0.9rem; margin-top:10px; flex-grow:1;">${pack.descripcion}</p>
@@ -179,6 +201,7 @@
                     `;
                     contenedor.innerHTML += card;
                 });
+
             } catch (error) {
                 contenedor.innerHTML = '<p style="color: red; text-align: center; width: 100%;">Error al cargar el catálogo.</p>';
             }
