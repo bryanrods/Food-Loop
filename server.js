@@ -6,7 +6,6 @@ import dotenv from 'dotenv';
 import crypto from 'crypto';
 import multer from 'multer';
 import path from 'path';
-
 import { BlobServiceClient } from '@azure/storage-blob';
 
 dotenv.config();
@@ -254,15 +253,14 @@ app.get('/api/me', async (req, res) => {
         // Usamos LEFT JOIN para no bloquear a los locales, y usamos AS para engañar al frontend
         // haciéndole creer que la columna se sigue llamando folio_usuario
         const query = `
-            SELECT u.id_usuario, u.nombre_usuario, u.email_usuario, u.rol_usuario, 
-                   s.folio_suscripcion AS folio_usuario, 
-                   s.estado_suscripcion, 
-                   s.fecha_corte,
-                   d.telefono, d.foto_usuario
+            SELECT u.id_usuario, u.nombre_usuario, u.rol_usuario, u.activo,
+                s.folio_suscripcion AS folio_usuario, 
+                s.estado_suscripcion, 
+                d.telefono, d.foto_usuario
             FROM usuario u 
             LEFT JOIN suscripcion_info s ON u.id_usuario = s.usuario_id 
             LEFT JOIN datos_usuario d ON u.id_usuario = d.usuario_id
-            WHERE u.id_usuario = ?
+            WHERE u.id_usuario = ? AND u.activo = TRUE
         `;
         const [rows] = await pool.query(query, [userId]);
 
@@ -329,7 +327,7 @@ app.get('/api/comercio/me', async (req, res) => {
         // Buscamos los datos actuales del local
         const [rows] = await pool.query(
             // 🛑 IMPORTANTE: Asegúrate de que esta columna esté en el SELECT
-            'SELECT direccion_comercio, telefono_comercio, hora_apertura, hora_cierre, foto_local, estado_operativo FROM comercio WHERE usuario_id = ?', 
+            'SELECT direccion_comercio, nombre_comercio, telefono_comercio, hora_apertura, hora_cierre, foto_local, estado_operativo FROM comercio WHERE usuario_id = ?', 
             [userId]
         );
         
@@ -598,9 +596,7 @@ app.put('/api/usuarios/actualizar', upload.single('foto_perfil'), async (req, re
     }
 });
 
-// ==========================================
-// BORRADO LÓGICO DE LOCAL (No destruye, solo oculta)
-// ==========================================
+// BORRADO LÓGICO UNIVERSAL (ADMIN)
 app.delete('/api/usuarios/:id', async (req, res) => {
     const usuarioId = req.params.id;
     const connection = await pool.getConnection();
@@ -608,29 +604,31 @@ app.delete('/api/usuarios/:id', async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. Verificamos si es un local
+        // 1. Verificamos el rol antes de proceder
         const [user] = await connection.query('SELECT rol_usuario FROM usuario WHERE id_usuario = ?', [usuarioId]);
         
-        if (user.length > 0 && user[0].rol_usuario === 'local') {
-            // 🛑 EN LUGAR DE DELETE: Marcamos como inactivo
-            // Y de paso, "apagamos" todos sus packs para que desaparezcan de la app
-            await connection.query('UPDATE usuario SET activo = FALSE WHERE id_usuario = ?', [usuarioId]);
-            
+        if (user.length === 0) {
+            return res.status(404).json({ success: false, message: "Usuario no encontrado." });
+        }
+
+        // 🛑 2. AHORA: Todos se marcan como INACTIVOS (Baja Lógica)
+        await connection.query('UPDATE usuario SET activo = FALSE WHERE id_usuario = ?', [usuarioId]);
+        
+        // 3. Si era un local, también ocultamos sus packs por seguridad
+        if (user[0].rol_usuario === 'local') {
             const [comercio] = await connection.query('SELECT id_comercio FROM comercio WHERE usuario_id = ?', [usuarioId]);
             if (comercio.length > 0) {
                 await connection.query('UPDATE pack SET estado = "oculto", stock_disponible = 0 WHERE comercio_id = ?', [comercio[0].id_comercio]);
             }
-        } else {
-            // Si es un usuario normal sin compras, aquí sí podrías decidir si borrar o no
-            await connection.query('DELETE FROM usuario WHERE id_usuario = ?', [usuarioId]);
         }
 
         await connection.commit();
-        res.json({ success: true, message: "Cuenta desactivada y packs retirados." });
+        res.json({ success: true, message: "La cuenta ha sido desactivada correctamente." });
+
     } catch (error) {
         await connection.rollback();
         console.error("Error al dar de baja:", error);
-        res.status(500).json({ success: false, message: "No se puede borrar por integridad de datos." });
+        res.status(500).json({ success: false, message: "No se pudo desactivar la cuenta." });
     } finally {
         connection.release();
     }
@@ -710,16 +708,25 @@ app.get('/api/reservaciones/comercio/:userId', async (req, res) => {
         if (comercio.length === 0) return res.status(404).json({ success: false, message: "Comercio no encontrado" });
 
         const query = `
-            SELECT r.id_reservacion AS id_reserva, r.cantidad, r.estado_reserva, DATE_FORMAT(r.fecha_reserva, '%h:%i %p') AS hora,
-                   TIMESTAMPDIFF(SECOND, NOW(), r.fecha_reserva + INTERVAL 1 HOUR) AS segundos_restantes,
-                   p.nombre_pack, p.precio_descuento, p.foto_pack, 
-                   u.nombre_usuario, -- Traemos el nombre real del cliente
-                   c.nombre_comercio, c.direccion_comercio
+            SELECT 
+                r.id_reservacion AS id_reserva, 
+                r.cantidad, 
+                r.estado_reserva, 
+                DATE_FORMAT(r.fecha_reserva, '%h:%i %p') AS hora,
+                TIMESTAMPDIFF(SECOND, NOW(), r.fecha_reserva + INTERVAL 1 HOUR) AS segundos_restantes,
+                p.nombre_pack, 
+                p.precio_descuento, 
+                p.foto_pack, 
+                u.nombre_usuario, 
+                c.nombre_comercio, 
+                c.direccion_comercio,
+                d.telefono AS telefono_usuario -- 🛑 AQUÍ TRAEMOS EL TELÉFONO (Sin coma al final)
             FROM reservacion r
             JOIN pack p ON r.pack_id = p.id_pack
             JOIN comercio c ON p.comercio_id = c.id_comercio
-            JOIN usuario u ON r.usuario_id = u.id_usuario -- Conectamos con el cliente
-            WHERE p.comercio_id = ? -- CORRECCIÓN: Filtramos por el ID de la tienda, no del usuario
+            JOIN usuario u ON r.usuario_id = u.id_usuario
+            LEFT JOIN datos_usuario d ON u.id_usuario = d.usuario_id -- 🛑 EL NUEVO JOIN
+            WHERE p.comercio_id = ? 
             ORDER BY r.id_reservacion DESC
         `;
         const [rows] = await pool.query(query, [comercio[0].id_comercio]);
@@ -914,7 +921,7 @@ setInterval(async () => {
 // ==========================================
 // RUTAS DE ADMINISTRADOR
 // ==========================================
-// A. Ver las finanzas y deudas de cada local (DATOS REALES Y COMBINADOS)
+// Ver las finanzas y deudas de cada local (DATOS REALES Y COMBINADOS)
 app.get('/api/admin/finanzas', async (req, res) => {
     try {
         const query = `
@@ -950,7 +957,7 @@ app.get('/api/admin/finanzas', async (req, res) => {
     }
 });
 
-// C. Ver desglose detallado (Usando UNION para unificar ventas y membresías)
+// Ver desglose detallado (Usando UNION para unificar ventas y membresías)
 app.get('/api/admin/finanzas/:comercioId', async (req, res) => {
     try {
         const query = `
@@ -1003,7 +1010,7 @@ app.get('/api/admin/usuarios', async (req, res) => {
 // RUTAS DE REACTIVACIÓN (ADMIN)
 // ==========================================
 
-// A. Obtener solo usuarios inactivos
+// Obtener solo usuarios inactivos
 app.get('/api/admin/usuarios/inactivos', async (req, res) => {
     try {
         const query = `
@@ -1020,7 +1027,7 @@ app.get('/api/admin/usuarios/inactivos', async (req, res) => {
     }
 });
 
-// B. Reactivar una cuenta
+// Reactivar una cuenta
 app.put('/api/admin/usuarios/reactivar/:id', async (req, res) => {
     const usuarioId = req.params.id;
     try {
@@ -1031,6 +1038,44 @@ app.put('/api/admin/usuarios/reactivar/:id', async (req, res) => {
     } catch (error) {
         console.error("Error al reactivar usuario:", error);
         res.status(500).json({ success: false, message: "No se pudo reactivar la cuenta." });
+    }
+});
+
+// CANCELAR APARTADO DESDE EL LOCAL
+app.put('/api/reservaciones/local-cancelar/:id', async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Buscamos la reserva y el nombre del pack
+        const [reserva] = await connection.query(
+            'SELECT pack_id, cantidad, estado_reserva FROM reservacion WHERE id_reservacion = ?', 
+            [req.params.id]
+        );
+
+        if (reserva.length === 0 || reserva[0].estado_reserva !== 'pendiente') {
+            throw new Error("La reserva no existe o ya no está pendiente.");
+        }
+
+        // 2. Cambiamos el estado
+        await connection.query(
+            'UPDATE reservacion SET estado_reserva = "cancelada" WHERE id_reservacion = ?', 
+            [req.params.id]
+        );
+
+        // 3. Devolvemos el stock al local automáticamente
+        await connection.query(
+            'UPDATE pack SET stock_disponible = stock_disponible + ? WHERE id_pack = ?', 
+            [reserva[0].cantidad, reserva[0].pack_id]
+        );
+
+        await connection.commit();
+        res.json({ success: true, message: "Apartado cancelado y stock devuelto al inventario." });
+    } catch (error) {
+        await connection.rollback();
+        res.status(400).json({ success: false, message: error.message });
+    } finally {
+        connection.release();
     }
 });
 

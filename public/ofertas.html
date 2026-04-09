@@ -10,13 +10,37 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        .packs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+        /* ESTILOS PARA EL CARRUSEL */
+        .swiper-ofertas {
+            width: 100%;
+            padding-bottom: 40px; /* Espacio para los puntitos (paginación) */
         }
-        /* ESTILOS DEL MODAL BRUTALISTA */
+        .swiper-slide {
+            width: 280px; /* Fija el ancho de cada tarjeta */
+            height: auto;
+            display: flex;
+            justify-content: center;
+        }
+        /* Igualamos las alturas de las tarjetas */
+        .swiper-wrapper {
+            align-items: stretch;
+        }
+        .dashboard-card {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0;
+            border: 2px solid var(--color-primary);
+        }
+        .card-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        /* ESTILOS DEL MODAL BRUTALISTA (Quedan igual) */
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
@@ -97,6 +121,8 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/navbar.js"></script>
+ 
     <script>
         let estadoSuscripcionActual = 'inactiva';
         let usuarioGlobal = null;

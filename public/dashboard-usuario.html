@@ -44,23 +44,7 @@
 </head>
 
 <body>
-    <header class="navbar">
-        <div class="navbar-container">
-            <a href="index.html" class="logo-brand"><span>Food Loop</span></a>
-            <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
-            <nav class="nav-menu" id="navMenu">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="galeria.html" class="nav-link">Galería</a>
-                <a href="features.html" class="nav-link">Características</a>
-                <a href="testimonios.html" class="nav-link">Casos de éxito</a>
-                <a href="about.html" class="nav-link">Sobre Nosotros</a>
-
-                <button class="cta-btn" onclick="cerrarSesion()">Cerrar
-                    Sesión</button>
-            </nav>
-        </div>
-    </header>
-
+    <header class="navbar" id="navbar-placeholder"></header>
     <main>
         <section class="dashboard-section">
             <div class="dashboard-header">
@@ -160,32 +144,16 @@
         </div>
     </footer>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="js/navbar.js"></script>
     <script>
         // Declaramos variables globales
         let estadoSuscripcionActual = 'inactiva'; 
         let usuarioGlobal = null;
+        let latidoUsuario = null; // 👈 Guardamos el reloj aquí
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // 1. Verificamos sesión
-            const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
-            if (!usuarioGuardado) {
-                window.location.href = 'login.html';
-                return;
-            }
+        async function verificarEstadoYDatos() {
+            if (!usuarioGlobal) return;
 
-            usuarioGlobal = JSON.parse(usuarioGuardado);
-
-            // Verificación de seguridad
-            if (usuarioGlobal.rol === 'local') {
-                window.location.href = 'dashboard-local.html';
-                return;
-            }
-
-            document.getElementById('nombre-usuario').textContent = usuarioGlobal.nombre;
-
-            // ==========================================
-            // 2. LÓGICA DE ESTADO Y PERFIL (GET /me)
-            // ==========================================
             try {
                 const response = await fetch(`http://localhost:3005/api/me`, {
                     headers: { 'user-id': usuarioGlobal.id }
@@ -193,60 +161,105 @@
                 
                 const data = await response.json();
 
-                if (data.success) {
-                    const estadoData = data.user;
-                    estadoSuscripcionActual = estadoData.estado_suscripcion || 'inactiva';
-                    const folioContainer = document.getElementById('folio-container');
+                // 🛑 SI EL ADMIN TE DESACTIVÓ
+                if (!data.success) {
+                    clearInterval(latidoUsuario); // 👈 Detenemos el reloj de inmediato
                     
-                    // Llenar datos de perfil en el modal y tarjeta principal
-                    if (estadoData.telefono) document.getElementById('userTelefono').value = estadoData.telefono;
-                    if (estadoData.foto_usuario) {
-                        const rutaFoto = estadoData.foto_usuario;
-                        
-                        // En el modal
-                        document.getElementById('userProfilePreview').src = rutaFoto;
-                        document.getElementById('userProfilePreview').style.display = 'block';
-                        document.getElementById('userProfileIcon').style.display = 'none';
-
-                        // En la tarjeta principal
-                        const mainImg = document.getElementById('main-img-profile');
-                        const mainIcon = document.getElementById('main-icon-profile');
-                        if (mainImg && mainIcon) {
-                            mainImg.src = rutaFoto;
-                            mainImg.style.display = 'block';
-                            mainIcon.style.display = 'none';
-                        }
-                    }
-
-                    // PINTAR FOLIO Y ALERTAS SEGÚN ESTADO
-                    if (estadoSuscripcionActual === 'inactiva') {
-                        folioContainer.style.borderColor = '#d32f2f';
-                        folioContainer.style.backgroundColor = '#ffebee';
-                        folioContainer.innerHTML = `
-                            <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; line-height: 1.3; color: #d32f2f;">
-                                <i class="fas fa-exclamation-triangle"></i> Tu membresía está inactiva.<br>Paga en un local para desbloquear las ofertas.
-                            </p>
-                            <span style="font-size: 1.6rem; font-weight: 900; color: #d32f2f; display:block; text-align:center;">${estadoData.folio_usuario}</span>
-                        `;
-                    } else if (estadoSuscripcionActual === 'activa') {
-                        folioContainer.style.borderColor = '#2D6A4F';
-                        folioContainer.style.backgroundColor = '#e8f5e9';
-                        const fechaCorte = new Date(estadoData.fecha_corte).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-                        folioContainer.innerHTML = `
-                            <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; line-height: 1.3; color: #2D6A4F;">
-                                <i class="fas fa-check-circle"></i> ¡Membresía Activa!<br>Válida hasta: <strong>${fechaCorte}</strong>
-                            </p>
-                            <span style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary); display:block; text-align:center;">${estadoData.folio_usuario}</span>
-                        `;
-                    }
+                    Swal.fire({
+                        title: 'Sesión Bloqueada',
+                        text: 'Tu cuenta ha sido desactivada por el administrador.',
+                        icon: 'error',
+                        allowOutsideClick: false,
+                        confirmButtonColor: '#d32f2f'
+                    }).then(() => {
+                        cerrarSesion();
+                    });
+                    return;
                 }
+
+                // SI TODO ESTÁ BIEN, ACTUALIZAMOS
+                actualizarInterfazUsuario(data.user);
+
             } catch (error) {
-                console.error("Error cargando perfil:", error);
+                console.error("Error en el latido del usuario:", error);
+            }
+        }
+
+        function actualizarInterfazUsuario(estadoData) {
+            // 🛑 ELIMINÉ LA LÍNEA QUE TRONABA EL CÓDIGO
+            estadoSuscripcionActual = estadoData.estado_suscripcion || 'inactiva';
+            const folioContainer = document.getElementById('folio-container');
+            
+            if (!folioContainer) return;
+
+            // Llenar datos de perfil
+            if (estadoData.telefono) document.getElementById('userTelefono').value = estadoData.telefono;
+            
+            if (estadoData.foto_usuario) {
+                const rutaFoto = estadoData.foto_usuario;
+                
+                // En el modal
+                document.getElementById('userProfilePreview').src = rutaFoto;
+                document.getElementById('userProfilePreview').style.display = 'block';
+                document.getElementById('userProfileIcon').style.display = 'none';
+
+                // En la tarjeta principal
+                const mainImg = document.getElementById('main-img-profile');
+                const mainIcon = document.getElementById('main-icon-profile');
+                if (mainImg && mainIcon) {
+                    mainImg.src = rutaFoto;
+                    mainImg.style.display = 'block';
+                    mainIcon.style.display = 'none';
+                }
             }
 
-            // ==========================================
-            // 3. ACTUALIZACIÓN DE PERFIL (GUARDAR FOTO Y TEL)
-            // ==========================================
+            // PINTAR FOLIO SEGÚN ESTADO
+            if (estadoSuscripcionActual === 'inactiva') {
+                folioContainer.style.borderColor = '#d32f2f';
+                folioContainer.style.backgroundColor = '#ffebee';
+                folioContainer.innerHTML = `
+                    <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; line-height: 1.3; color: #d32f2f;">
+                        <i class="fas fa-exclamation-triangle"></i> Tu membresía está inactiva.<br>Paga en un local para desbloquear las ofertas.
+                    </p>
+                    <span style="font-size: 1.6rem; font-weight: 900; color: #d32f2f; display:block; text-align:center;">${estadoData.folio_usuario}</span>
+                `;
+            } else if (estadoSuscripcionActual === 'activa') {
+                folioContainer.style.borderColor = '#2D6A4F';
+                folioContainer.style.backgroundColor = '#e8f5e9';
+                const fechaCorte = new Date(estadoData.fecha_corte).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+                folioContainer.innerHTML = `
+                    <p style="font-size: 0.85rem; font-weight: bold; margin-bottom: 8px; line-height: 1.3; color: #2D6A4F;">
+                        <i class="fas fa-check-circle"></i> ¡Membresía Activa!<br>Válida hasta: <strong>${fechaCorte}</strong>
+                    </p>
+                    <span style="font-size: 1.2rem; font-weight: bold; color: var(--color-primary); display:block; text-align:center;">${estadoData.folio_usuario}</span>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const usuarioGuardado = localStorage.getItem('usuarioFoodLoop');
+            if (!usuarioGuardado) {
+                window.location.href = 'login.html';
+                return;
+            }
+            usuarioGlobal = JSON.parse(usuarioGuardado);
+
+            if (usuarioGlobal.rol === 'local') {
+                window.location.href = 'dashboard-local.html';
+                return;
+            }
+
+            document.getElementById('nombre-usuario').textContent = usuarioGlobal.nombre;
+            
+            // Carga inicial
+            await verificarEstadoYDatos();
+            
+            // 💓 ACTIVAR EL LATIDO (30 segundos es lo ideal)
+            latidoUsuario = setInterval(verificarEstadoYDatos, 30000); 
+            
+            configurarListenersPerfil();
+        });
+        function configurarListenersPerfil(){
             const userFotoInput = document.getElementById('userProfilePicture');
             const userFotoPreview = document.getElementById('userProfilePreview');
             const userFotoIcon = document.getElementById('userProfileIcon');
@@ -288,8 +301,7 @@
                     }
                 });
             }
-
-        });
+        }
 
         // ==========================================
         // 6. MODALES Y SESIÓN

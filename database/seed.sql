@@ -13,21 +13,24 @@ VALUES (
         '$2a$10$9vZVj0JWMe3crEb5PcLb2.qgpkKfraqVZq2t3St2f16mSmNuOG2me',
         'admin@foodloop.com',
         CURDATE(),
-        'admin'
+        'admin',
+        1
     ),
     (
         'María Panadería',
-        '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-        'maria@eltrigo.com',
+        '$2a$10$ejLw1uj4txwWu7Kmz0rxgOb9oyz5KFQyZ3H7ZTcfo/IwwXrYdsc8q',
+        'local@gmail.com',
         CURDATE(),
-        'local'
+        'local',
+        1
     ),
     (
-        'Sebastián Cliente',
-        '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-        'sebas@gmail.com',
+        'Sebastián Loya',
+        '$2a$10$ejLw1uj4txwWu7Kmz0rxgOb9oyz5KFQyZ3H7ZTcfo/IwwXrYdsc8q',
+        'usuario@gmail.com',
         CURDATE(),
-        'usuario'
+        'usuario',
+        1
     );
 
 -- Insertar Comercios (Asignado al usuario con rol 'local', que es el ID 2)
@@ -46,7 +49,7 @@ VALUES (
         'Av. de las Torres 123',
         '6561234567',
         2,
-        '/uploads/perfil-1775531261449-171147862.jpeg',
+        NULL,
         '08:00:00',
         '20:00:00'
     );
